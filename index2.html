@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+<title>สรุปการขาย</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Kanit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --pink:      #f77998;
+  --pink-d:    #e0506e;
+  --pink-l:    #ffe0ea;
+  --pink-xl:   #fff5f8;
+  --pink-glow: rgba(247,121,152,.22);
+  --green:     #10b981;
+  --green-d:   #059669;
+  --green-l:   #d1fae5;
+  --red:       #ef4444;
+  --red-l:     #fee2e2;
+  --orange:    #f59e0b;
+  --orange-l:  #fef3c7;
+  --blue:      #3b82f6;
+  --blue-l:    #dbeafe;
+  --text:      #0f0f1a;
+  --t2:        #6b7280;
+  --t3:        #b0b7c3;
+  --bg:        #fdf2f5;
+  --card:      #ffffff;
+  --bdr:       #f0dde2;
+  --sh:        0 2px 16px rgba(247,121,152,.10);
+  --sh-md:     0 6px 28px rgba(247,121,152,.18);
+}
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+body { font-family:'Sarabun',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+/* ── STEP BAR ── */
+.steps-bar {
+  background: linear-gradient(135deg,#f77998 0%,#f25880 60%,#e04870 100%);
+  padding: 16px 20px 20px;
+  position: sticky; top:0; z-index:100;
+  box-shadow: 0 6px 24px var(--pink-glow);
+}
+.steps-title {
+  color:#fff; font-family:'Kanit',sans-serif;
+  font-size:18px; font-weight:800; margin-bottom:14px;
+  display:flex; align-items:center; gap:8px;
+}
+.steps-row { display:flex; align-items:center; }
+.step-pill {
+  display:flex; align-items:center; gap:6px;
+  padding:5px 12px; border-radius:20px;
+  background:rgba(255,255,255,.15); transition:all .3s; flex-shrink:0;
+}
+.step-pill.active { background:rgba(255,255,255,.95); }
+.step-pill.done   { background:rgba(255,255,255,.3); }
+.step-num {
+  width:22px; height:22px; border-radius:50%;
+  background:rgba(255,255,255,.3); color:rgba(255,255,255,.8);
+  font-size:11px; font-weight:800;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Kanit',sans-serif; transition:all .3s;
+}
+.step-pill.active .step-num { background:var(--pink); color:#fff; }
+.step-pill.done   .step-num { background:var(--green); color:#fff; }
+.step-lbl {
+  font-size:11px; font-weight:700; color:rgba(255,255,255,.7);
+  font-family:'Kanit',sans-serif; white-space:nowrap;
+}
+.step-pill.active .step-lbl { color:var(--text); }
+.step-pill.done   .step-lbl { color:rgba(255,255,255,.85); }
+.step-connector {
+  flex:1; height:2px; background:rgba(255,255,255,.2);
+  margin:0 4px; min-width:12px; transition:background .4s;
+}
+.step-connector.done { background:rgba(255,255,255,.6); }
+
+/* ── SCREENS ── */
+.screen { display:none; padding:16px 14px 0; animation:fadeUp .28s ease both; }
+.screen.active { display:block; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)} }
+
+/* ── SEC TITLE ── */
+.sec-ttl {
+  font-family:'Kanit',sans-serif; font-size:13px; font-weight:700;
+  color:var(--t2); text-transform:uppercase; letter-spacing:.8px;
+  margin-bottom:12px; display:flex; align-items:center; gap:6px;
+}
+.sec-ttl::after { content:''; flex:1; height:1.5px; background:linear-gradient(90deg,var(--bdr),transparent); }
+
+/* ── CAT GRID ── */
+.cat-all {
+  background:var(--card); border-radius:14px; padding:14px 18px;
+  border:2px solid transparent; box-shadow:var(--sh);
+  cursor:pointer; transition:all .2s; display:flex; align-items:center; gap:12px;
+  margin-bottom:10px;
+}
+.cat-all.sel { border-color:var(--pink); background:var(--pink-xl); }
+.cat-all:active { transform:scale(.98); }
+.cat-all-ico { width:40px; height:40px; border-radius:12px; background:var(--pink-l); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+.cat-all-name { font-family:'Kanit',sans-serif; font-size:14px; font-weight:800; }
+.cat-all-sub  { font-size:11px; color:var(--t2); margin-top:2px; }
+
+.cat-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+.cat-card {
+  background:var(--card); border-radius:18px; padding:20px 14px 16px;
+  border:2px solid transparent; box-shadow:var(--sh);
+  cursor:pointer; transition:all .2s; text-align:center;
+  position:relative; overflow:hidden; animation:fadeUp .28s ease both;
+}
+.cat-card::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,var(--pink-xl),transparent); opacity:0; transition:opacity .2s; }
+.cat-card.sel { border-color:var(--pink); box-shadow:var(--sh-md),0 0 0 3px var(--pink-glow); }
+.cat-card.sel::before { opacity:1; }
+.cat-card:active { transform:scale(.96); }
+.cat-check { position:absolute; top:10px; right:10px; width:22px; height:22px; border-radius:50%; background:var(--pink); color:#fff; font-size:11px; display:flex; align-items:center; justify-content:center; opacity:0; transform:scale(0); transition:all .2s; }
+.cat-card.sel .cat-check { opacity:1; transform:scale(1); }
+.cat-icon  { font-size:32px; margin-bottom:8px; position:relative; z-index:1; }
+.cat-name  { font-family:'Kanit',sans-serif; font-size:14px; font-weight:800; position:relative; z-index:1; }
+.cat-badge { display:inline-block; margin-top:6px; font-size:10px; font-weight:700; color:var(--pink); background:var(--pink-l); padding:2px 8px; border-radius:10px; position:relative; z-index:1; }
+
+/* ── PERIOD CARDS ── */
+.period-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.period-card {
+  background:var(--card); border-radius:18px; padding:24px 16px 20px;
+  border:2px solid transparent; box-shadow:var(--sh);
+  cursor:pointer; transition:all .2s; text-align:center; min-height:140px;
+}
+.period-card.sel { border-color:var(--pink); background:var(--pink-xl); box-shadow:var(--sh-md),0 0 0 3px var(--pink-glow); }
+.period-card:active { transform:scale(.96); }
+.period-ico  { font-size:36px; margin-bottom:12px; display:block; }
+.period-name { font-family:'Kanit',sans-serif; font-size:16px; font-weight:800; }
+.period-desc { font-size:12px; color:var(--t2); margin-top:6px; line-height:1.6; }
+
+/* ── CUSTOM DATE ── */
+.custom-wrap { display:none; margin-top:12px; background:var(--card); border-radius:16px; padding:16px; box-shadow:var(--sh); border:1px solid var(--bdr); }
+.custom-wrap.show { display:block; animation:fadeUp .2s ease both; }
+.date-row { display:flex; gap:8px; align-items:center; }
+.date-row span { font-size:13px; color:var(--t2); flex-shrink:0; font-weight:600; }
+.di { flex:1; padding:11px 14px; border:2px solid var(--bdr); border-radius:12px; font-family:'Sarabun',sans-serif; font-size:13px; outline:none; color:var(--text); -webkit-appearance:none; transition:border-color .2s; }
+.di:focus { border-color:var(--pink); box-shadow:0 0 0 3px var(--pink-glow); }
+
+/* ── BOTTOM BAR ── */
+.bottom-bar {
+  position:sticky; bottom:0;
+  background:rgba(255,255,255,.96); backdrop-filter:blur(12px);
+  border-top:1px solid var(--bdr); padding:10px 14px 20px;
+  box-shadow:0 -4px 20px var(--pink-glow); z-index:50;
+  margin-top:16px;
+}
+.btn-main {
+  width:100%; padding:15px; border-radius:14px; border:none;
+  background:linear-gradient(135deg,#f77998,#e04870); color:#fff;
+  font-family:'Kanit',sans-serif; font-size:16px; font-weight:800;
+  cursor:pointer; box-shadow:0 4px 18px var(--pink-glow); transition:all .18s;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.btn-main:active { transform:scale(.98); }
+.btn-main:disabled { background:#e9ecef; color:#adb5bd; box-shadow:none; cursor:not-allowed; }
+.btn-ghost {
+  width:100%; padding:11px; border-radius:11px;
+  border:1.5px solid var(--bdr); background:transparent;
+  font-family:'Kanit',sans-serif; font-size:13px; font-weight:700;
+  color:var(--t2); cursor:pointer; margin-top:8px; transition:background .15s;
+}
+.btn-ghost:active { background:var(--pink-xl); }
+
+/* ── RESULT ── */
+.result-screen { display:none; padding-bottom:40px; animation:fadeUp .28s ease both; }
+.result-screen.active { display:block; }
+.result-meta {
+  background:linear-gradient(135deg,#f77998,#f04870);
+  padding:14px 18px;
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;
+}
+.rm-cat    { font-family:'Kanit',sans-serif; font-size:14px; font-weight:800; color:#fff; }
+.rm-period { font-size:12px; color:rgba(255,255,255,.85); background:rgba(255,255,255,.18); padding:4px 10px; border-radius:10px; font-weight:600; }
+.rm-change { cursor:pointer; font-size:12px; color:rgba(255,255,255,.9); text-decoration:underline; font-weight:600; }
+.res-pad   { padding:14px 14px 0; }
+
+/* ── SECTION CARD ── */
+.sec-card {
+  background:var(--card); border-radius:18px;
+  box-shadow:var(--sh); border:1px solid var(--bdr);
+  margin-bottom:12px; overflow:hidden;
+}
+.sec-hd {
+  padding:14px 16px 10px; border-bottom:1px solid var(--bdr);
+  font-family:'Kanit',sans-serif; font-size:14px; font-weight:800;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.sec-badge { font-size:11px; padding:2px 8px; border-radius:10px; background:var(--pink-l); color:var(--pink-d); font-weight:700; }
+
+/* ── ROW ── */
+.item-row {
+  display:flex; align-items:center; gap:10px;
+  padding:11px 16px; border-bottom:1px solid #faf4f6;
+  animation:fadeUp .2s ease both;
+}
+.item-row:last-child { border-bottom:none; }
+.item-img { width:40px; height:40px; border-radius:11px; background:var(--pink-l); flex-shrink:0; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:18px; }
+.item-img img { width:100%; height:100%; object-fit:cover; border-radius:11px; }
+.item-info { flex:1; min-width:0; }
+.item-name { font-family:'Kanit',sans-serif; font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.item-sub  { font-size:10px; color:var(--t2); margin-top:2px; }
+.item-date { font-size:10px; color:var(--t3); margin-top:1px; }
+.item-amt  { font-family:'Kanit',sans-serif; font-size:14px; font-weight:800; flex-shrink:0; }
+.empty-row { text-align:center; padding:24px; color:var(--t3); font-size:13px; font-weight:600; }
+
+/* ── LOADING ── */
+.loading-wrap { text-align:center; padding:60px 20px; color:var(--t3); }
+.spin { width:36px; height:36px; border:3px solid var(--pink-l); border-top-color:var(--pink); border-radius:50%; animation:sp .75s linear infinite; margin:0 auto 12px; }
+@keyframes sp { to{transform:rotate(360deg)} }
+
+/* ── TOAST ── */
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(90px); background:#0f0f1a; color:#fff; padding:12px 24px; border-radius:26px; font-family:'Kanit',sans-serif; font-size:13px; font-weight:700; z-index:999; transition:transform .3s cubic-bezier(.34,1.56,.64,1); pointer-events:none; white-space:nowrap; }
+.toast.show { transform:translateX(-50%) translateY(0); }
+.toast.err  { background:var(--red); }
+</style>
+</head>
+<body>
+
+<!-- STEP BAR -->
+<div class="steps-bar" id="stepsBar">
+  <div class="steps-title">🛒 สรุปการขาย</div>
+  <div class="steps-row">
+    <div class="step-pill active" id="sp1"><div class="step-num" id="sn1">1</div><div class="step-lbl">ประเภท</div></div>
+    <div class="step-connector" id="sc1"></div>
+    <div class="step-pill" id="sp2"><div class="step-num" id="sn2">2</div><div class="step-lbl">ช่วงเวลา</div></div>
+    <div class="step-connector" id="sc2"></div>
+    <div class="step-pill" id="sp3"><div class="step-num" id="sn3">3</div><div class="step-lbl">สรุป</div></div>
+  </div>
+</div>
+
+<!-- STEP 1: เลือกประเภท -->
+<div class="screen active" id="s1">
+  <div class="sec-ttl">เลือกประเภทสินค้า</div>
+  <div class="cat-all sel" id="catAllBtn" onclick="selCat('__all__','ทุกประเภท',this)">
+    <div class="cat-all-ico">🏪</div>
+    <div><div class="cat-all-name">ทุกประเภท</div><div class="cat-all-sub">แสดงยอดรวมทั้งหมด</div></div>
+  </div>
+  <div class="cat-grid" id="catGrid">
+    <div style="grid-column:span 2"><div class="loading-wrap" style="padding:32px 0"><div class="spin"></div></div></div>
+  </div>
+  <div class="bottom-bar">
+    <button class="btn-main" onclick="goS2()"><span>ถัดไป</span><span>→</span></button>
+  </div>
+</div>
+
+<!-- STEP 2: เลือกช่วงเวลา -->
+<div class="screen" id="s2">
+  <div class="sec-ttl">เลือกช่วงเวลา</div>
+  <div class="period-grid">
+    <div class="period-card sel" id="pc-today" onclick="selPeriod('today',this)">
+      <span class="period-ico">📅</span>
+      <div class="period-name">วันนี้</div>
+      <div class="period-desc" id="todayLabel">—</div>
+    </div>
+    <div class="period-card" id="pc-custom" onclick="selPeriod('custom',this)">
+      <span class="period-ico">🗓️</span>
+      <div class="period-name">กำหนดเอง</div>
+      <div class="period-desc">เลือกช่วงวันที่ต้องการ</div>
+    </div>
+  </div>
+  <div class="custom-wrap" id="customWrap">
+    <div class="date-row">
+      <input class="di" type="date" id="dateFrom">
+      <span>ถึง</span>
+      <input class="di" type="date" id="dateTo">
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <button class="btn-main" onclick="goResult()"><span>ดูสรุปการขาย</span><span>📊</span></button>
+    <button class="btn-ghost" onclick="backTo(1)">← กลับเลือกประเภท</button>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div class="result-screen" id="s3">
+  <div class="result-meta">
+    <div>
+      <div class="rm-cat" id="rmCat">—</div>
+      <div style="margin-top:3px"><span class="rm-period" id="rmPeriod">—</span></div>
+    </div>
+    <div class="rm-change" onclick="backTo(1)">เปลี่ยน ✕</div>
+  </div>
+  <div class="res-pad" id="resContent">
+    <div class="loading-wrap"><div class="spin"></div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const GAS = "https://script.google.com/macros/s/AKfycbyHj4e_etkcIUc9AvASppV9m_JWZsjY8wg7FFBHJtEvdVFk-yY0SLmfEP5C3yKw5KhP/exec";
+
+const ICONS = ["🎂","🍰","🎁","🛍️","🍩","🎀","🌸","🍫","☕","🧁","🎊","🧧","🫐","🍓","🎐","🪴"];
+
+let selCatVal  = '__all__';
+let selCatName = 'ทุกประเภท';
+let selPeriodV = 'today';
+
+// data
+let entries  = [];  // getProductEntries  → รายการสินค้าที่เพิ่มสต็อก
+let products = [];  // getProducts        → สต็อกปัจจุบัน (มี soldQty ถ้า GAS มี)
+let expenses = [];  // getExpenses        → ค่าใช้จ่ายนอก
+
+// ── UTILS ──
+function pad(n){ return String(n).padStart(2,'0'); }
+function toYMD(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function fmt(n){ return (parseFloat(n)||0).toLocaleString('th-TH',{minimumFractionDigits:0,maximumFractionDigits:2}); }
+function fmtD(s){
+  if(!s) return ''; s=s.toString().trim();
+  const p=s.split(/[-\/]/);
+  if(p.length>=3){ if(p[0].length===4) return p[2].slice(0,2)+'/'+p[1]+'/'+p[0]; return p[0]+'/'+p[1]+'/'+p[2]; }
+  const d=new Date(s); return isNaN(d)?s:d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();
+}
+function parseDate(s){
+  if(!s) return null; s=s.toString().trim();
+  // "14/03/2026 21:43" or "2026-03-14" or "14/03/2026"
+  const dt = s.replace(/(\d{2})\/(\d{2})\/(\d{4})/,'$3-$2-$1');
+  const d = new Date(dt);
+  return isNaN(d) ? null : d;
+}
+
+// ── INIT ──
+(function init(){
+  const now=new Date(), y=now.getFullYear(), m=pad(now.getMonth()+1), d=pad(now.getDate());
+  document.getElementById('todayLabel').textContent = d+'/'+m+'/'+y;
+  const ld=pad(new Date(now.getFullYear(),now.getMonth()+1,0).getDate());
+  document.getElementById('dateFrom').value = y+'-'+m+'-01';
+  document.getElementById('dateTo').value   = y+'-'+m+'-'+ld;
+  loadData();
+})();
+
+async function loadData(){
+  try {
+    const [rE, rP, rX] = await Promise.all([
+      fetch(GAS+'?action=getProductEntries').then(r=>r.json()).catch(()=>[]),
+      fetch(GAS+'?action=getProducts').then(r=>r.json()).catch(()=>[]),
+      fetch(GAS+'?action=getExpenses').then(r=>r.json()).catch(()=>[]),
+    ]);
+    entries  = rE||[];
+    products = rP||[];
+    expenses = rX||[];
+    renderCats();
+  } catch(e){
+    document.getElementById('catGrid').innerHTML=`<div style="grid-column:span 2;text-align:center;padding:20px;color:var(--red);font-size:13px;font-weight:600">⚠️ โหลดไม่ได้ กรุณาลองใหม่</div>`;
+  }
+}
+
+function renderCats(){
+  const cats=[...new Set(entries.filter(p=>!p.name?.startsWith('สินค้าอื่นๆ')).map(p=>p.category).filter(Boolean))];
+  if(!cats.length){ document.getElementById('catGrid').innerHTML=`<div style="grid-column:span 2;text-align:center;padding:20px;color:var(--t3)">📭 ยังไม่มีสินค้า</div>`; return; }
+  document.getElementById('catGrid').innerHTML = cats.map((cat,i)=>{
+    const cnt=entries.filter(p=>p.category===cat&&!p.name?.startsWith('สินค้าอื่นๆ')).length;
+    return `<div class="cat-card" onclick="selCat('${esc(cat)}','${esc(cat)}',this)" style="animation-delay:${i*.06}s">
+      <div class="cat-check">✓</div>
+      <div class="cat-icon">${ICONS[i%ICONS.length]}</div>
+      <div class="cat-name">${cat}</div>
+      <div class="cat-badge">${cnt} รายการ</div>
+    </div>`;
+  }).join('');
+}
+function esc(s){ return s.replace(/'/g,"\\'"); }
+
+// ── SELECT ──
+function selCat(val, name, el){
+  selCatVal=val; selCatName=name;
+  document.querySelectorAll('.cat-card,.cat-all').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function selPeriod(p, el){
+  selPeriodV=p;
+  document.querySelectorAll('.period-card').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('customWrap').classList.toggle('show', p==='custom');
+}
+
+// ── NAV ──
+function showScreen(id){
+  document.querySelectorAll('.screen,.result-screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function stepDone(n){
+  const p=document.getElementById('sp'+n), nu=document.getElementById('sn'+n);
+  p.className='step-pill done'; nu.textContent='✓';
+  const c=document.getElementById('sc'+n); if(c) c.classList.add('done');
+  const nx=document.getElementById('sp'+(n+1)); if(nx) nx.className='step-pill active';
+}
+function resetSteps(){
+  [1,2,3].forEach(n=>{
+    const p=document.getElementById('sp'+n), nu=document.getElementById('sn'+n);
+    p.className='step-pill'+(n===1?' active':''); nu.textContent=n;
+    const c=document.getElementById('sc'+n); if(c) c.classList.remove('done');
+  });
+}
+function backTo(n){
+  if(n===1){ showScreen('s1'); resetSteps(); }
+  else {
+    showScreen('s2');
+    ['sp1','sn1','sc1'].forEach(id=>{ const el=document.getElementById(id); if(el){ if(id==='sp1') el.className='step-pill done'; else if(id==='sn1') el.textContent='✓'; else el.classList.add('done'); }});
+    document.getElementById('sp2').className='step-pill active';
+    document.getElementById('sp3').className='step-pill'; document.getElementById('sn3').textContent='3';
+    document.getElementById('sc2').classList.remove('done');
+  }
+}
+function goS2(){
+  stepDone(1); showScreen('s2');
+}
+function goResult(){
+  if(selPeriodV==='custom'){
+    const f=document.getElementById('dateFrom').value, t=document.getElementById('dateTo').value;
+    if(!f||!t){ toast('❌ กรุณาเลือกวันที่','err'); return; }
+    if(f>t){ toast('❌ วันเริ่มต้องไม่เกินวันสิ้นสุด','err'); return; }
+  }
+  stepDone(2); showScreen('s3'); renderResult();
+}
+
+// ── DATE RANGE ──
+function getRange(){
+  if(selPeriodV==='custom'){
+    const f=document.getElementById('dateFrom').value, t=document.getElementById('dateTo').value;
+    return { from:new Date(f), to:new Date(t+'T23:59:59'), label:'ช่วง '+fmtD(f)+' – '+fmtD(t) };
+  }
+  const now=new Date(), y=now.getFullYear(), m=now.getMonth(), d=now.getDate();
+  return { from:new Date(y,m,d), to:new Date(y,m,d,23,59,59), label:'วันนี้ '+fmtD(toYMD(now)) };
+}
+function inRange(dateStr){
+  const {from,to}=getRange();
+  const d=parseDate(dateStr);
+  return d && d>=from && d<=to;
+}
+function byCat(arr){ return selCatVal==='__all__' ? arr : arr.filter(p=>p.category===selCatVal); }
+
+// ── RENDER RESULT ──
+function renderResult(){
+  const {label}=getRange();
+  document.getElementById('rmCat').textContent    = selCatName;
+  document.getElementById('rmPeriod').textContent = label;
+  document.getElementById('resContent').innerHTML = `<div class="loading-wrap"><div class="spin"></div></div>`;
+
+  // ── 1. รายการสินค้า — entries กรองวันที่ + ประเภท ──
+  const buyList = byCat(entries.filter(p=>!p.name?.startsWith('สินค้าอื่นๆ')))
+    .filter(p=> inRange(p.date||p.lastDate||p.firstDate||''))
+    .sort((a,b)=>(parseDate(b.date||b.lastDate||b.firstDate)||0)-(parseDate(a.date||a.lastDate||a.firstDate)||0));
+
+  // ── 2. รายการขาย — entries กรองวันที่ + ประเภท คำนวณจาก salePrice × qty
+  //    (หรือถ้า products มี soldQty ใช้ soldQty แทน)
+  const sellList = buyList.map(entry=>{
+    const cur = products.find(p=>p.name===entry.name);
+    const soldQty = parseFloat(cur?.soldQty||cur?.sold_qty||0);
+    const qty = soldQty>0 ? soldQty : parseFloat(entry.qty)||0;
+    const amount = (parseFloat(entry.salePrice)||0) * qty;
+    return { name:entry.name||'-', cat:entry.category||'-', qty, unit:entry.unit||'ชิ้น', amount, note:`฿${fmt(entry.salePrice)}/ชิ้น`, image:entry.lastImage||'', date:entry.date||entry.lastDate||entry.firstDate||'' };
+  }).filter(r=>r.amount>0);
+
+  // ── 3. ค่าใช้จ่ายอื่นๆ — expenses กรองวันที่ + ประเภท ──
+  const expList = byCat(expenses)
+    .filter(e=> inRange(e.date||''))
+    .sort((a,b)=>(parseDate(b.date)||0)-(parseDate(a.date)||0))
+    .map(e=>({ name:e.name||'-', cat:e.category||'-', qty:0, unit:'', amount:parseFloat(e.amount)||0, note:e.note||'', image:'', date:e.date||'' }));
+
+  // ── ยอดรวม ──
+  const totalBuy  = buyList.reduce((s,p)=>(parseFloat(p.costPrice)||0)*(parseFloat(p.qty)||0)+s, 0);
+  const totalSell = sellList.reduce((s,r)=>s+r.amount, 0);
+  const totalExp  = expList.reduce((s,e)=>s+e.amount, 0);
+  const profit    = totalSell - totalBuy - totalExp;
+  const isProfit  = profit>=0;
+  const margin    = totalSell>0?((totalSell-totalBuy)/totalSell*100):0;
+
+  // ── HTML ──
+  let html='';
+
+  // SUMMARY
+  html+=`
+  <div style="background:linear-gradient(135deg,${isProfit?'#10b981,#059669':'#ef4444,#dc2626'});border-radius:20px;padding:20px;margin-bottom:12px;text-align:center;box-shadow:0 8px 28px ${isProfit?'rgba(16,185,129,.3)':'rgba(239,68,68,.3)'};animation:fadeUp .28s ease both;position:relative;overflow:hidden">
+    <div style="position:absolute;top:-20px;right:-16px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.1)"></div>
+    <div style="font-family:'Kanit',sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,.85);margin-bottom:6px">${isProfit?'📈':'📉'} กำไรสุทธิ</div>
+    <div style="font-family:'Kanit',sans-serif;font-size:36px;font-weight:900;color:#fff">${isProfit?'+':''}฿${fmt(profit)}</div>
+    <div style="font-size:11px;color:rgba(255,255,255,.75);margin-top:4px">Margin ${margin.toFixed(1)}%</div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+    <div style="background:#fff;border-radius:14px;padding:14px 10px;text-align:center;box-shadow:var(--sh);border:1px solid var(--bdr)">
+      <div style="font-size:18px;margin-bottom:4px">📥</div>
+      <div style="font-family:'Kanit',sans-serif;font-size:15px;font-weight:900;color:var(--orange)">฿${fmt(totalBuy)}</div>
+      <div style="font-size:10px;color:var(--t2);font-weight:700;margin-top:2px">ซื้อสินค้า</div>
+    </div>
+    <div style="background:#fff;border-radius:14px;padding:14px 10px;text-align:center;box-shadow:var(--sh);border:1px solid var(--bdr)">
+      <div style="font-size:18px;margin-bottom:4px">📤</div>
+      <div style="font-family:'Kanit',sans-serif;font-size:15px;font-weight:900;color:var(--green)">฿${fmt(totalSell)}</div>
+      <div style="font-size:10px;color:var(--t2);font-weight:700;margin-top:2px">ยอดขาย</div>
+    </div>
+    <div style="background:#fff;border-radius:14px;padding:14px 10px;text-align:center;box-shadow:var(--sh);border:1px solid var(--bdr)">
+      <div style="font-size:18px;margin-bottom:4px">💸</div>
+      <div style="font-family:'Kanit',sans-serif;font-size:15px;font-weight:900;color:var(--red)">฿${fmt(totalExp)}</div>
+      <div style="font-size:10px;color:var(--t2);font-weight:700;margin-top:2px">ค่าใช้จ่าย</div>
+    </div>
+  </div>`;
+
+  // helper row
+  function mkRow(r, amtColor, amtSign, i){
+    let img = r.image ? '' : '';
+    if(r.image){ const m=r.image.match(/id=([^&]+)/); if(m) img=`<img src="https://drive.google.com/thumbnail?id=${m[1]}&sz=w80" onerror="this.parentElement.innerHTML='🎁'">`; }
+    const ico = amtSign==='+'?'📤':r.qty===0&&!r.image?'💸':'📥';
+    return `<div class="item-row" style="animation-delay:${i*.04}s">
+      <div class="item-img">${img||ico}</div>
+      <div class="item-info">
+        <div class="item-name">${r.name}</div>
+        <div class="item-sub">${r.cat}${r.qty>0?' · '+fmt(r.qty)+' '+r.unit:''}${r.note?' · '+r.note:''}</div>
+        <div class="item-date">📅 ${fmtD(r.date)||'—'}</div>
+      </div>
+      <div class="item-amt" style="color:${amtColor}">${amtSign}฿${fmt(r.amount)}</div>
+    </div>`;
+  }
+
+  // helper section
+  function mkSec(title, icon, list, amtColor, amtSign, total){
+    const rows = list.length>0 ? list.map((r,i)=>mkRow(r,amtColor,amtSign,i)).join('') : `<div class="empty-row">ไม่มีรายการ</div>`;
+    return `<div class="sec-card">
+      <div class="sec-hd">
+        <span>${icon} ${title}</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-family:'Kanit',sans-serif;font-size:13px;font-weight:800;color:${amtColor}">${amtSign}฿${fmt(total)}</span>
+          <span class="sec-badge">${list.length} รายการ</span>
+        </div>
+      </div>
+      ${rows}
+    </div>`;
+  }
+
+  // buyRows from buyList
+  const buyRows = buyList.map(p=>({ name:p.name||'-', cat:p.category||'-', qty:parseFloat(p.qty)||0, unit:p.unit||'ชิ้น', amount:(parseFloat(p.costPrice)||0)*(parseFloat(p.qty)||0), note:`ทุน ฿${fmt(p.costPrice)} · ขาย ฿${fmt(p.salePrice)}/ชิ้น`, image:p.lastImage||'', date:p.date||p.lastDate||p.firstDate||'' }));
+
+  html += mkSec('รายการสินค้า',    '📥', buyRows,  'var(--orange)', '−', totalBuy);
+  html += mkSec('รายการขาย',       '📤', sellList, 'var(--green)',  '+', totalSell);
+  html += mkSec('ค่าใช้จ่ายอื่นๆ', '💸', expList,  'var(--red)',    '−', totalExp);
+  html += `<div style="height:8px"></div>`;
+
+  document.getElementById('resContent').innerHTML = html;
+  const s3=document.getElementById('sp3'), n3=document.getElementById('sn3');
+  if(s3){ s3.className='step-pill done'; n3.textContent='✓'; }
+}
+
+// ── TOAST ──
+function toast(msg, type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast show '+type;
+  setTimeout(()=>t.className='toast '+type, 2400);
+}
+</script>
+</body>
+</html>
