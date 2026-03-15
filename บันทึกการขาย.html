@@ -179,59 +179,51 @@ body {
 }
 
 /* ═══════════════════════════════
-   INCOME CARD
+   INCOME BAR (fixed bottom — compact)
 ═══════════════════════════════ */
-.income-card {
-  background: var(--card);
-  border-radius: 20px;
-  padding: 16px 18px;
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--border);
-  margin-bottom: 14px;
-}
-.income-lbl {
-  font-family: 'Kanit', sans-serif;
-  font-size: 12px; font-weight: 700;
-  color: var(--text-2); margin-bottom: 10px;
-  text-transform: uppercase; letter-spacing: .5px;
-}
-.income-wrap {
-  display: flex; align-items: center; gap: 10px;
+.income-bar {
+  display: flex; align-items: center; gap: 8px;
   background: linear-gradient(135deg, #fff5f8, #fde8ef);
-  border: 2.5px solid var(--pink-l);
-  border-radius: 16px; padding: 6px 16px;
+  border: 2px solid var(--pink-l);
+  border-radius: 14px; padding: 8px 14px;
+  margin-bottom: 10px;
   transition: border-color .2s, box-shadow .2s;
 }
-.income-wrap.focus {
+.income-bar.focus {
   border-color: var(--pink);
-  box-shadow: 0 0 0 4px var(--pink-glow);
+  box-shadow: 0 0 0 3px var(--pink-glow);
+}
+.income-bar-lbl {
+  font-family: 'Kanit', sans-serif;
+  font-size: 11px; font-weight: 700; color: var(--text-2);
+  flex-shrink: 0; white-space: nowrap;
 }
 .baht-sym {
   font-family: 'Kanit', sans-serif;
-  font-size: 28px; font-weight: 900;
+  font-size: 20px; font-weight: 900;
   color: var(--pink); line-height: 1; flex-shrink: 0;
 }
 .income-inp {
   flex: 1; border: none; background: none; outline: none;
   font-family: 'Kanit', sans-serif;
-  font-size: 36px; font-weight: 900;
-  color: var(--text); padding: 8px 0;
+  font-size: 22px; font-weight: 900;
+  color: var(--text); padding: 4px 0;
   text-align: right; min-width: 0;
 }
 .income-inp::placeholder { color: var(--text-3); }
 .unit-lbl {
-  font-size: 14px; font-weight: 600; color: var(--text-2);
-  flex-shrink: 0; align-self: flex-end; padding-bottom: 12px;
+  font-size: 12px; font-weight: 700; color: var(--text-2);
+  flex-shrink: 0;
 }
 
 /* ═══════════════════════════════
    PAGE2 LAYOUT
 ═══════════════════════════════ */
-.page2-top { padding: 14px 14px 10px; flex-shrink: 0; }
+.page2-top { display: none; } /* income ย้ายไปอยู่ bottom-bar แล้ว */
 .prod-scroll-wrap {
   flex: 1; overflow-y: auto;
-  /* bottom-bar ~130px + ticker ~58px + gap 16px = 204px */
-  padding: 0 14px 220px;
+  /* bottom-bar = income(~56px) + ticker(~54px) + btn(~50px) + ghost(~46px) + padding = ~220px */
+  padding: 14px 14px 260px;
   -webkit-overflow-scrolling: touch;
 }
 .prod-scroll-wrap .sec-ttl {
@@ -319,9 +311,9 @@ body {
    TICKER
 ═══════════════════════════════ */
 .ticker {
-  position: fixed; bottom: 138px; left: 14px; right: 14px;
+  position: fixed; bottom: 192px; left: 14px; right: 14px;
   background: var(--card);
-  border-radius: 18px; padding: 12px 16px;
+  border-radius: 18px; padding: 10px 16px;
   box-shadow: 0 8px 32px rgba(0,0,0,.12);
   border: 1px solid var(--border); z-index: 50;
   transform: translateZ(0);
@@ -599,20 +591,7 @@ body {
 ════════════════════════════════════ -->
 <div class="page page2-layout" id="page2">
 
-  <div class="page2-top">
-    <div class="income-card">
-      <div class="income-lbl">💵 ยอดเงินที่ขายได้ทั้งหมด</div>
-      <div class="income-wrap" id="incomeWrap">
-        <span class="baht-sym">฿</span>
-        <input class="income-inp" type="number" id="incomeInp"
-          placeholder="0" min="0" inputmode="decimal"
-          onfocus="document.getElementById('incomeWrap').classList.add('focus')"
-          onblur="document.getElementById('incomeWrap').classList.remove('focus')"
-          oninput="updateTicker()">
-        <span class="unit-lbl">บาท</span>
-      </div>
-    </div>
-  </div>
+  <div class="page2-top"></div>
 
   <div class="prod-scroll-wrap">
     <div class="sec-ttl" id="prodSecTtl">สินค้าในประเภท</div>
@@ -640,6 +619,17 @@ body {
   </div>
 
   <div class="bottom-bar">
+    <!-- income bar — compact, fixed bottom -->
+    <div class="income-bar" id="incomeWrap">
+      <span class="income-bar-lbl">💵 ยอดขาย</span>
+      <span class="baht-sym">฿</span>
+      <input class="income-inp" type="number" id="incomeInp"
+        placeholder="0" min="0" inputmode="decimal"
+        onfocus="document.getElementById('incomeWrap').classList.add('focus')"
+        onblur="document.getElementById('incomeWrap').classList.remove('focus')"
+        oninput="updateTicker()">
+      <span class="unit-lbl">บาท</span>
+    </div>
     <button class="btn-main" id="btnP2" disabled onclick="goStep3()">
       <span>ตรวจสอบ &amp; ยืนยัน</span><span>✓</span>
     </button>
@@ -747,8 +737,6 @@ function goStep2() {
   renderProds();
   showPage(2);
   stepDone(1);
-  // auto focus income input
-  setTimeout(() => document.getElementById("incomeInp").focus(), 300);
 }
 
 function renderProds() {
