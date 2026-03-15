@@ -32,11 +32,14 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body {
+  height: 100%;
+}
 body {
   font-family: 'Sarabun', sans-serif;
   background: var(--bg);
   color: var(--text);
-  min-height: 100vh;
+  min-height: 100%;
   overflow-x: hidden;
 }
 
@@ -99,7 +102,8 @@ body {
 .page.active { display: block; }
 .page2-layout {
   display: none; flex-direction: column;
-  height: calc(100vh - 112px);
+  /* dvh = dynamic viewport height — ย่อลงตาม keyboard อัตโนมัติ */
+  height: calc(100dvh - 112px);
 }
 .page2-layout.active { display: flex; }
 @keyframes fadeUp {
@@ -219,11 +223,10 @@ body {
 /* ═══════════════════════════════
    PAGE2 LAYOUT
 ═══════════════════════════════ */
-.page2-top { display: none; } /* income ย้ายไปอยู่ bottom-bar แล้ว */
+.page2-top { display: none; }
 .prod-scroll-wrap {
   flex: 1; overflow-y: auto;
-  /* bottom-bar = income(~56px) + ticker(~54px) + btn(~50px) + ghost(~46px) + padding = ~220px */
-  padding: 14px 14px 260px;
+  padding: 14px 14px 16px;
   -webkit-overflow-scrolling: touch;
 }
 .prod-scroll-wrap .sec-ttl {
@@ -311,13 +314,12 @@ body {
    TICKER
 ═══════════════════════════════ */
 .ticker {
-  position: fixed; bottom: 192px; left: 14px; right: 14px;
+  flex-shrink: 0;
   background: var(--card);
-  border-radius: 18px; padding: 10px 16px;
-  box-shadow: 0 8px 32px rgba(0,0,0,.12);
-  border: 1px solid var(--border); z-index: 50;
-  transform: translateZ(0);
-  will-change: transform;
+  border-radius: 0; padding: 10px 16px;
+  box-shadow: 0 -2px 12px rgba(0,0,0,.06);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
 }
 .tk-row { display: flex; align-items: stretch; }
 .tk-item { flex: 1; text-align: center; }
@@ -334,16 +336,11 @@ body {
    BOTTOM BAR
 ═══════════════════════════════ */
 .bottom-bar {
-  position: fixed; bottom: 0; left: 0; right: 0;
-  background: rgba(255,255,255,.96);
-  backdrop-filter: blur(12px);
+  flex-shrink: 0;
+  background: rgba(255,255,255,.98);
   border-top: 1px solid var(--border);
-  padding: 10px 14px calc(18px + env(safe-area-inset-bottom, 0px));
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
   box-shadow: 0 -4px 24px rgba(247,121,152,.12);
-  z-index: 100;
-  /* ไม่ให้ขยับตาม keyboard */
-  transform: translateZ(0);
-  will-change: transform;
 }
 .btn-main {
   width: 100%; padding: 15px; border-radius: 14px; border: none;
@@ -598,7 +595,7 @@ body {
     <div class="prod-list" id="prodList"></div>
   </div>
 
-  <!-- TICKER -->
+  <!-- TICKER — อยู่ระหว่าง scroll กับ bottom-bar, ไม่ fixed -->
   <div class="ticker" id="ticker">
     <div class="tk-row">
       <div class="tk-item">
@@ -619,7 +616,7 @@ body {
   </div>
 
   <div class="bottom-bar">
-    <!-- income bar — compact, fixed bottom -->
+    <!-- income bar compact -->
     <div class="income-bar" id="incomeWrap">
       <span class="income-bar-lbl">💵 ยอดขาย</span>
       <span class="baht-sym">฿</span>
