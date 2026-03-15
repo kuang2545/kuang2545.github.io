@@ -311,7 +311,7 @@ body { font-family: 'Sarabun', sans-serif; color: var(--text); min-height: 100vh
     <div class="section-label">④ ราคา</div>
     <div class="card"><div class="card-inner">
       <div class="form-group">
-        <label class="form-label" id="p-cost-label">💰 ราคาทุนรวม (บาท) <span class="req">*</span></label>
+        <label class="form-label" id="p-cost-label">💰 ราคาทุนต่อชิ้น (บาท) <span class="req">*</span></label>
         <input class="form-input" type="number" id="p-cost" placeholder="0.00" min="0" inputmode="decimal" oninput="updatePriceHint()">
         <div class="price-hint" id="p-cost-hint"></div>
       </div>
@@ -640,7 +640,18 @@ function onUnitChange(){
   document.getElementById('p-packWrap').className='extra-field'+(unit==='แพ็ค'?' show':'');
   document.getElementById('p-kiloWrap').className='extra-field'+(unit==='กิโล'?' show':'');
   const cl=document.getElementById('p-cost-label');
-  if(cl){const lb={โหล:'💰 ราคาทุนต่อโหล (บาท)',ครึ่งโหล:'💰 ราคาทุนต่อครึ่งโหล (บาท)',แพ็ค:'💰 ราคาทุนต่อแพ็ค (บาท)',กิโล:'💰 ราคาทุนต่อกิโล (บาท)'};cl.innerHTML=(lb[unit]||'💰 ราคาทุนรวม (บาท)')+' <span class="req">*</span>';}
+  if(cl){
+    const lb={
+      โหล:      '💰 ราคาทุนต่อโหล (บาท)',
+      ครึ่งโหล: '💰 ราคาทุนต่อครึ่งโหล (บาท)',
+      แพ็ค:     '💰 ราคาทุนต่อแพ็ค (บาท)',
+      กิโล:     '💰 ราคาทุนต่อกิโล (บาท)',
+      ชิ้น:     '💰 ราคาทุนต่อชิ้น (บาท)',
+      เมตร:     '💰 ราคาทุนต่อเมตร (บาท)',
+      ลิตร:     '💰 ราคาทุนต่อลิตร (บาท)',
+    };
+    cl.innerHTML=(lb[unit]||`💰 ราคาทุนต่อ${unit} (บาท)`)+' <span class="req">*</span>';
+  }
   updateConverted();
 }
 function updateConverted(){
@@ -711,7 +722,904 @@ function resetProductForm(){
   ['p-cost-hint','p-sale-hint'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
   document.getElementById('p-img-box').classList.remove('has-img');
   document.getElementById('p-previewImg').src='';document.getElementById('p-imgInput').value='';pImgBase64='';
-  const cl=document.getElementById('p-cost-label');if(cl)cl.innerHTML='💰 ราคาทุนรวม (บาท) <span class="req">*</span>';
+  const cl=document.getElementById('p-cost-label');if(cl)cl.innerHTML='💰 ราคาทุนต่อชิ้น (บาท) <span class="req">*</span>';
+  document.getElementById('p-newCatWrap').style.display='none';
+  document.getElementById('p-ac-list').classList.remove('open');
+  selectPCat('','-- เลือกประเภท --');loadProductCategories();
+  const t=new Date();document.getElementById('p-date').value=t.getFullYear()+'-'+pad(t.getMonth()+1)+'-'+pad(t.getDate());
+  window.scrollTo(0,0);
+}
+
+/* EXPENSE CATEGORIES */
+async function loadExpenseCats(){
+  try{const r=await fetch(GAS_URL+'?action=getCategories');cachedExpCats=await r.json()||[];}catch(e){cachedExpCats=[];}
+  renderECatDD(cachedExpCats);
+}
+function buildGenericCatDD(ddId,cats,onSelect,placeholder){
+  const dd=document.getElementById(ddId);if(!dd)return;dd.innerHTML='';
+  const ph=document.createElement('div');ph.className='dd-item dd-placeholder';ph.textContent=placeholder||'-- เลือกประเภท --';ph.onclick=()=>onSelect('',placeholder||'-- เลือกประเภท --');dd.appendChild(ph);
+  (cats||[]).forEach(c=>{const item=document.createElement('div');item.className='dd-item';item.textContent=c;item.onclick=()=>onSelect(c,c);dd.appendChild(item);});
+}
+function renderECatDD(cats){buildGenericCatDD('e-cat-dropdown',cats,selectECat,'-- เลือกประเภท --');}
+function selectECat(val,label){
+  document.getElementById('e-cat').value=val;document.getElementById('e-cat-display').textContent=label;
+  const box=document.getElementById('e-cat-box');val?box.classList.add('has-val'):box.classList.remove('has-val');
+  document.getElementById('e-cat-dropdown').classList.remove('open');box.classList.remove('active');if(val)syncCategory(val);
+}
+function toggleECatDD(){document.getElementById('e-cat-dropdown').classList.toggle('open');document.getElementById('e-cat-box').classList.toggle('active');}
+
+/* EXPENSE IMAGE */
+function triggerEImg(){if(!document.getElementById('e-img-box').classList.contains('has-img'))document.getElementById('e-imgInput').click();}
+function onEImage(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{eImgBase64=ev.target.result;document.getElementById('e-previewImg').src=eImgBase64;document.getElementById('e-img-box').classList.add('has-img');};r.readAsDataURL(file);}
+function removeEImg(e){e.stopPropagation();eImgBase64='';document.getElementById('e-previewImg').src='';document.getElementById('e-img-box').classList.remove('has-img');document.getElementById('e-imgInput').value='';}
+
+/* SUBMIT EXPENSE */
+async function submitExpense(){
+  const cat=document.getElementById('e-cat').value.trim(),date=document.getElementById('e-date').value,name=document.getElementById('e-name').value.trim(),amount=parseFloat(document.getElementById('e-amount').value),note=document.getElementById('e-note').value.trim();
+  if(!cat){showToast('❌ กรุณาระบุประเภทงาน','error');return;}if(!date){showToast('❌ กรุณาเลือกวันที่','error');return;}if(!name){showToast('❌ กรุณาระบุรายการ','error');return;}if(!amount||amount<=0){showToast('❌ กรุณาระบุจำนวนเงิน','error');return;}
+  const btn=document.getElementById('e-submitBtn');btn.disabled=true;btn.textContent='⏳ กำลังบันทึก...';
+  try{const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:'addExpense',category:cat,date,name,amount,note,image:eImgBase64||""})});const data=await res.json();
+    if(data.status==='ok'){showToast('✅ บันทึกสำเร็จ!','success');['e-name','e-amount','e-note'].forEach(id=>document.getElementById(id).value='');selectECat('','-- เลือกประเภท --');removeEImg({stopPropagation:()=>{}});}else showToast('❌ บันทึกไม่สำเร็จ','error');
+  }catch(e){showToast('❌ เกิดข้อผิดพลาด','error');}
+  btn.disabled=false;btn.textContent='💾 บันทึกค่าใช้จ่าย';
+}
+
+/* EXPENSE HISTORY */
+async function loadExpenses(){
+  try{const r=await fetch(GAS_URL+'?action=getExpenses');allExpenses=await r.json()||[];}catch(e){allExpenses=[];}
+  renderExpenseList();populateEhCatDD();
+}
+function populateEhCatDD(){
+  const cur=document.getElementById('eh-cat').value,cats=Array.from(new Set(allExpenses.map(e=>e.category).filter(Boolean))).sort();
+  const dd=document.getElementById('eh-cat-dropdown');dd.innerHTML='';
+  const all=document.createElement('div');all.className='dd-item dd-placeholder';all.textContent='ทั้งหมด';all.onclick=()=>selectEhCat('','ทั้งหมด');dd.appendChild(all);
+  cats.forEach(c=>{const item=document.createElement('div');item.className='dd-item'+(c===cur?' dd-selected':'');item.textContent=c;item.onclick=()=>selectEhCat(c,c);dd.appendChild(item);});
+}
+function selectEhCat(val,label){
+  document.getElementById('eh-cat').value=val;document.getElementById('eh-cat-display').textContent=label;
+  const box=document.getElementById('eh-cat-box');val?box.classList.add('has-val'):box.classList.remove('has-val');
+  document.getElementById('eh-cat-dropdown').classList.remove('open');box.classList.remove('active');renderExpenseList();if(val)syncCategory(val);
+}
+function toggleEhCatDD(){populateEhCatDD();document.getElementById('eh-cat-dropdown').classList.toggle('open');document.getElementById('eh-cat-box').classList.toggle('active');}
+function renderExpenseList(){
+  const content=document.getElementById('eh-content'),selCat=(document.getElementById('eh-cat')?.value||'').trim();
+  const ymdFrom=toYMD(document.getElementById('eh-date-from')?.value||''),ymdTo=toYMD(document.getElementById('eh-date-to')?.value||'');
+  const filtered=allExpenses.filter(e=>{if(selCat&&e.category!==selCat)return false;const ymd=toYMD(e.date);if(!ymd)return false;if(ymdFrom&&ymd<ymdFrom)return false;if(ymdTo&&ymd>ymdTo)return false;return true;});
+  if(filtered.length===0){content.innerHTML='<div class="empty"><div class="empty-icon">📭</div><div>ไม่มีรายการที่ตรงเงื่อนไข</div></div>';return;}
+  const sorted=[...filtered].sort((a,b)=>b.date.localeCompare(a.date)),total=sorted.reduce((s,e)=>s+parseFloat(e.amount||0),0);
+  content.innerHTML=`<div class="summary-card"><div class="sc-count">แสดง ${sorted.length} รายการ</div><div class="sc-amount">฿${fmt(total)}</div><div class="sc-label">รายจ่ายรวม</div></div><div class="card" style="overflow:hidden;margin-bottom:16px;">`+sorted.map(e=>{
+    const d=new Date(e.date),ds=d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();
+    const imgUrl=e.imageUrl?e.imageUrl.replace('drive.google.com/uc?id=','drive.google.com/thumbnail?id=').replace(/(&sz=\w+)?$/,'&sz=w200'):'';
+    const thumb=imgUrl?`<img class="expense-thumb" src="${imgUrl}" onclick="openLightbox('${imgUrl.replace('sz=w200','sz=w1200')}')" onerror="this.style.display='none';this.nextSibling.style.display='flex'"><div class="expense-thumb-placeholder" style="display:none">💸</div>`:`<div class="expense-thumb-placeholder">💸</div>`;
+    return `<div class="expense-item">${thumb}<div class="expense-info"><div class="expense-name">${e.name||'-'}</div><div class="expense-meta"><span class="badge">${e.category||'-'}</span>${ds}${e.note?' · '+e.note:''}</div></div><div style="text-align:right;flex-shrink:0;margin-left:8px"><div style="font-family:'Kanit',sans-serif;font-size:14px;font-weight:800;color:var(--red)">-฿${fmt(e.amount)}</div><div style="font-size:10px;color:var(--muted)">รายจ่าย</div></div></div>`;
+  }).join('')+'</div>';
+}
+
+/* PRODUCT HISTORY */
+async function loadProductHistory(){
+  document.getElementById('ph-content').innerHTML='<div class="loading"><div class="sp"></div>กำลังโหลด...</div>';
+  try{const r=await fetch(GAS_URL+'?action=getProductEntries');renderProductHistory(await r.json()||[]);}
+  catch(e){document.getElementById('ph-content').innerHTML='<div class="empty"><div class="empty-icon">❌</div><div>โหลดไม่ได้</div></div>';}
+}
+function applyPhFilter(){renderProductHistory(allProducts);}
+function renderProductHistory(products){
+  allProducts=products;
+  const ymdFrom=toYMD(document.getElementById('ph-date-from')?.value||''),ymdTo=toYMD(document.getElementById('ph-date-to')?.value||'');
+  const filtered=products.filter(p=>{if(phFilterCat&&p.category!==phFilterCat)return false;if(ymdFrom||ymdTo){const pd=toYMD(p.date||p.firstDate||p.lastDate||'');if(pd){if(ymdFrom&&pd<ymdFrom)return false;if(ymdTo&&pd>ymdTo)return false;}}return true;});
+  const cats=Array.from(new Set(products.map(p=>p.category).filter(Boolean))).sort();
+  buildGenericCatDD('ph-cat-dropdown',cats,(val,label)=>{
+    phFilterCat=val;document.getElementById('ph-cat').value=val;document.getElementById('ph-cat-display').textContent=label;
+    const box=document.getElementById('ph-cat-box');val?box.classList.add('has-val'):box.classList.remove('has-val');
+    document.getElementById('ph-cat-dropdown').classList.remove('open');box.classList.remove('active');renderProductHistory(products);if(val)syncCategory(val);
+  },'ทั้งหมด');
+  if(filtered.length===0){document.getElementById('ph-content').innerHTML='<div class="empty"><div class="empty-icon">📭</div><div>ไม่มีสินค้าที่ตรงเงื่อนไข</div></div>';return;}
+  const totalProfit=filtered.reduce((s,p)=>s+(p.salePrice-p.costPrice)*p.qty,0);
+  const fmtD=s=>{if(!s)return'';const d=new Date(s);return isNaN(d)?s:d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();};
+  document.getElementById('ph-content').innerHTML=`<div class="summary-card"><div class="sc-count">${filtered.length} รายการ</div><div class="sc-amount">฿${fmt(totalProfit)}</div><div class="sc-label">กำไรรวมในสต็อก</div></div><div class="card" style="overflow:hidden;margin-bottom:16px;">`+filtered.map(p=>{
+    const imgUrl=p.lastImage?p.lastImage.replace('drive.google.com/uc?id=','drive.google.com/thumbnail?id=').replace(/(&sz=\w+)?$/,'&sz=w200'):'';
+    const thumb=imgUrl?`<img class="expense-thumb" src="${imgUrl}" onclick="openLightbox('${imgUrl.replace('sz=w200','sz=w1200')}')" onerror="this.style.display='none';this.nextSibling.style.display='flex'"><div class="expense-thumb-placeholder" style="display:none">📦</div>`:`<div class="expense-thumb-placeholder">📦</div>`;
+    const profit=(p.salePrice-p.costPrice)*p.qty,dateStr=(p.date||p.firstDate||p.lastDate)?fmtD(p.date||p.firstDate||p.lastDate)+' · ':'';
+    return `<div class="expense-item">${thumb}<div class="expense-info"><div class="expense-name">${p.name||'-'} <span class="badge">${p.category||'-'}</span></div><div class="expense-meta">${dateStr}${p.qty} ${p.unit||'ชิ้น'} · ทุน ฿${fmt(p.costPrice)} · ขาย ฿${fmt(p.salePrice)}</div></div><div style="text-align:right;flex-shrink:0;margin-left:8px"><div style="font-family:'Kanit',sans-serif;font-size:14px;font-weight:800;color:var(--green)">+฿${fmt(profit)}</div><div style="font-size:10px;color:var(--muted)">กำไร</div></div></div>`;
+  }).join('')+'</div>';
+}
+function togglePhCatDD(){document.getElementById('ph-cat-dropdown').classList.toggle('open');document.getElementById('ph-cat-box').classList.toggle('active');}
+
+/* EDIT EXPENSE */
+function openEditModal(expense){
+  document.getElementById('em-row-index').value=expense.rowIndex||'';document.getElementById('em-date').value=expense.date||'';document.getElementById('em-name').value=expense.name||'';document.getElementById('em-amount').value=expense.amount||'';document.getElementById('em-note').value=expense.note||'';document.getElementById('em-img-url').value=expense.imageUrl||'';
+  buildGenericCatDD('em-cat-dropdown',cachedExpCats,selectEmCat,'-- เลือกประเภท --');
+  selectEmCat(expense.category||'',expense.category||'-- เลือกประเภท --');
+  document.getElementById('edit-modal').classList.add('show');
+}
+function closeEditModal(e){if(e&&e.target!==document.getElementById('edit-modal'))return;document.getElementById('edit-modal').classList.remove('show');}
+function selectEmCat(val,label){
+  document.getElementById('em-cat').value=val;document.getElementById('em-cat-display').textContent=label;
+  const box=document.getElementById('em-cat-box');val?box.classList.add('has-val'):box.classList.remove('has-val');
+  document.getElementById('em-cat-dropdown').classList.remove('open');box.classList.remove('active');
+}
+function toggleEmCatDD(){document.getElementById('em-cat-dropdown').classList.toggle('open');document.getElementById('em-cat-box').classList.toggle('active');}
+async function submitEditExpense(){
+  const rowIndex=parseInt(document.getElementById('em-row-index').value),cat=document.getElementById('em-cat').value.trim(),date=document.getElementById('em-date').value,name=document.getElementById('em-name').value.trim(),amount=parseFloat(document.getElementById('em-amount').value),note=document.getElementById('em-note').value.trim(),imgUrl=document.getElementById('em-img-url').value;
+  if(!cat){showToast('❌ กรุณาระบุประเภทงาน','error');return;}if(!name){showToast('❌ กรุณาระบุรายการ','error');return;}if(!amount||amount<=0){showToast('❌ กรุณาระบุจำนวนเงิน','error');return;}
+  const btn=document.getElementById('em-save-btn');btn.disabled=true;btn.textContent='⏳...';
+  try{const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:'editExpense',rowIndex,category:cat,date,name,amount,note,imageUrl:imgUrl,image:""})});const data=await res.json();
+    if(data.status==='ok'){showToast('✅ แก้ไขสำเร็จ!','success');document.getElementById('edit-modal').classList.remove('show');await loadExpenses();}else showToast('❌ แก้ไขไม่สำเร็จ','error');
+  }catch(e){showToast('❌ เกิดข้อผิดพลาด','error');}
+  btn.disabled=false;btn.textContent='💾 บันทึก';
+}
+async function deleteExpense(rowIdx){if(!confirm('ลบรายการนี้?'))return;try{await fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:'deleteExpense',rowIndex:rowIdx})});showToast('🗑️ ลบแล้ว','success');await loadExpenses();}catch(e){showToast('❌ ลบไม่สำเร็จ','error');}}
+
+function openLightbox(url){document.getElementById('lightbox-img').src=url;document.getElementById('lightbox').classList.add('show');}
+function closeLightbox(){document.getElementById('lightbox').classList.remove('show');document.getElementById('lightbox-img').src='';}
+
+/* CLOSE OUTSIDE CLICK */
+document.addEventListener('click',function(e){
+  const pairs=[['p-cat-wrap','p-cat-dropdown','p-cat-box'],['e-cat-wrap','e-cat-dropdown','e-cat-box'],['eh-cat-wrap','eh-cat-dropdown','eh-cat-box'],['ph-cat-wrap','ph-cat-dropdown','ph-cat-box'],['em-cat-wrap','em-cat-dropdown','em-cat-box']];
+  pairs.forEach(([w,d,b])=>{const wrap=document.getElementById(w);if(wrap&&!wrap.contains(e.target)){document.getElementById(d)?.classList.remove('open');document.getElementById(b)?.classList.remove('active');}});
+  const acWrap=document.querySelector('.autocomplete-wrap');if(acWrap&&!acWrap.contains(e.target))document.getElementById('p-ac-list')?.classList.remove('open');
+});
+
+/* SYNC CATEGORY */
+function syncCategory(val){
+  if(!val||val==='__new__')return;
+  try{localStorage.setItem('lastCategory',val);}catch(e){}
+  fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:'setLastCategory',category:val})}).catch(()=>{});
+  if(!document.getElementById('p-category').value||document.getElementById('p-category').value==='__new__') selectPCatSilent(val);
+  const eCat=document.getElementById('e-cat').value;
+  if(!eCat){document.getElementById('e-cat').value=val;document.getElementById('e-cat-display').textContent=val;document.getElementById('e-cat-box').classList.add('has-val');}
+  phFilterCat=val;document.getElementById('ph-cat').value=val;document.getElementById('ph-cat-display').textContent=val;document.getElementById('ph-cat-box').classList.add('has-val');
+  if(currentScreen==='product-history')applyPhFilter();
+  document.getElementById('eh-cat').value=val;document.getElementById('eh-cat-display').textContent=val;document.getElementById('eh-cat-box').classList.add('has-val');
+  if(currentScreen==='expense-history')renderExpenseList();
+}
+
+/* INIT */
+document.addEventListener('DOMContentLoaded',()=>{
+  const t=new Date(),ts=t.getFullYear()+'-'+pad(t.getMonth()+1)+'-'+pad(t.getDate());
+  document.getElementById('e-date').value=ts;document.getElementById('p-date').value=ts;
+  loadProductCategories();loadExpenseCats();loadProductNames();
+  async function restoreLastCategory(){
+    let lastCat='';
+    try{const r=await fetch(GAS_URL+'?action=getLastCategory');const d=await r.json();if(d.category)lastCat=d.category;}catch(e){}
+    if(!lastCat){try{lastCat=localStorage.getItem('lastCategory')||'';}catch(e){}}
+    if(lastCat){
+      try{localStorage.setItem('lastCategory',lastCat);}catch(e){}
+      phFilterCat=lastCat;
+      ['ph-cat','eh-cat','e-cat'].forEach(id=>document.getElementById(id).value=lastCat);
+      ['ph-cat-display','eh-cat-display','e-cat-display'].forEach(id=>document.getElementById(id).textContent=lastCat);
+      ['ph-cat-box','eh-cat-box','e-cat-box'].forEach(id=>document.getElementById(id).classList.add('has-val'));
+      window._restoreCat=lastCat;
+    }
+  }
+  restoreLastCategory();
+});
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ระบบจัดการร้านค้า</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Kanit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --pink:       #f77998;
+  --pink-light: #fde8ed;
+  --pink-mid:   #fba8bc;
+  --pink-dark:  #e05575;
+  --bg:         #f9f4f6;
+  --card:       #ffffff;
+  --text:       #1e1e2e;
+  --sub:        #64607a;
+  --muted:      #a09cb5;
+  --border:     #ecdde4;
+  --red:        #e74c3c;
+  --green:      #22c55e;
+  --green-bg:   #f0fdf4;
+  --shadow:     0 2px 16px rgba(247,121,152,0.10);
+  --shadow-lg:  0 8px 32px rgba(247,121,152,0.18);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: var(--bg); }
+body { font-family: 'Sarabun', sans-serif; color: var(--text); min-height: 100vh; }
+
+.screen { display: none; }
+.screen.active { display: block; padding-bottom: 28px; }
+
+/* ── HEADER ── */
+.app-header {
+  background: linear-gradient(135deg, #f77998 0%, #f9a0b8 50%, #f4c2d0 100%);
+  padding: 18px 20px 14px; position: relative; overflow: hidden;
+}
+.app-header::before { content:''; position:absolute; top:-40px; right:-20px; width:130px; height:130px; background:rgba(255,255,255,0.14); border-radius:50%; }
+.app-header::after  { content:''; position:absolute; bottom:-24px; left:20px; width:80px; height:80px; background:rgba(255,255,255,0.09); border-radius:50%; }
+.app-header h1 { font-family:'Kanit',sans-serif; font-size:20px; font-weight:800; color:#fff; position:relative; z-index:1; letter-spacing:0.3px; }
+.app-header p  { font-size:12px; color:rgba(255,255,255,0.82); margin-top:2px; position:relative; z-index:1; }
+
+/* ── NAV ── */
+.top-nav { background:#fff; display:flex; align-items:stretch; border-bottom:2px solid var(--border); box-shadow:0 2px 8px rgba(247,121,152,0.08); position:sticky; top:0; z-index:100; }
+.nav-btn { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; background:none; border:none; padding:10px 4px 8px; gap:3px; position:relative; transition:background 0.15s; min-height:58px; }
+.nav-btn:active { background:var(--pink-light); }
+.nav-icon  { font-size:20px; line-height:1; }
+.nav-label { font-size:11px; font-weight:700; color:var(--muted); font-family:'Kanit',sans-serif; letter-spacing:0.3px; }
+.nav-btn.active .nav-label { color:var(--pink); }
+.nav-btn.active::after { content:''; position:absolute; bottom:0; left:20%; right:20%; height:3px; background:linear-gradient(90deg,var(--pink),var(--pink-dark)); border-radius:3px 3px 0 0; }
+.nav-divider { width:1px; background:var(--border); align-self:stretch; margin:8px 0; }
+
+/* ── SECTION LABEL ── */
+.section-label { font-family:'Kanit',sans-serif; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1.2px; padding:16px 20px 6px; display:flex; align-items:center; gap:6px; }
+.section-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* ── CARD ── */
+.card { background:var(--card); border-radius:18px; margin:0 14px 12px; box-shadow:var(--shadow); border:1px solid var(--border); overflow:visible; }
+.card-inner { padding:18px; }
+
+/* ── FORM ── */
+.form-group { margin-bottom:16px; position:relative; }
+.form-group:last-child { margin-bottom:0; }
+.form-label { font-size:12px; font-weight:700; color:var(--sub); margin-bottom:7px; display:flex; align-items:center; gap:5px; font-family:'Kanit',sans-serif; text-transform:uppercase; letter-spacing:0.5px; }
+.req { color:var(--pink); font-size:14px; line-height:1; }
+.form-input { width:100%; padding:13px 16px; border:2px solid var(--border); border-radius:12px; font-size:15px; font-family:'Sarabun',sans-serif; color:var(--text); background:#fff; outline:none; transition:border-color 0.2s,box-shadow 0.2s; -webkit-appearance:none; appearance:none; }
+.form-input:focus { border-color:var(--pink); box-shadow:0 0 0 3px rgba(247,121,152,0.12); }
+.form-input::placeholder { color:var(--muted); }
+.row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.form-input.select-arrow { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23f77998' stroke-width='2.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; padding-right:38px; }
+
+/* ── CUSTOM SELECT ── */
+.custom-select-wrap { position:relative; }
+.custom-select-box { width:100%; padding:13px 16px; border:2px solid var(--border); border-radius:12px; font-size:15px; font-family:'Sarabun',sans-serif; color:var(--muted); background:#fff; cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition:border-color 0.2s,box-shadow 0.2s; user-select:none; }
+.custom-select-box.active { border-color:var(--pink); box-shadow:0 0 0 3px rgba(247,121,152,0.12); }
+.custom-select-box.has-val { color:var(--text); }
+.cat-arrow { font-size:11px; color:var(--muted); transition:transform 0.2s; flex-shrink:0; }
+.custom-select-box.active .cat-arrow { transform:rotate(180deg); }
+.custom-dropdown { display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; background:#fff; border:2px solid var(--border); border-radius:14px; box-shadow:var(--shadow-lg); z-index:300; overflow:hidden; max-height:240px; overflow-y:auto; }
+.custom-dropdown.open { display:block; }
+.dd-item { padding:13px 16px; font-size:14px; font-family:'Sarabun',sans-serif; color:var(--text); font-weight:600; cursor:pointer; transition:background 0.12s; border-bottom:1px solid #f5eef1; display:flex; align-items:center; gap:8px; }
+.dd-item:last-child { border-bottom:none; }
+.dd-item:hover,.dd-item:active { background:var(--pink-light); color:var(--pink-dark); }
+.dd-item.dd-placeholder { color:var(--muted); font-style:italic; font-weight:400; }
+.dd-item.dd-new { color:var(--pink); font-weight:700; }
+.dd-item.dd-selected { color:var(--pink-dark); font-weight:700; background:var(--pink-light); }
+
+/* ── AUTOCOMPLETE ── */
+.autocomplete-wrap { position:relative; }
+.autocomplete-list { display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; background:#fff; border:2px solid var(--border); border-radius:14px; box-shadow:var(--shadow-lg); z-index:300; overflow:hidden; max-height:200px; overflow-y:auto; }
+.autocomplete-list.open { display:block; }
+.ac-item { padding:12px 16px; font-size:14px; font-family:'Sarabun',sans-serif; color:var(--text); font-weight:600; cursor:pointer; transition:background 0.12s; border-bottom:1px solid #f5eef1; display:flex; align-items:center; gap:8px; }
+.ac-item:last-child { border-bottom:none; }
+.ac-item:hover,.ac-item:active { background:var(--pink-light); color:var(--pink-dark); }
+.ac-match { color:var(--pink-dark); font-weight:800; background:rgba(247,121,152,0.15); border-radius:3px; padding:0 1px; }
+.ac-cat { font-size:10px; color:var(--muted); background:var(--pink-light); border-radius:6px; padding:1px 6px; font-weight:700; flex-shrink:0; }
+
+/* ── UNIT CHIPS ── */
+.unit-chips { display:flex; flex-wrap:wrap; gap:8px; }
+.unit-chip { padding:8px 14px; border:2px solid var(--border); border-radius:20px; font-size:13px; font-family:'Sarabun',sans-serif; font-weight:600; color:var(--sub); cursor:pointer; transition:all 0.18s; background:#fff; white-space:nowrap; }
+.unit-chip:active { background:var(--pink-light); }
+.unit-chip.selected { background:linear-gradient(135deg,var(--pink),var(--pink-dark)); border-color:var(--pink-dark); color:#fff; box-shadow:0 3px 10px rgba(247,121,152,0.35); }
+#p-unit { display:none; }
+
+/* ── HINTS ── */
+.convert-hint { padding:11px 16px; background:linear-gradient(135deg,#fff5f7,#fde8ed); border-radius:10px; color:var(--pink-dark); font-weight:700; font-size:14px; border:1.5px solid var(--pink-mid); text-align:center; margin-top:8px; display:none; }
+.price-hint { display:none; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:700; background:var(--green-bg); color:#16a34a; border:1.5px solid #bbf7d0; margin-top:6px; }
+
+/* ── EXTRA FIELD (pack/kilo size) ── */
+.extra-field { display:none; margin-top:10px; padding:14px; background:linear-gradient(135deg,#fff5f7,#fde8ed); border-radius:12px; border:1.5px solid var(--pink-mid); animation:slideDown 0.2s ease; }
+.extra-field.show { display:block; }
+@keyframes slideDown { from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)} }
+.extra-field .form-label { margin-bottom:8px; }
+
+/* ── IMAGE UPLOAD ── */
+.img-upload-box { width:100%; min-height:100px; border:2px dashed var(--border); border-radius:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; background:#fafafa; transition:all 0.2s; position:relative; overflow:hidden; }
+.img-upload-box:hover { border-color:var(--pink-mid); background:var(--pink-light); }
+.img-upload-box.has-img { border-style:solid; border-color:var(--pink); background:#fff; }
+.img-upload-box img { width:100%; max-height:180px; object-fit:cover; border-radius:12px; display:none; }
+.img-upload-box.has-img img { display:block; }
+.img-placeholder { color:var(--muted); font-size:13px; text-align:center; padding:20px; }
+.img-placeholder .ip-icon { font-size:32px; display:block; margin-bottom:6px; opacity:0.6; }
+.img-upload-box.has-img .img-placeholder { display:none; }
+.img-remove { position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.5); color:#fff; border:none; border-radius:50%; width:28px; height:28px; font-size:14px; cursor:pointer; display:none; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.2); }
+.img-upload-box.has-img .img-remove { display:flex; }
+
+/* ── BUTTONS ── */
+.btn-wrap { padding:4px 14px 14px; }
+.btn { width:100%; padding:16px; background:linear-gradient(135deg,#f77998,#f0436a); color:#fff; border:none; border-radius:14px; font-size:16px; font-weight:800; font-family:'Kanit',sans-serif; cursor:pointer; letter-spacing:0.5px; box-shadow:0 4px 20px rgba(247,121,152,0.45); transition:all 0.2s; }
+.btn:active { transform:scale(0.97); box-shadow:0 2px 8px rgba(247,121,152,0.3); }
+.btn:disabled { opacity:0.55; cursor:not-allowed; transform:none; }
+.btn-cancel { background:#f0edf3; color:var(--sub); border:none; border-radius:12px; padding:13px; font-size:14px; font-weight:700; font-family:'Kanit',sans-serif; cursor:pointer; transition:background 0.15s; }
+.btn-cancel:active { background:#e4dfe9; }
+
+/* ── SUCCESS ── */
+.success-box { display:none; text-align:center; padding:48px 24px; animation:popIn 0.4s cubic-bezier(.34,1.56,.64,1); }
+@keyframes popIn { from{opacity:0;transform:scale(0.88)}to{opacity:1;transform:scale(1)} }
+.success-ico  { font-size:72px; display:block; margin-bottom:12px; }
+.success-box h2 { font-family:'Kanit',sans-serif; font-size:24px; color:var(--pink); font-weight:800; }
+.success-detail { margin:16px 0; background:var(--pink-light); border-radius:14px; padding:14px 16px; text-align:left; border:1.5px solid var(--border); }
+.success-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; font-size:13px; color:var(--sub); border-bottom:1px solid #f0dde2; }
+.success-row:last-child { border-bottom:none; padding-bottom:0; }
+.success-row span:last-child { font-weight:700; color:var(--text); }
+.success-row.profit span:last-child { color:var(--green); font-family:'Kanit',sans-serif; font-size:16px; }
+.back-btn { margin-top:4px; display:inline-block; background:linear-gradient(135deg,#f77998,#f0436a); color:#fff; border:none; padding:14px 40px; border-radius:50px; font-size:15px; font-weight:800; font-family:'Kanit',sans-serif; cursor:pointer; box-shadow:0 4px 20px rgba(247,121,152,0.4); letter-spacing:0.5px; transition:all 0.2s; }
+.back-btn:active { transform:scale(0.97); }
+
+/* ── TOAST ── */
+.toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(90px); background:#1e1e2e; color:#fff; padding:13px 26px; border-radius:28px; font-size:14px; font-weight:600; z-index:9999; transition:transform 0.3s cubic-bezier(.34,1.56,.64,1); white-space:nowrap; box-shadow:0 8px 30px rgba(0,0,0,0.22); pointer-events:none; font-family:'Kanit',sans-serif; }
+.toast.show { transform:translateX(-50%) translateY(0); }
+.toast.success { background:#16a34a; }
+.toast.error   { background:var(--red); }
+
+/* ── LOADING ── */
+.overlay { display:none; position:fixed; inset:0; background:rgba(249,244,246,0.95); flex-direction:column; align-items:center; justify-content:center; z-index:500; }
+.overlay.show { display:flex; }
+.spinner { width:44px; height:44px; border:4px solid var(--border); border-top-color:var(--pink); border-radius:50%; animation:spin 0.7s linear infinite; margin-bottom:14px; }
+@keyframes spin { to{transform:rotate(360deg)} }
+.overlay p { color:var(--pink); font-size:15px; font-weight:700; font-family:'Kanit',sans-serif; }
+
+/* ── HISTORY SHEET ── */
+.hist-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:400; align-items:stretch; justify-content:flex-end; }
+.hist-overlay.show { display:flex; }
+.hist-sheet { background:#fff; border-radius:22px 0 0 22px; width:82%; max-width:320px; padding:0 0 32px; display:flex; flex-direction:column; animation:slideInRight 0.28s cubic-bezier(.25,.46,.45,.94); overflow-y:auto; }
+@keyframes slideInRight { from{transform:translateX(100%)}to{transform:translateX(0)} }
+.hist-handle-wrap { padding:20px 20px 4px; display:flex; align-items:center; justify-content:space-between; }
+.hist-handle { width:36px; height:4px; background:var(--border); border-radius:2px; }
+.hist-close-btn { background:var(--pink-light); border:none; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; font-size:14px; cursor:pointer; color:var(--pink-dark); font-weight:700; }
+.hist-title { font-family:'Kanit',sans-serif; font-size:17px; font-weight:800; color:var(--text); padding:6px 20px 14px; }
+.hist-option { display:flex; align-items:center; gap:14px; padding:16px 20px; cursor:pointer; transition:background 0.15s; border-top:1px solid var(--border); }
+.hist-option:active { background:var(--pink-light); }
+.hist-option-icon { width:48px; height:48px; border-radius:14px; background:var(--pink-light); display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+.hist-option-text .t1 { font-weight:700; font-size:14px; color:var(--text); font-family:'Kanit',sans-serif; }
+.hist-option-text .t2 { font-size:11px; color:var(--muted); margin-top:2px; }
+
+/* ── LIST ITEMS ── */
+.expense-item { display:flex; align-items:flex-start; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--border); animation:fadeIn 0.25s ease; }
+.expense-item:last-child { border-bottom:none; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)} }
+.expense-thumb { width:46px; height:46px; border-radius:12px; object-fit:cover; flex-shrink:0; margin-right:12px; cursor:pointer; }
+.expense-thumb-placeholder { width:46px; height:46px; border-radius:12px; background:var(--pink-light); flex-shrink:0; margin-right:12px; display:flex; align-items:center; justify-content:center; font-size:20px; }
+.expense-info { flex:1; min-width:0; }
+.expense-name { font-size:14px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.expense-meta { font-size:11px; color:var(--muted); margin-top:3px; line-height:1.5; }
+.badge { display:inline-block; padding:2px 8px; border-radius:8px; font-size:10px; font-weight:700; background:var(--pink-light); color:var(--pink-dark); margin-right:4px; }
+
+/* ── SUMMARY CARD ── */
+.summary-card { margin:0 14px 10px; padding:16px 18px; background:linear-gradient(135deg,#f77998,#f4698b); border-radius:18px; box-shadow:0 4px 20px rgba(247,121,152,0.3); }
+.summary-card .sc-count  { color:rgba(255,255,255,0.82); font-size:12px; margin-bottom:4px; }
+.summary-card .sc-amount { font-family:'Kanit',sans-serif; font-size:28px; font-weight:800; color:#fff; }
+.summary-card .sc-label  { color:rgba(255,255,255,0.78); font-size:11px; margin-top:2px; }
+
+.empty { text-align:center; padding:48px 16px; color:var(--muted); }
+.empty-icon { font-size:48px; margin-bottom:10px; opacity:0.5; }
+.loading { text-align:center; padding:36px; color:var(--muted); font-size:14px; }
+.sp { width:34px; height:34px; border:3px solid var(--border); border-top-color:var(--pink); border-radius:50%; animation:spin 0.7s linear infinite; margin:0 auto 12px; }
+
+/* ── MODAL ── */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:450; align-items:flex-end; justify-content:center; }
+.modal-overlay.show { display:flex; }
+.modal-sheet { background:#fff; border-radius:22px 22px 0 0; padding:20px 16px 32px; width:100%; max-width:480px; max-height:90vh; overflow-y:auto; animation:slideUp 0.3s cubic-bezier(.34,1.56,.64,1); }
+@keyframes slideUp { from{transform:translateY(100%)}to{transform:translateY(0)} }
+.modal-handle { width:40px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 16px; }
+.modal-title { font-family:'Kanit',sans-serif; font-size:17px; font-weight:800; color:var(--text); margin-bottom:16px; text-align:center; }
+.modal-btns { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
+
+/* ── LIGHTBOX ── */
+.lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:9999; align-items:center; justify-content:center; }
+.lightbox.show { display:flex; }
+.lightbox img { max-width:95vw; max-height:90vh; border-radius:14px; object-fit:contain; }
+.lightbox-close { position:absolute; top:18px; right:22px; color:#fff; font-size:30px; cursor:pointer; background:none; border:none; }
+
+/* ── FILTER CARD ── */
+.filter-card { margin:10px 14px; padding:14px 16px; background:#fff; border-radius:16px; border:1px solid var(--border); box-shadow:var(--shadow); }
+.filter-title { font-family:'Kanit',sans-serif; font-size:13px; font-weight:700; color:var(--sub); margin-bottom:12px; }
+.date-range { display:flex; gap:8px; align-items:center; }
+.date-range span { color:var(--muted); font-size:13px; flex-shrink:0; }
+</style>
+</head>
+<body>
+
+<!-- SHARED TOP -->
+<div id="shared-top">
+  <div class="app-header" id="main-header">
+    <h1 id="header-title">🎂 เพิ่มสินค้าใหม่</h1>
+    <p id="header-sub">กรอกข้อมูลแล้วกดบันทึก</p>
+  </div>
+  <nav class="top-nav">
+    <button class="nav-btn active" id="nav-product" onclick="navTo('product')">
+      <span class="nav-icon">🎂</span><span class="nav-label">สินค้า</span>
+    </button>
+    <div class="nav-divider"></div>
+    <button class="nav-btn" id="nav-expense" onclick="navTo('expense')">
+      <span class="nav-icon">💸</span><span class="nav-label">ค่าใช้จ่าย</span>
+    </button>
+    <div class="nav-divider"></div>
+    <button class="nav-btn" id="nav-history" onclick="openHistSheet()">
+      <span class="nav-icon">📋</span><span class="nav-label">ประวัติ</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ════ SCREEN: เพิ่มสินค้า ════ -->
+<div id="screen-product" class="screen active">
+  <div id="productForm">
+
+    <div class="section-label">① เลือกประเภทสินค้า</div>
+    <div class="card"><div class="card-inner">
+      <div class="form-group" style="margin-bottom:0">
+        <div class="custom-select-wrap" id="p-cat-wrap">
+          <div class="custom-select-box" id="p-cat-box" onclick="togglePCatDD()">
+            <span id="p-cat-display">⏳ กำลังโหลด...</span><span class="cat-arrow">▾</span>
+          </div>
+          <div class="custom-dropdown" id="p-cat-dropdown"></div>
+        </div>
+        <input type="hidden" id="p-category" value="">
+      </div>
+      <div id="p-newCatWrap" style="display:none;margin-top:10px">
+        <input class="form-input" type="text" id="p-newCat" placeholder="✏️ พิมพ์ชื่อประเภทใหม่...">
+      </div>
+    </div></div>
+
+    <div class="section-label">② ชื่อสินค้า</div>
+    <div class="card"><div class="card-inner">
+      <div class="form-group" style="margin-bottom:0">
+        <div class="autocomplete-wrap">
+          <input class="form-input" type="text" id="p-name" placeholder="พิมพ์ชื่อสินค้า..." autocomplete="off" oninput="onProductNameInput()" onfocus="onProductNameInput()">
+          <div class="autocomplete-list" id="p-ac-list"></div>
+        </div>
+      </div>
+    </div></div>
+
+    <div class="section-label">③ วันที่ · จำนวน · หน่วย</div>
+    <div class="card"><div class="card-inner">
+      <div class="form-group">
+        <label class="form-label">📅 วันที่เพิ่มสินค้า <span class="req">*</span></label>
+        <input class="form-input" type="date" id="p-date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">🔢 จำนวน <span class="req">*</span></label>
+        <input class="form-input" type="number" id="p-qty" placeholder="ใส่จำนวน" min="1" inputmode="numeric" oninput="updateConverted()">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">📏 หน่วย <span class="req">*</span></label>
+        <div class="unit-chips" id="unit-chips">
+          <div class="unit-chip selected" data-val="ชิ้น"     onclick="selectUnit('ชิ้น',this)">ชิ้น</div>
+          <div class="unit-chip"          data-val="โหล"      onclick="selectUnit('โหล',this)">โหล ×12</div>
+          <div class="unit-chip"          data-val="ครึ่งโหล" onclick="selectUnit('ครึ่งโหล',this)">ครึ่งโหล ×6</div>
+          <div class="unit-chip"          data-val="แพ็ค"     onclick="selectUnit('แพ็ค',this)">แพ็ค</div>
+          <div class="unit-chip"          data-val="กิโล"     onclick="selectUnit('กิโล',this)">กิโล</div>
+          <div class="unit-chip"          data-val="เมตร"     onclick="selectUnit('เมตร',this)">เมตร</div>
+          <div class="unit-chip"          data-val="ลิตร"     onclick="selectUnit('ลิตร',this)">ลิตร</div>
+        </div>
+        <select id="p-unit" onchange="onUnitChange()">
+          <option value="ชิ้น">ชิ้น</option><option value="โหล">โหล</option>
+          <option value="ครึ่งโหล">ครึ่งโหล</option><option value="แพ็ค">แพ็ค</option>
+          <option value="กิโล">กิโล</option><option value="เมตร">เมตร</option><option value="ลิตร">ลิตร</option>
+        </select>
+      </div>
+      <div class="extra-field" id="p-packWrap">
+        <label class="form-label">📦 แพ็คละกี่ชิ้น <span class="req">*</span></label>
+        <input class="form-input" type="number" id="p-packSize" placeholder="เช่น 6, 12, 24" min="1" inputmode="numeric" oninput="updateConverted()">
+      </div>
+      <div class="extra-field" id="p-kiloWrap">
+        <label class="form-label">⚖️ กิโลละกี่ชิ้น <span class="req">*</span></label>
+        <input class="form-input" type="number" id="p-kiloSize" placeholder="เช่น 10, 20, 50" min="1" inputmode="numeric" oninput="updateConverted()">
+      </div>
+      <div class="convert-hint" id="p-convertedWrap"></div>
+    </div></div>
+
+    <div class="section-label">④ ราคา</div>
+    <div class="card"><div class="card-inner">
+      <div class="form-group">
+        <label class="form-label" id="p-cost-label">💰 ราคาทุนต่อชิ้น (บาท) <span class="req">*</span></label>
+        <input class="form-input" type="number" id="p-cost" placeholder="0.00" min="0" inputmode="decimal" oninput="updatePriceHint()">
+        <div class="price-hint" id="p-cost-hint"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">💵 ราคาขาย / ชิ้น (บาท) <span class="req">*</span></label>
+        <input class="form-input" type="number" id="p-sale" placeholder="0.00" min="0" inputmode="decimal" oninput="updatePriceHint()">
+        <div class="price-hint" id="p-sale-hint"></div>
+      </div>
+    </div></div>
+
+    <div class="section-label">⑤ รูปสินค้า (ไม่บังคับ)</div>
+    <div class="card"><div class="card-inner">
+      <div class="img-upload-box" id="p-img-box" onclick="triggerPImg()">
+        <div class="img-placeholder"><span class="ip-icon">📷</span>แตะเพื่อเลือกรูปสินค้า</div>
+        <img id="p-previewImg" src="" alt="">
+        <button class="img-remove" onclick="removePImg(event)">✕</button>
+      </div>
+      <input type="file" id="p-imgInput" accept="image/*" style="display:none" onchange="onPImage(this)">
+    </div></div>
+
+    <div class="btn-wrap" style="padding-top:8px">
+      <button class="btn" id="p-submitBtn" onclick="submitProduct()">✅ บันทึกสินค้า</button>
+    </div>
+  </div>
+
+  <div class="success-box" id="p-successBox">
+    <span class="success-ico">🎉</span>
+    <h2>บันทึกสำเร็จ!</h2>
+    <div class="success-detail" id="p-successDetail"></div>
+    <button class="back-btn" onclick="resetProductForm()">➕ เพิ่มสินค้าอีกชิ้น</button>
+  </div>
+</div>
+
+<!-- ════ SCREEN: เพิ่มค่าใช้จ่าย ════ -->
+<div id="screen-expense" class="screen">
+  <div class="section-label">① ประเภทงาน</div>
+  <div class="card"><div class="card-inner">
+    <div class="custom-select-wrap" id="e-cat-wrap">
+      <div class="custom-select-box" id="e-cat-box" onclick="toggleECatDD()">
+        <span id="e-cat-display">-- เลือกประเภท --</span><span class="cat-arrow">▾</span>
+      </div>
+      <div class="custom-dropdown" id="e-cat-dropdown"></div>
+    </div>
+    <input type="hidden" id="e-cat" value="">
+  </div></div>
+
+  <div class="section-label">② รายละเอียด</div>
+  <div class="card"><div class="card-inner">
+    <div class="form-group">
+      <label class="form-label">📅 วันที่ <span class="req">*</span></label>
+      <input class="form-input" id="e-date" type="date">
+    </div>
+    <div class="form-group">
+      <label class="form-label">📝 รายการ <span class="req">*</span></label>
+      <input class="form-input" id="e-name" type="text" placeholder="เช่น ค่าขนส่ง, ซื้อวัตถุดิบ...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">💰 จำนวนเงิน (บาท) <span class="req">*</span></label>
+      <input class="form-input" id="e-amount" type="number" inputmode="decimal" placeholder="0.00" min="0" step="0.01">
+    </div>
+    <div class="form-group" style="margin-bottom:0">
+      <label class="form-label">📌 หมายเหตุ</label>
+      <input class="form-input" id="e-note" type="text" placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)">
+    </div>
+  </div></div>
+
+  <div class="section-label">③ รูปภาพ (ไม่บังคับ)</div>
+  <div class="card"><div class="card-inner">
+    <div class="img-upload-box" id="e-img-box" onclick="triggerEImg()">
+      <div class="img-placeholder"><span class="ip-icon">🖼️</span>แตะเพื่อแนบรูปใบเสร็จ/สลิป</div>
+      <img id="e-previewImg" src="" alt="">
+      <button class="img-remove" onclick="removeEImg(event)">✕</button>
+    </div>
+    <input type="file" id="e-imgInput" accept="image/*" style="display:none" onchange="onEImage(event)">
+  </div></div>
+
+  <div class="btn-wrap">
+    <button class="btn" id="e-submitBtn" onclick="submitExpense()">💾 บันทึกค่าใช้จ่าย</button>
+  </div>
+</div>
+
+<!-- ════ SCREEN: ประวัติสินค้า ════ -->
+<div id="screen-product-history" class="screen">
+  <div class="filter-card">
+    <div class="filter-title">🔍 กรองรายการ</div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label class="form-label" style="margin-bottom:6px">ประเภทสินค้า</label>
+      <div class="custom-select-wrap" id="ph-cat-wrap">
+        <div class="custom-select-box" id="ph-cat-box" onclick="togglePhCatDD()">
+          <span id="ph-cat-display">ทั้งหมด</span><span class="cat-arrow">▾</span>
+        </div>
+        <div class="custom-dropdown" id="ph-cat-dropdown"></div>
+      </div>
+      <input type="hidden" id="ph-cat" value="">
+    </div>
+    <div class="form-group" style="margin-bottom:0">
+      <label class="form-label" style="margin-bottom:6px">ช่วงวันที่</label>
+      <div class="date-range">
+        <input class="form-input" id="ph-date-from" type="date" style="flex:1" onchange="applyPhFilter()">
+        <span>ถึง</span>
+        <input class="form-input" id="ph-date-to" type="date" style="flex:1" onchange="applyPhFilter()">
+      </div>
+    </div>
+  </div>
+  <div id="ph-content"><div class="loading"><div class="sp"></div>กำลังโหลด...</div></div>
+</div>
+
+<!-- ════ SCREEN: ประวัติค่าใช้จ่าย ════ -->
+<div id="screen-expense-history" class="screen">
+  <div class="filter-card">
+    <div class="filter-title">🔍 กรองรายการ</div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label class="form-label" style="margin-bottom:6px">ประเภทงาน</label>
+      <div class="custom-select-wrap" id="eh-cat-wrap">
+        <div class="custom-select-box" id="eh-cat-box" onclick="toggleEhCatDD()">
+          <span id="eh-cat-display">ทั้งหมด</span><span class="cat-arrow">▾</span>
+        </div>
+        <div class="custom-dropdown" id="eh-cat-dropdown"></div>
+      </div>
+      <input type="hidden" id="eh-cat" value="">
+    </div>
+    <div class="form-group" style="margin-bottom:0">
+      <label class="form-label" style="margin-bottom:6px">ช่วงวันที่</label>
+      <div class="date-range">
+        <input class="form-input" id="eh-date-from" type="date" style="flex:1" onchange="renderExpenseList()">
+        <span>ถึง</span>
+        <input class="form-input" id="eh-date-to" type="date" style="flex:1" onchange="renderExpenseList()">
+      </div>
+    </div>
+  </div>
+  <div id="eh-content"><div class="loading"><div class="sp"></div>กำลังโหลด...</div></div>
+</div>
+
+<!-- HISTORY SHEET -->
+<div class="hist-overlay" id="hist-overlay" onclick="closeHistSheet(event)">
+  <div class="hist-sheet">
+    <div class="hist-handle-wrap">
+      <div class="hist-handle"></div>
+      <button class="hist-close-btn" onclick="closeHistSheet()">✕</button>
+    </div>
+    <div class="hist-title">📋 ดูประวัติ</div>
+    <div class="hist-option" onclick="navTo('product-history');closeHistSheet()">
+      <div class="hist-option-icon">📦</div>
+      <div class="hist-option-text"><div class="t1">ประวัติสินค้า</div><div class="t2">ดูสต็อกและรายการสินค้าทั้งหมด</div></div>
+    </div>
+    <div class="hist-option" onclick="navTo('expense-history');closeHistSheet()">
+      <div class="hist-option-icon">💸</div>
+      <div class="hist-option-text"><div class="t1">ประวัติค่าใช้จ่าย</div><div class="t2">ดูค่าใช้จ่ายและกรองตามวันที่</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="edit-modal" onclick="closeEditModal(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✏️ แก้ไขค่าใช้จ่าย</div>
+    <div class="form-group">
+      <label class="form-label">ประเภทงาน</label>
+      <div class="custom-select-wrap" id="em-cat-wrap">
+        <div class="custom-select-box" id="em-cat-box" onclick="toggleEmCatDD()">
+          <span id="em-cat-display">-- เลือกประเภท --</span><span class="cat-arrow">▾</span>
+        </div>
+        <div class="custom-dropdown" id="em-cat-dropdown"></div>
+      </div>
+      <input type="hidden" id="em-cat" value="">
+    </div>
+    <div class="form-group"><label class="form-label">วันที่</label><input class="form-input" id="em-date" type="date"></div>
+    <div class="form-group"><label class="form-label">รายการ</label><input class="form-input" id="em-name" type="text"></div>
+    <div class="form-group"><label class="form-label">จำนวนเงิน (บาท)</label><input class="form-input" id="em-amount" type="number" inputmode="decimal" min="0" step="0.01"></div>
+    <div class="form-group"><label class="form-label">หมายเหตุ</label><input class="form-input" id="em-note" type="text"></div>
+    <input type="hidden" id="em-row-index"><input type="hidden" id="em-img-url">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeEditModal()">ยกเลิก</button>
+      <button class="btn" style="width:auto;padding:13px" id="em-save-btn" onclick="submitEditExpense()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<div class="overlay" id="loadingOverlay"><div class="spinner"></div><p>กำลังบันทึก...</p></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyHj4e_etkcIUc9AvASppV9m_JWZsjY8wg7FFBHJtEvdVFk-yY0SLmfEP5C3yKw5KhP/exec";
+
+let pImgBase64='', eImgBase64='';
+let allExpenses=[], allProducts=[];
+let cachedExpCats=[], cachedProductCats=[];
+let cachedProductNames={};
+let currentScreen='product', phFilterCat='';
+
+const SCREEN_HEADERS = {
+  'product':         {title:'🎂 เพิ่มสินค้าใหม่',   sub:'กรอกข้อมูลแล้วกดบันทึก'},
+  'expense':         {title:'💸 เพิ่มค่าใช้จ่าย',   sub:'บันทึกค่าใช้จ่ายใหม่'},
+  'product-history': {title:'📦 ประวัติสินค้า',       sub:'รายการสินค้าทั้งหมด'},
+  'expense-history': {title:'💸 ประวัติค่าใช้จ่าย',  sub:'รายการค่าใช้จ่ายทั้งหมด'},
+};
+
+function navTo(screen) {
+  currentScreen=screen;
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+screen).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const nm={product:'nav-product',expense:'nav-expense','product-history':'nav-history','expense-history':'nav-history'};
+  if(nm[screen]) document.getElementById(nm[screen]).classList.add('active');
+  const info=SCREEN_HEADERS[screen];
+  if(info){document.getElementById('header-title').textContent=info.title;document.getElementById('header-sub').textContent=info.sub;}
+  if(screen==='expense-history'){
+    const t=new Date(),y=t.getFullYear(),m=pad(t.getMonth()+1),d=pad(t.getDate());
+    const fe=document.getElementById('eh-date-from'),te=document.getElementById('eh-date-to');
+    if(!fe.value) fe.value=y+'-'+m+'-01'; if(!te.value) te.value=y+'-'+m+'-'+d;
+    loadExpenses();
+  }
+  if(screen==='product-history'){
+    const t=new Date(),y=t.getFullYear(),m=pad(t.getMonth()+1);
+    const fp=document.getElementById('ph-date-from'),tp=document.getElementById('ph-date-to');
+    if(!fp.value) fp.value=y+'-'+m+'-01';
+    if(!tp.value){const ld=new Date(y,parseInt(m),0).getDate();tp.value=y+'-'+m+'-'+pad(ld);}
+    loadProductHistory();
+  }
+  window.scrollTo(0,0);
+}
+
+function openHistSheet(){document.getElementById('hist-overlay').classList.add('show');}
+function closeHistSheet(e){if(e&&e.target!==document.getElementById('hist-overlay'))return;document.getElementById('hist-overlay').classList.remove('show');}
+
+function pad(n){return String(n).padStart(2,'0');}
+function fmt(n){const v=parseFloat(n)||0;return v%1===0?v.toLocaleString('th-TH'):v.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function showToast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+(type||'')+' show';setTimeout(()=>t.className='toast '+(type||''),2600);}
+function toYMD(s){if(!s)return'';s=s.toString().trim();if(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(s))return s;const sl=s.split('/');if(sl.length===3&&sl[2].length>=4)return sl[2].padStart(4,'0')+'-'+sl[1].padStart(2,'0')+'-'+sl[0].padStart(2,'0');const d=new Date(s);if(!isNaN(d))return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');return s;}
+
+/* UNIT CHIPS */
+function selectUnit(val,el){
+  document.querySelectorAll('.unit-chip').forEach(c=>c.classList.remove('selected'));
+  if(el) el.classList.add('selected');
+  document.getElementById('p-unit').value=val;
+  onUnitChange();
+}
+
+/* PRODUCT CATEGORIES */
+function loadProductCategories(){
+  fetch(GAS_URL+'?action=getCategories').then(r=>r.json()).then(data=>{cachedProductCats=data||[];renderPCatDD(data);}).catch(()=>renderPCatDD([]));
+}
+function loadProductNames(){
+  fetch(GAS_URL+'?action=getProductEntries').then(r=>r.json()).then(data=>{
+    cachedProductNames={};
+    (data||[]).forEach(p=>{
+      if(!p.category||!p.name)return;
+      if(!cachedProductNames[p.category]) cachedProductNames[p.category]=[];
+      if(!cachedProductNames[p.category].includes(p.name)) cachedProductNames[p.category].push(p.name);
+    });
+  }).catch(()=>{});
+}
+function renderPCatDD(cats){
+  const dd=document.getElementById('p-cat-dropdown'), cur=document.getElementById('p-category').value;
+  dd.innerHTML='';
+  const ph=document.createElement('div'); ph.className='dd-item dd-placeholder'; ph.innerHTML='🏷️ &nbsp;เลือกประเภทสินค้า';
+  ph.onclick=()=>selectPCat('','-- เลือกประเภท --'); dd.appendChild(ph);
+  cats.forEach(c=>{const item=document.createElement('div');item.className='dd-item'+(c===cur?' dd-selected':'');item.textContent=c;item.onclick=()=>{selectPCat(c,c);document.getElementById('p-newCatWrap').style.display='none';};dd.appendChild(item);});
+  const ni=document.createElement('div'); ni.className='dd-item dd-new'; ni.innerHTML='➕ &nbsp;เพิ่มประเภทใหม่';
+  ni.onclick=()=>{selectPCat('__new__','➕ เพิ่มประเภทใหม่');document.getElementById('p-newCatWrap').style.display='block';document.getElementById('p-newCat').focus();};
+  dd.appendChild(ni);
+  const restore=window._restoreCat;
+  if(restore&&!cur&&cats.includes(restore)) selectPCatSilent(restore);
+  else if(!cur||cur==='__new__'){document.getElementById('p-cat-display').textContent='-- เลือกประเภท --';document.getElementById('p-cat-box').classList.remove('has-val');}
+  else{document.getElementById('p-cat-display').textContent=cur;document.getElementById('p-cat-box').classList.add('has-val');}
+}
+function selectPCat(val,label){
+  document.getElementById('p-category').value=val;
+  document.getElementById('p-cat-display').textContent=label;
+  const box=document.getElementById('p-cat-box');
+  (val&&val!=='__new__')?box.classList.add('has-val'):box.classList.remove('has-val');
+  document.getElementById('p-cat-dropdown').classList.remove('open'); box.classList.remove('active');
+  if(val&&val!=='__new__') syncCategory(val);
+  onProductNameInput();
+}
+function selectPCatSilent(val){
+  if(!val)return;
+  document.getElementById('p-category').value=val;
+  document.getElementById('p-cat-display').textContent=val;
+  document.getElementById('p-cat-box').classList.add('has-val');
+  document.getElementById('p-cat-box').classList.remove('active');
+  document.getElementById('p-cat-dropdown').classList.remove('open');
+  document.getElementById('p-newCatWrap').style.display='none';
+}
+function togglePCatDD(){document.getElementById('p-cat-dropdown').classList.toggle('open');document.getElementById('p-cat-box').classList.toggle('active');}
+
+/* AUTOCOMPLETE */
+function onProductNameInput(){
+  const query=(document.getElementById('p-name').value||'').trim();
+  const cat=document.getElementById('p-category').value;
+  const list=document.getElementById('p-ac-list');
+  let pool=[];
+  if(cat&&cat!=='__new__') pool=(cachedProductNames[cat]||[]).map(n=>({name:n,cat}));
+  else Object.entries(cachedProductNames).forEach(([c,names])=>names.forEach(n=>pool.push({name:n,cat:c})));
+  if(!query||pool.length===0){list.classList.remove('open');return;}
+  const q=query.toLowerCase();
+  const matched=pool.filter(p=>p.name.toLowerCase().includes(q)).slice(0,8);
+  if(matched.length===0){list.classList.remove('open');return;}
+  list.innerHTML=matched.map(p=>{
+    const idx=p.name.toLowerCase().indexOf(q);
+    const before=p.name.slice(0,idx), match=p.name.slice(idx,idx+query.length), after=p.name.slice(idx+query.length);
+    const catTag=cat?'':'<span class="ac-cat">'+p.cat+'</span>';
+    return `<div class="ac-item" onclick="selectProductName('${p.name.replace(/'/g,"\\'")}')">📦 ${before}<span class="ac-match">${match}</span>${after} ${catTag}</div>`;
+  }).join('');
+  list.classList.add('open');
+}
+function selectProductName(name){document.getElementById('p-name').value=name;document.getElementById('p-ac-list').classList.remove('open');}
+
+/* UNIT & CALC */
+function getMultiplier(){
+  const unit=document.getElementById('p-unit').value;
+  if(unit==='โหล') return 12; if(unit==='ครึ่งโหล') return 6;
+  if(unit==='แพ็ค') return parseFloat(document.getElementById('p-packSize').value)||0;
+  if(unit==='กิโล') return parseFloat(document.getElementById('p-kiloSize').value)||0;
+  return 1;
+}
+function onUnitChange(){
+  const unit=document.getElementById('p-unit').value;
+  document.getElementById('p-packWrap').className='extra-field'+(unit==='แพ็ค'?' show':'');
+  document.getElementById('p-kiloWrap').className='extra-field'+(unit==='กิโล'?' show':'');
+  const cl=document.getElementById('p-cost-label');
+  if(cl){
+    const lb={
+      โหล:      '💰 ราคาทุนต่อโหล (บาท)',
+      ครึ่งโหล: '💰 ราคาทุนต่อครึ่งโหล (บาท)',
+      แพ็ค:     '💰 ราคาทุนต่อแพ็ค (บาท)',
+      กิโล:     '💰 ราคาทุนต่อกิโล (บาท)',
+      ชิ้น:     '💰 ราคาทุนต่อชิ้น (บาท)',
+      เมตร:     '💰 ราคาทุนต่อเมตร (บาท)',
+      ลิตร:     '💰 ราคาทุนต่อลิตร (บาท)',
+    };
+    cl.innerHTML=(lb[unit]||`💰 ราคาทุนต่อ${unit} (บาท)`)+' <span class="req">*</span>';
+  }
+  updateConverted();
+}
+function updateConverted(){
+  const unit=document.getElementById('p-unit').value,qty=parseFloat(document.getElementById('p-qty').value)||0,multi=getMultiplier();
+  const wrap=document.getElementById('p-convertedWrap');
+  const msgs={โหล:qty>0?`🔄 ${qty} โหล = ${qty*12} ชิ้น`:'',ครึ่งโหล:qty>0?`🔄 ${qty} ครึ่งโหล = ${qty*6} ชิ้น`:'',แพ็ค:qty>0&&multi>0?`🔄 ${qty} แพ็ค × ${multi} ชิ้น = ${qty*multi} ชิ้น`:'',กิโล:qty>0&&multi>0?`🔄 ${qty} กิโล × ${multi} ชิ้น = ${qty*multi} ชิ้น`:''};
+  const msg=msgs[unit]||''; wrap.textContent=msg; wrap.style.display=msg?'block':'none';
+  updatePriceHint();
+}
+function updatePriceHint(){
+  const unit=document.getElementById('p-unit').value,multi=getMultiplier();
+  const costEl=document.getElementById('p-cost-hint'),saleEl=document.getElementById('p-sale-hint');
+  const cost=parseFloat(document.getElementById('p-cost').value)||0,sale=parseFloat(document.getElementById('p-sale').value)||0;
+  if(multi>1){
+    const uw=unit==='กิโล'?'กก.':'ชิ้น';
+    costEl.textContent=cost>0?`💡 ทุน/${uw} = ฿${(cost/multi).toFixed(2)}`:''; costEl.style.display=cost>0?'block':'none';
+    if(cost>0&&sale>0){saleEl.textContent=`📈 กำไร/ชิ้น = ฿${(sale-cost/multi).toFixed(2)}`;saleEl.style.display='block';}else saleEl.style.display='none';
+  } else {
+    costEl.style.display='none';
+    if(cost>0&&sale>0){saleEl.textContent=`📈 กำไร/ชิ้น = ฿${(sale-cost).toFixed(2)}`;saleEl.style.display='block';}else saleEl.style.display='none';
+  }
+}
+
+/* PRODUCT IMAGE */
+function triggerPImg(){if(!document.getElementById('p-img-box').classList.contains('has-img'))document.getElementById('p-imgInput').click();}
+function onPImage(input){const file=input.files[0];if(!file)return;const r=new FileReader();r.onload=e=>{pImgBase64=e.target.result;document.getElementById('p-previewImg').src=pImgBase64;document.getElementById('p-img-box').classList.add('has-img');};r.readAsDataURL(file);}
+function removePImg(e){e.stopPropagation();pImgBase64='';document.getElementById('p-previewImg').src='';document.getElementById('p-img-box').classList.remove('has-img');document.getElementById('p-imgInput').value='';}
+
+/* SUBMIT PRODUCT */
+async function submitProduct(){
+  const catVal=document.getElementById('p-category').value;
+  const category=catVal==='__new__'?document.getElementById('p-newCat').value.trim():catVal;
+  const name=document.getElementById('p-name').value.trim(),qtyRaw=parseFloat(document.getElementById('p-qty').value)||0;
+  const unit=document.getElementById('p-unit').value,cost=document.getElementById('p-cost').value,sale=document.getElementById('p-sale').value,multi=getMultiplier();
+  if(!category){showToast('❌ กรุณาเลือกประเภทสินค้า','error');return;}
+  if(!name){showToast('❌ กรุณาใส่ชื่อสินค้า','error');return;}
+  if(qtyRaw<=0){showToast('❌ กรุณาใส่จำนวน','error');return;}
+  if(unit==='แพ็ค'&&multi<=0){showToast('❌ กรุณาใส่จำนวนชิ้นต่อแพ็ค','error');return;}
+  if(unit==='กิโล'&&multi<=0){showToast('❌ กรุณาใส่จำนวนชิ้นต่อกิโล','error');return;}
+  if(!cost||!sale){showToast('❌ กรุณาใส่ราคาทุนและราคาขาย','error');return;}
+  const realQty=qtyRaw*(multi>1?multi:1),unitLabel=multi>1?'ชิ้น':unit,pDate=document.getElementById('p-date').value;
+  const costPerPc=multi>1?parseFloat(cost)/multi:parseFloat(cost),salePerPc=parseFloat(sale);
+  document.getElementById('loadingOverlay').classList.add('show');
+  document.getElementById('p-submitBtn').disabled=true;
+  try{
+    if(catVal==='__new__') await fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:'addCategory',category})});
+    await fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:'addProduct',category,name,qty:realQty,unit:unitLabel,cost:costPerPc,sale:salePerPc,image:pImgBase64,date:pDate})});
+    document.getElementById('loadingOverlay').classList.remove('show');
+    const profit=(salePerPc-costPerPc)*realQty,qtyDisplay=multi>1?`${qtyRaw} ${unit} (${realQty} ชิ้น)`:`${realQty} ${unitLabel}`;
+    const rows=[['ประเภท',category],['สินค้า',name],['จำนวน',qtyDisplay],['ทุน/ชิ้น',`฿${costPerPc.toFixed(2)}`],['ขาย/ชิ้น',`฿${salePerPc.toFixed(2)}`]];
+    document.getElementById('p-successDetail').innerHTML=rows.map(([k,v])=>`<div class="success-row"><span>${k}</span><span>${v}</span></div>`).join('')+`<div class="success-row profit"><span>💰 กำไรรวม</span><span>+฿${fmt(profit)}</span></div>`;
+    document.getElementById('productForm').style.display='none';
+    document.getElementById('p-submitBtn').style.display='none';
+    document.getElementById('p-successBox').style.display='block';
+    window.scrollTo(0,0);
+  }catch(err){document.getElementById('loadingOverlay').classList.remove('show');document.getElementById('p-submitBtn').disabled=false;showToast('❌ เกิดข้อผิดพลาด: '+err.message,'error');}
+}
+function resetProductForm(){
+  document.getElementById('p-successBox').style.display='none';
+  document.getElementById('productForm').style.display='block';
+  document.getElementById('p-submitBtn').style.display='block';
+  document.getElementById('p-submitBtn').disabled=false;
+  ['p-name','p-qty','p-cost','p-sale','p-packSize','p-kiloSize','p-newCat','p-date'].forEach(id=>document.getElementById(id).value='');
+  selectUnit('ชิ้น',document.querySelector('.unit-chip[data-val="ชิ้น"]'));
+  document.getElementById('p-unit').value='ชิ้น';
+  ['p-packWrap','p-kiloWrap'].forEach(id=>document.getElementById(id).className='extra-field');
+  document.getElementById('p-convertedWrap').style.display='none';
+  ['p-cost-hint','p-sale-hint'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  document.getElementById('p-img-box').classList.remove('has-img');
+  document.getElementById('p-previewImg').src='';document.getElementById('p-imgInput').value='';pImgBase64='';
+  const cl=document.getElementById('p-cost-label');if(cl)cl.innerHTML='💰 ราคาทุนต่อชิ้น (บาท) <span class="req">*</span>';
   document.getElementById('p-newCatWrap').style.display='none';
   document.getElementById('p-ac-list').classList.remove('open');
   selectPCat('','-- เลือกประเภท --');loadProductCategories();
