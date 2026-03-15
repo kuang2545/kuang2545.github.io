@@ -33,8 +33,7 @@ html { height:100%; }
 body {
   font-family:'Sarabun',sans-serif;
   background:var(--bg); color:var(--text);
-  /* ใช้ dvh เพื่อให้ body ย่อตาม keyboard */
-  height:100dvh;
+  height:100vh;
   overflow:hidden;
   display:flex; flex-direction:column;
 }
@@ -567,6 +566,18 @@ function stepDone(n){
 }
 function openOvl(id)  { document.getElementById(id).classList.add("show"); }
 function closeOvl(id) { document.getElementById(id).classList.remove("show"); }
+
+// ── KEYBOARD RESIZE (รองรับ LINE WebView / Android) ──
+function applyViewport(){
+  const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  document.body.style.height = h + 'px';
+}
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize', applyViewport);
+  window.visualViewport.addEventListener('scroll', applyViewport);
+}
+window.addEventListener('resize', applyViewport);
+applyViewport();
 
 init();
 </script>
