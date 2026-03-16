@@ -1,10 +1,8 @@
-<!-- ================= index.html (หน้าเว็บ) ================= -->
 <!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <title>พอร์ตหุ้นของฉัน</title>
 <style>
   :root {
@@ -18,10 +16,7 @@
     --muted: #9ca3af;
     --border: #1f2937;
   }
-  * {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -42,1578 +37,779 @@
     gap: 10px;
   }
 
-  .header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
-  .title-box {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .title {
-    font-size: 18px;
-    font-weight: 700;
-  }
-
+  /* ── header ── */
+  .header { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .title  { font-size:18px; font-weight:700; }
   .btn-refresh {
-    border: none;
-    border-radius: 999px;
-    padding: 6px 14px;
-    font-size: 13px;
-    font-weight: 600;
-    background: linear-gradient(135deg, #22c55e, #16a34a);
-    color: #022c22;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    box-shadow: 0 8px 20px rgba(34,197,94,0.35);
+    border:none; border-radius:999px; padding:6px 14px; font-size:13px; font-weight:600;
+    background:linear-gradient(135deg,#22c55e,#16a34a); color:#022c22;
+    display:inline-flex; align-items:center; gap:6px; cursor:pointer;
+    box-shadow:0 8px 20px rgba(34,197,94,0.35);
   }
-  .btn-refresh:active {
-    transform: scale(.96);
-    box-shadow: 0 3px 10px rgba(34,197,94,0.4);
-  }
+  .btn-refresh:active { transform:scale(.96); }
 
+  /* ── summary ── */
   .summary-card {
-    background: linear-gradient(135deg, #0b1120, #020617);
-    border-radius: 16px;
-    padding: 10px 12px;
-    border: 1px solid rgba(148,163,184,0.3);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    background:linear-gradient(135deg,#0b1120,#020617);
+    border-radius:16px; padding:10px 12px;
+    border:1px solid rgba(148,163,184,0.3);
+    display:flex; flex-direction:column; gap:8px;
   }
-
-  .summary-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-  }
-  .summary-top > div:first-child { min-width: 0; }
-  .summary-label {
-    font-size: 11px;
-    color: var(--muted);
-  }
-  .summary-main {
-    font-size: 18px;
-    font-weight: 700;
-  }
+  .summary-top { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .summary-top > div:first-child { min-width:0; }
+  .summary-label { font-size:11px; color:var(--muted); }
+  .summary-main  { font-size:18px; font-weight:700; }
   .summary-pl {
-    font-size: 13px;
-    font-weight: 600;
-    padding: 4px 8px;
-    border-radius: 999px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    white-space: nowrap;
-    flex-shrink: 0;
+    font-size:13px; font-weight:600; padding:4px 8px; border-radius:999px;
+    display:inline-flex; align-items:center; gap:4px; white-space:nowrap; flex-shrink:0;
   }
-  .summary-pl.plus {
-    color: #bbf7d0;
-    background: var(--accent-soft);
-  }
-  .summary-pl.minus {
-    color: #fecaca;
-    background: var(--danger-soft);
-  }
+  .summary-pl.plus  { color:#bbf7d0; background:var(--accent-soft); }
+  .summary-pl.minus { color:#fecaca; background:var(--danger-soft); }
+  .summary-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin-top:4px; }
+  .summary-item { background:rgba(15,23,42,0.9); border-radius:10px; padding:6px; border:1px solid var(--border); }
+  .summary-item-label { font-size:11px; color:var(--muted); margin-bottom:2px; }
+  .summary-item-value { font-size:13px; font-weight:600; }
+  .status-text { font-size:11px; color:var(--muted); margin-top:2px; }
 
-  .summary-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 6px;
-    margin-top: 4px;
-  }
-  .summary-item {
-    background: rgba(15,23,42,0.9);
-    border-radius: 10px;
-    padding: 6px;
-    border: 1px solid var(--border);
-  }
-  .summary-item-label {
-    font-size: 11px;
-    color: var(--muted);
-    margin-bottom: 2px;
-  }
-  .summary-item-value {
-    font-size: 13px;
-    font-weight: 600;
-  }
-
-  .status-text {
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 2px;
-  }
-
+  /* ── add card ── */
   .add-card {
-    background: rgba(15,23,42,0.92);
-    border-radius: 14px;
-    padding: 10px 12px;
-    border: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+    background:rgba(15,23,42,0.92); border-radius:14px; padding:10px 12px;
+    border:1px solid var(--border); display:flex; flex-direction:column; gap:6px;
   }
-  .add-title {
-    font-size: 13px;
-    font-weight: 600;
-  }
-  .add-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 6px;
-  }
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    position: relative;
-  }
-  .field label {
-    font-size: 11px;
-    color: var(--muted);
-  }
+  .add-title { font-size:13px; font-weight:600; }
+  .add-grid  { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
+  .field { display:flex; flex-direction:column; gap:2px; position:relative; }
+  .field label { font-size:11px; color:var(--muted); }
   .field input {
-    border-radius: 10px;
-    border: 1px solid #374151;
-    padding: 6px 8px;
-    font-size: 13px;
-    background: #020617;
-    color: var(--text);
-    outline: none;
+    border-radius:10px; border:1px solid #374151; padding:6px 8px;
+    font-size:13px; background:#020617; color:var(--text); outline:none;
   }
-  .field input:focus {
-    border-color: #22c55e;
-    box-shadow: 0 0 0 1px rgba(34,197,94,0.6);
+  .field input:focus { border-color:#22c55e; box-shadow:0 0 0 1px rgba(34,197,94,0.6); }
+  .amount-row { display:flex; align-items:center; gap:6px; }
+  .amount-row input { flex:1 1 auto; min-width:0; }
+  .currency-toggle { display:inline-flex; gap:4px; }
+  .currency-btn, .sell-cur-btn {
+    border-radius:999px; border:1px solid #374151; padding:2px 8px;
+    font-size:11px; background:#020617; color:var(--muted); cursor:pointer; white-space:nowrap;
   }
-
-  .amount-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+  .currency-btn.active, .sell-cur-btn.active {
+    background:var(--accent-soft); border-color:var(--accent); color:#bbf7d0;
   }
-  .amount-row input {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-
-  .currency-toggle {
-    display: inline-flex;
-    gap: 4px;
-    margin-top: 0;
-  }
-  .currency-btn,
-  .sell-cur-btn {
-    border-radius: 999px;
-    border: 1px solid #374151;
-    padding: 2px 8px;
-    font-size: 11px;
-    background: #020617;
-    color: var(--muted);
-    cursor: pointer;
-    white-space: nowrap;
-  }
-  .currency-btn.active,
-  .sell-cur-btn.active {
-    background: var(--accent-soft);
-    border-color: var(--accent);
-    color: #bbf7d0;
-  }
-
   .suggest-list {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 100%;
-    margin-top: 2px;
-    background: #020617;
-    border: 1px solid #374151;
-    border-radius: 10px;
-    max-height: 180px;
-    overflow-y: auto;
-    padding: 4px 0;
-    z-index: 20;
-    display: none;
+    position:absolute; left:0; right:0; top:100%; margin-top:2px;
+    background:#020617; border:1px solid #374151; border-radius:10px;
+    max-height:180px; overflow-y:auto; padding:4px 0; z-index:20; display:none;
   }
-  .suggest-item {
-    padding: 6px 10px;
-    font-size: 13px;
-    cursor: pointer;
-  }
-  .suggest-item:hover,
-  .suggest-item:active {
-    background: #111827;
-  }
-
+  .suggest-item { padding:6px 10px; font-size:13px; cursor:pointer; }
+  .suggest-item:hover { background:#111827; }
   .btn-add {
-    margin-top: 4px;
-    border: none;
-    border-radius: 999px;
-    padding: 6px 14px;
-    font-size: 13px;
-    font-weight: 600;
-    background: linear-gradient(135deg, #22c55e, #16a34a);
-    color: #022c22;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    cursor: pointer;
+    margin-top:4px; border:none; border-radius:999px; padding:6px 14px;
+    font-size:13px; font-weight:600;
+    background:linear-gradient(135deg,#22c55e,#16a34a); color:#022c22;
+    display:inline-flex; align-items:center; justify-content:center; gap:6px; cursor:pointer;
   }
-  .btn-add:active {
-    transform: scale(.96);
-  }
-  .add-status {
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 2px;
-  }
+  .btn-add:active { transform:scale(.96); }
+  .add-status { font-size:11px; color:var(--muted); margin-top:2px; }
 
+  /* ── list ── */
   .list {
-    flex: 1;
-    overflow-y: auto;
-    padding-top: 4px;
-    padding-bottom: 4px;
-    scrollbar-width: thin;
-    scrollbar-color: #4b5563 transparent;
+    flex:1; overflow-y:auto; padding:4px 0;
+    scrollbar-width:thin; scrollbar-color:#4b5563 transparent;
   }
-  .list::-webkit-scrollbar {
-    width: 4px;
-  }
-  .list::-webkit-scrollbar-thumb {
-    background: #4b5563;
-    border-radius: 999px;
-  }
+  .list::-webkit-scrollbar { width:4px; }
+  .list::-webkit-scrollbar-thumb { background:#4b5563; border-radius:999px; }
 
-  .stock-row {
-    position: relative;
-    overflow: hidden;
-    margin-bottom: 10px;
-    border-radius: 14px;
-  }
-
+  /* ── stock card ── */
+  .stock-row { position:relative; overflow:hidden; margin-bottom:10px; border-radius:14px; }
   .stock-action-left {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 80px;
-    background: #b91c1c;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 14px 0 0 14px;
+    position:absolute; left:0; top:0; bottom:0; width:80px;
+    background:#b91c1c; display:flex; align-items:center; justify-content:center;
+    border-radius:14px 0 0 14px;
   }
-  .stock-sell-btn {
-    border: none;
-    background: transparent;
-    color: #fee2e2;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-  }
-
+  .stock-sell-btn { border:none; background:transparent; color:#fee2e2; font-size:13px; font-weight:700; cursor:pointer; }
   .stock-card {
-    background: var(--card);
-    border-radius: 14px;
-    padding: 10px 12px;
-    border: 1px solid var(--border);
-    box-shadow: 0 8px 16px rgba(15,23,42,0.45);
-    cursor: pointer;
-    transform: translateX(0);
-    transition: transform .16s ease-out;
-    touch-action: pan-y;
+    background:var(--card); border-radius:14px; padding:10px 12px;
+    border:1px solid var(--border); box-shadow:0 8px 16px rgba(15,23,42,0.45);
+    cursor:pointer; transform:translateX(0); transition:transform .16s ease-out;
+    touch-action:pan-y; user-select:none; -webkit-user-select:none;
+  }
+  .stock-card * { user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+  .stock-top { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:4px; }
+  .symbol    { font-size:15px; font-weight:700; }
+  .trend     { font-size:11px; color:var(--muted); }
+  .pl-tag    { font-size:13px; font-weight:600; padding:4px 8px; border-radius:999px; display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+  .pl-plus   { color:#bbf7d0; background:var(--accent-soft); }
+  .pl-minus  { color:#fecaca; background:var(--danger-soft); }
+  .grid-3    { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin-top:6px; }
+  .field-label { font-size:11px; color:var(--muted); margin-bottom:2px; }
+  .field-value { font-size:13px; font-weight:500; }
+  .row-bottom  { margin-top:8px; display:flex; flex-wrap:wrap; gap:6px 10px; font-size:11px; color:var(--muted); }
+  .txt-plus    { color:#4ade80; }
+  .txt-minus   { color:#fb7185; }
+  .empty       { font-size:13px; color:var(--muted); text-align:center; margin-top:24px; }
 
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    -webkit-touch-callout: none;
-  }
-  .stock-card * {
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    -webkit-touch-callout: none;
-  }
-  .stock-card.swiping {
-    transition: none;
-  }
-
-  .stock-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 8px;
-    margin-bottom: 4px;
-  }
-  .symbol {
-    font-size: 15px;
-    font-weight: 700;
-  }
-  .trend {
-    font-size: 11px;
-    color: var(--muted);
-  }
-  .pl-tag {
-    font-size: 13px;
-    font-weight: 600;
-    padding: 4px 8px;
-    border-radius: 999px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    white-space: nowrap;
-  }
-  .pl-plus {
-    color: #bbf7d0;
-    background: var(--accent-soft);
-  }
-  .pl-minus {
-    color: #fecaca;
-    background: var(--danger-soft);
-  }
-
-  .grid-3 {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 6px;
-    margin-top: 6px;
-  }
-  .field-label {
-    font-size: 11px;
-    color: var(--muted);
-    margin-bottom: 2px;
-  }
-  .field-value {
-    font-size: 13px;
-    font-weight: 500;
-  }
-
-  .row-bottom {
-    margin-top: 8px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px 10px;
-    font-size: 11px;
-    color: var(--muted);
-  }
-  .txt-plus {
-    color: #4ade80;
-  }
-  .txt-minus {
-    color: #fb7185;
-  }
-
-  .empty {
-    font-size: 13px;
-    color: var(--muted);
-    text-align: center;
-    margin-top: 24px;
-  }
-
-  /* ===== Footer ===== */
+  /* ── footer ── */
   .footer-note {
-    font-size: 10px;
-    color: #4b5563;
-    text-align: center;
-    padding: 8px 0 4px;
-    border-top: 1px solid #1f2937;
-    margin-top: 4px;
-    line-height: 1.6;
-    word-break: break-all;
+    font-size:10px; color:#4b5563; text-align:center;
+    padding:8px 0 2px; border-top:1px solid #1f2937; line-height:1.7; word-break:break-all;
   }
-  .footer-note a {
-    color: #6b7280;
-    text-decoration: none;
-  }
-  .footer-note a:hover {
-    color: #9ca3af;
-    text-decoration: underline;
-  }
+  .footer-note code { color:#6b7280; }
 
-  .chart-modal,
-  .sell-modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(15,23,42,0.85);
-    display: none;
-    align-items: flex-start;
-    justify-content: center;
-    z-index: 50;
-    padding-top: 48px;
+  /* ── modals ── */
+  .chart-modal, .sell-modal {
+    position:fixed; inset:0; background:rgba(15,23,42,0.85);
+    display:none; align-items:flex-start; justify-content:center; z-index:50; padding-top:48px;
   }
-  .chart-modal.show,
-  .sell-modal.show {
-    display: flex;
+  .chart-modal.show, .sell-modal.show { display:flex; }
+  .chart-panel, .sell-panel {
+    width:100%; max-width:540px; max-height:90vh; background:#020617;
+    border-radius:16px; padding:10px 12px 12px;
+    border:1px solid var(--border); box-shadow:0 20px 40px rgba(0,0,0,.6); margin:12px;
   }
-  .chart-panel,
-  .sell-panel {
-    width: 100%;
-    max-width: 540px;
-    max-height: 90vh;
-    background: #020617;
-    border-radius: 16px;
-    padding: 10px 12px 12px;
-    border: 1px solid var(--border);
-    box-shadow: 0 20px 40px rgba(0,0,0,.6);
-    margin: 12px;
-  }
+  .chart-header, .sell-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:8px; }
+  .chart-title, .sell-title { font-size:14px; font-weight:600; min-width:0; }
+  .sell-sub   { font-size:11px; color:var(--muted); }
+  .chart-close, .sell-close { border:none; background:transparent; color:var(--muted); font-size:18px; padding:2px 4px; cursor:pointer; flex-shrink:0; }
+  .chart-tabs { display:flex; gap:6px; margin:4px 0; font-size:11px; }
+  .chart-tab  { border-radius:999px; border:1px solid var(--border); background:#020617; color:var(--muted); padding:4px 8px; cursor:pointer; }
+  .chart-tab.active { background:var(--accent-soft); border-color:var(--accent); color:#bbf7d0; }
+  .chart-status { font-size:11px; color:var(--muted); margin-bottom:4px; }
+  .chart-body { position:relative; width:100%; height:260px; }
+  @media (min-width:600px) { .chart-body { height:320px; } }
 
-  .chart-header,
-  .sell-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 4px;
-    gap: 8px;
-  }
-  .chart-title,
-  .sell-title {
-    font-size: 14px;
-    font-weight: 600;
-    min-width: 0;
-  }
-  .sell-sub {
-    font-size: 11px;
-    color: var(--muted);
-  }
-  .chart-close,
-  .sell-close {
-    border: none;
-    background: transparent;
-    color: var(--muted);
-    font-size: 18px;
-    padding: 2px 4px;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-
-  .chart-tabs {
-    display: flex;
-    gap: 6px;
-    margin: 4px 0 4px;
-    font-size: 11px;
-  }
-  .chart-tab {
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: #020617;
-    color: var(--muted);
-    padding: 4px 8px;
-    cursor: pointer;
-    flex: 0 0 auto;
-  }
-  .chart-tab.active {
-    background: var(--accent-soft);
-    border-color: var(--accent);
-    color: #bbf7d0;
-  }
-  .chart-status {
-    font-size: 11px;
-    color: var(--muted);
-    margin-bottom: 4px;
-  }
-  .chart-body {
-    position: relative;
-    width: 100%;
-    height: 260px;
-  }
-  @media (min-width: 600px) {
-    .chart-body {
-      height: 320px;
-    }
-  }
-
-  .sell-summary-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 6px;
-    margin: 4px 0 6px;
-  }
-  .sell-summary-item {
-    background: rgba(15,23,42,0.9);
-    border-radius: 10px;
-    padding: 6px;
-    border: 1px solid var(--border);
-  }
-  .sell-label {
-    font-size: 11px;
-    color: var(--muted);
-    margin-bottom: 2px;
-  }
-  .sell-value {
-    font-size: 13px;
-    font-weight: 600;
-  }
-  .sell-form {
-    margin-top: 4px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .sell-hint {
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 2px;
-  }
+  .sell-summary-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin:4px 0 6px; }
+  .sell-summary-item { background:rgba(15,23,42,0.9); border-radius:10px; padding:6px; border:1px solid var(--border); }
+  .sell-label { font-size:11px; color:var(--muted); margin-bottom:2px; }
+  .sell-value { font-size:13px; font-weight:600; }
+  .sell-form  { margin-top:4px; display:flex; flex-direction:column; gap:6px; }
+  .sell-hint  { font-size:11px; color:var(--muted); margin-top:2px; }
   .btn-sell-confirm {
-    border: none;
-    border-radius: 999px;
-    padding: 7px 14px;
-    font-size: 13px;
-    font-weight: 600;
-    background: linear-gradient(135deg, #ef4444, #b91c1c);
-    color: #fee2e2;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    cursor: pointer;
-    margin-top: 4px;
-    box-shadow: 0 8px 18px rgba(239,68,68,0.35);
+    border:none; border-radius:999px; padding:7px 14px; font-size:13px; font-weight:600;
+    background:linear-gradient(135deg,#ef4444,#b91c1c); color:#fee2e2;
+    display:inline-flex; align-items:center; justify-content:center; gap:6px; cursor:pointer;
+    margin-top:4px; box-shadow:0 8px 18px rgba(239,68,68,0.35);
   }
-  .btn-sell-confirm:active {
-    transform: scale(.96);
-  }
-  .sell-status {
-    font-size: 11px;
-    margin-top: 2px;
-    color: var(--muted);
-  }
+  .btn-sell-confirm:active { transform:scale(.96); }
+  .sell-status { font-size:11px; margin-top:2px; color:var(--muted); }
 
-  /* ===== layout PC / Tablet (แบบภาพ 2) ===== */
-  @media (min-width: 768px) {
-    body {
-      align-items: flex-start;
-    }
-
+  /* ── PC layout ── */
+  @media (min-width:768px) {
+    body { align-items:flex-start; }
     .phone {
-      max-width: 1100px;
-      min-height: auto;
-      padding: 24px 24px 32px;
-      display: grid;
-      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-      grid-template-rows: auto auto minmax(0, 1fr) auto;
-      grid-template-areas:
-        "header header"
-        "add summary"
-        "list list"
-        "footer footer";
-      column-gap: 20px;
-      row-gap: 16px;
+      max-width:1100px; min-height:auto; padding:24px 24px 32px;
+      display:grid;
+      grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);
+      grid-template-rows:auto auto minmax(0,1fr) auto;
+      grid-template-areas:"header header" "add summary" "list list" "footer footer";
+      column-gap:20px; row-gap:16px;
     }
-
-    .header {
-      grid-area: header;
-    }
-    .add-card {
-      grid-area: add;
-    }
-    .summary-card {
-      grid-area: summary;
-    }
+    .header       { grid-area:header; }
+    .add-card     { grid-area:add; }
+    .summary-card { grid-area:summary; }
     .list {
-      grid-area: list;
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      padding-top: 0;
-      padding-bottom: 0;
-      overflow-y: visible;
+      grid-area:list;
+      display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:12px; overflow-y:visible; padding:0;
     }
-    .stock-row {
-      margin-bottom: 0;
-    }
-    .footer-note {
-      grid-area: footer;
-    }
+    .stock-row  { margin-bottom:0; }
+    .footer-note { grid-area:footer; }
   }
 </style>
-
 </head>
 <body>
-  <div class="phone">
-    <div class="header">
-      <div class="title-box">
-        <div class="title">พอร์ตหุ้นของฉัน</div>
-      </div>
-      <button id="refreshBtn" class="btn-refresh">
-        🔄 รีเฟรช
-      </button>
-    </div>
+<div class="phone">
 
-    <div class="summary-card">
-      <div class="summary-top">
-        <div>
-          <div class="summary-label">มูลค่าพอร์ตปัจจุบัน</div>
-          <div class="summary-main" id="sumValue">–</div>
-        </div>
-        <div id="sumPLBox" class="summary-pl plus">
-          <span id="sumPL">0.00 (0.00%)</span>
-        </div>
-      </div>
-      <div class="summary-grid">
-        <div class="summary-item">
-          <div class="summary-item-label">เงินลงทุนรวม</div>
-          <div class="summary-item-value" id="sumInvest">–</div>
-        </div>
-        <div class="summary-item">
-          <div class="summary-item-label">กำไร / ขาดทุน</div>
-          <div class="summary-item-value" id="sumPLShort">–</div>
-        </div>
-        <div class="summary-item">
-          <div class="summary-item-label">ผลตอบแทนรวม</div>
-          <div class="summary-item-value" id="sumPLPct">–</div>
-        </div>
-      </div>
-      <div class="status-text" id="statusText">กำลังโหลดข้อมูล...</div>
-    </div>
+  <div class="header">
+    <div class="title">พอร์ตหุ้นของฉัน</div>
+    <button id="refreshBtn" class="btn-refresh">🔄 รีเฟรช</button>
+  </div>
 
-    <form id="addForm" class="add-card">
-      <div class="add-title">เพิ่มรายการซื้อใหม่</div>
-      <div class="add-grid">
-        <div class="field">
-          <label for="addSymbol">หุ้น / กองทุน / ทอง</label>
-          <input id="addSymbol" autocomplete="off" />
-          <div id="symbolSuggest" class="suggest-list"></div>
-        </div>
-        <div class="field">
-          <label for="addPrice">ราคา/หน่วย (USD)</label>
-          <input id="addPrice" type="number" step="0.01" inputmode="decimal" />
-        </div>
+  <div class="summary-card">
+    <div class="summary-top">
+      <div>
+        <div class="summary-label">มูลค่าพอร์ตปัจจุบัน</div>
+        <div class="summary-main" id="sumValue">–</div>
+      </div>
+      <div id="sumPLBox" class="summary-pl plus"><span id="sumPL">0.00 (0.00%)</span></div>
+    </div>
+    <div class="summary-grid">
+      <div class="summary-item">
+        <div class="summary-item-label">เงินลงทุนรวม</div>
+        <div class="summary-item-value" id="sumInvest">–</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-item-label">กำไร / ขาดทุน</div>
+        <div class="summary-item-value" id="sumPLShort">–</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-item-label">ผลตอบแทนรวม</div>
+        <div class="summary-item-value" id="sumPLPct">–</div>
+      </div>
+    </div>
+    <div class="status-text" id="statusText">กำลังโหลดข้อมูล...</div>
+  </div>
+
+  <form id="addForm" class="add-card">
+    <div class="add-title">เพิ่มรายการซื้อใหม่</div>
+    <div class="add-grid">
+      <div class="field">
+        <label>หุ้น / กองทุน / ทอง</label>
+        <input id="addSymbol" autocomplete="off" />
+        <div id="symbolSuggest" class="suggest-list"></div>
       </div>
       <div class="field">
-        <label for="addAmount">
-          จำนวนเงินที่ใช้ซื้อ <span id="amountUnit">(฿)</span>
-        </label>
+        <label>ราคา/หน่วย (USD)</label>
+        <input id="addPrice" type="number" step="0.01" inputmode="decimal" />
+      </div>
+    </div>
+    <div class="field">
+      <label>จำนวนเงินที่ใช้ซื้อ <span id="amountUnit">(฿)</span></label>
+      <div class="amount-row">
+        <input id="addAmount" type="number" step="0.01" inputmode="decimal" />
+        <div class="currency-toggle">
+          <button type="button" class="currency-btn active" data-cur="THB">฿ บาท</button>
+          <button type="button" class="currency-btn"        data-cur="USD">$ ดอลลาร์</button>
+        </div>
+      </div>
+    </div>
+    <button type="submit" class="btn-add">➕ เพิ่มลง</button>
+    <div id="addStatus" class="add-status"></div>
+  </form>
+
+  <div id="list" class="list"></div>
+
+  <div class="footer-note">
+    📊 ข้อมูลดึงจาก Google Sheets ·
+    Spreadsheet ID: <code>1cI6-HcomF6cR5mqKKit9KDwjOIWNAWJaMO5Yb6IGbjU</code>
+  </div>
+</div>
+
+<!-- chart modal -->
+<div id="chartModal" class="chart-modal">
+  <div class="chart-panel">
+    <div class="chart-header">
+      <div id="chartTitle" class="chart-title">กราฟราคา</div>
+      <button id="chartClose" class="chart-close">✕</button>
+    </div>
+    <div class="chart-tabs">
+      <button class="chart-tab" data-range="1D">1 วัน</button>
+      <button class="chart-tab" data-range="1M">1 เดือน</button>
+      <button class="chart-tab active" data-range="1Y">1 ปี</button>
+    </div>
+    <div id="chartStatus" class="chart-status"></div>
+    <div class="chart-body"><canvas id="priceChart"></canvas></div>
+  </div>
+</div>
+
+<!-- sell modal -->
+<div id="sellModal" class="sell-modal">
+  <div class="sell-panel">
+    <div class="sell-header">
+      <div>
+        <div id="sellTitle" class="sell-title">ขาย</div>
+        <div id="sellSub"   class="sell-sub">–</div>
+      </div>
+      <button id="sellClose" class="sell-close">✕</button>
+    </div>
+    <div class="sell-summary-grid">
+      <div class="sell-summary-item">
+        <div class="sell-label">มูลค่าปัจจุบัน (฿)</div>
+        <div id="sellValueThb" class="sell-value">–</div>
+      </div>
+      <div class="sell-summary-item">
+        <div class="sell-label">มูลค่าปัจจุบัน ($)</div>
+        <div id="sellValueUsd" class="sell-value">–</div>
+      </div>
+      <div class="sell-summary-item">
+        <div class="sell-label">อัตราแลกเปลี่ยน</div>
+        <div id="sellFx" class="sell-value">–</div>
+      </div>
+    </div>
+    <form id="sellForm" class="sell-form">
+      <div class="field">
+        <label>จำนวนเงินที่จะขาย <span id="sellAmountUnit">(฿)</span></label>
         <div class="amount-row">
-          <input id="addAmount" type="number" step="0.01" inputmode="decimal" />
+          <input id="sellAmount" type="number" step="0.01" inputmode="decimal" />
           <div class="currency-toggle">
-            <button type="button" class="currency-btn active" data-cur="THB">฿ บาท</button>
-            <button type="button" class="currency-btn" data-cur="USD">$ ดอลลาร์</button>
+            <button type="button" class="sell-cur-btn active" data-cur="THB">฿ บาท</button>
+            <button type="button" class="sell-cur-btn"        data-cur="USD">$ ดอลลาร์</button>
           </div>
         </div>
+        <div id="sellMaxHint" class="sell-hint"></div>
       </div>
-      <button type="submit" class="btn-add">
-        ➕ เพิ่มลง
-      </button>
-      <div id="addStatus" class="add-status"></div>
+      <button type="submit" class="btn-sell-confirm">ขาย</button>
+      <div id="sellStatus" class="sell-status"></div>
     </form>
-
-    <div id="list" class="list"></div>
-
-    <!-- Footer แสดง Spreadsheet ID -->
-    <div class="footer-note">
-      📊 ข้อมูลดึงมาจาก Google Sheets&nbsp;·&nbsp;
-      Spreadsheet ID:&nbsp;<code>1cI6-HcomF6cR5mqKKit9KDwjOIWNAWJaMO5Yb6IGbjU</code>
-    </div>
   </div>
+</div>
 
-  <!-- modal กราฟหุ้น -->
-  <div id="chartModal" class="chart-modal">
-    <div class="chart-panel">
-      <div class="chart-header">
-        <div id="chartTitle" class="chart-title">กราฟราคา</div>
-        <button id="chartClose" class="chart-close">✕</button>
-      </div>
-      <div class="chart-tabs">
-        <button class="chart-tab" data-range="1D">1 วัน</button>
-        <button class="chart-tab" data-range="1M">1 เดือน</button>
-        <button class="chart-tab active" data-range="1Y">1 ปี</button>
-      </div>
-      <div id="chartStatus" class="chart-status">แตะการ์ดหุ้นเพื่อดูกราฟ</div>
-      <div class="chart-body">
-        <canvas id="priceChart"></canvas>
-      </div>
-    </div>
-  </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// =====================================================
+//  CONFIG — เปลี่ยนแค่ตรงนี้เมื่อ Deploy URL เปลี่ยน
+// =====================================================
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbybvRavwDE0fd4aaARpn1DDWUtupVAnMJIF76vrbw_Hzh7RU02Lxj20_yD06zYjIlHMfQ/exec';
 
-  <!-- modal ขาย -->
-  <div id="sellModal" class="sell-modal">
-    <div class="sell-panel">
-      <div class="sell-header">
+// =====================================================
+//  API wrapper — แทนที่ google.script.run ทั้งหมด
+// =====================================================
+async function callApi(params) {
+  const url = APPS_SCRIPT_URL + '?' + new URLSearchParams(params).toString();
+  const res  = await fetch(url);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const data = await res.json();
+  if (data && data.error) throw new Error(data.error);
+  return data;
+}
+
+// =====================================================
+//  ค่าคงที่
+// =====================================================
+const DEFAULT_SYMBOLS = [
+  'NVDA','GOOGL','AMZN','AAPL','MSFT','TSLA','META','NFLX','ADBE','ORCL',
+  'INTC','AMD','AVGO','QCOM','IBM','SHOP','BABA','SONY','SHEL'
+];
+const EXTENDED_SYMBOLS = [
+  'SPY','QQQ','VTI','VOO','DIA','IWM','EFA','EEM','XLK','XLV',
+  'XLE','XLF','XLY','XLP','XLI','XLU','XLB','SMH','SOXX','ARKK','ARKW','ARKG',
+  'GLD','SLV','GDX','IAU','PPLT',
+  'BTC-USD','ETH-USD','SOL-USD','BNB-USD','DOGE-USD',
+  'BRK-B','TSM','ASML','COST','PEP','KO','JPM','V','MA','UNH','LLY','XOM','CVX','NKE','DIS',
+  'KBANK','BBL','SCB','KTB','BAY','CPALL','PTT','PTTEP','ADVANC','TRUE',
+  'DELTA','GULF','EA','GPSC','AOT','CPN','CRC','BDMS','BH','BEM',
+  'BTS','MINT','SCC','SCCC','CPF','OSP','KCE','HANA','STA','TISCO',
+  'MTSGOLD','HGF-GOLD','SCBGOLD','KTGOLD','KFGOLD','TMB-ES-GOLD','B-INCOMESSF','ONE-UGG',
+  'K-USA-A','K-CHINA-A','K-USA-TECH-A','K-EUROPE-A',
+  'SCBUSA','SCBCHINA','SCBINDIA','SCBSEMI','SCBTECH'
+];
+const ALL_SYMBOLS = DEFAULT_SYMBOLS.concat(EXTENDED_SYMBOLS);
+let knownSymbols  = ALL_SYMBOLS.slice();
+let portfolioMap  = {};
+let latestFxRate  = null;
+
+// =====================================================
+//  ยูทิล
+// =====================================================
+const fmt    = n => (Number(n)||0).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtTHB = n => fmt(n) + ' ฿';
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// =====================================================
+//  สกุลเงินฟอร์มซื้อ
+// =====================================================
+let buyAmountCurrency = 'THB';
+document.querySelectorAll('.currency-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    buyAmountCurrency = this.dataset.cur;
+    document.querySelectorAll('.currency-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById('amountUnit').textContent = buyAmountCurrency === 'USD' ? '($)' : '(฿)';
+  });
+});
+
+// =====================================================
+//  Summary
+// =====================================================
+function setSummary(s) {
+  if (!s) {
+    ['sumValue','sumInvest','sumPLShort','sumPLPct','sumPL'].forEach(id =>
+      document.getElementById(id).textContent = '–');
+    return;
+  }
+  const { totalInvest=0, totalValue=0, totalPL=0, totalPLPct=0, fxNow } = s;
+  if (fxNow) latestFxRate = fxNow;
+  document.getElementById('sumValue').textContent   = fmtTHB(totalValue);
+  document.getElementById('sumInvest').textContent  = fmtTHB(totalInvest);
+  document.getElementById('sumPLShort').textContent = fmtTHB(totalPL);
+  document.getElementById('sumPLPct').textContent   = totalPLPct.toFixed(2) + ' %';
+  const sign = totalPL >= 0 ? '▲' : '▼';
+  document.getElementById('sumPL').textContent = sign + ' ' + fmtTHB(totalPL) + ' (' + totalPLPct.toFixed(2) + '%)';
+  const box = document.getElementById('sumPLBox');
+  box.classList.toggle('plus',  totalPL >= 0);
+  box.classList.toggle('minus', totalPL <  0);
+}
+
+// =====================================================
+//  Render portfolio
+// =====================================================
+function renderPortfolio(data) {
+  const listEl = document.getElementById('list');
+  listEl.innerHTML = ''; portfolioMap = {};
+
+  if (!data || !data.items || !data.items.length) {
+    setSummary(data ? data.summary : null);
+    document.getElementById('statusText').textContent = 'ยังไม่มีข้อมูลในชีต';
+    const e = document.createElement('div');
+    e.className = 'empty';
+    e.textContent = 'เพิ่มหุ้น/กองทุนจากฟอร์มด้านบน แล้วกด "รีเฟรช"';
+    listEl.appendChild(e);
+    return;
+  }
+  setSummary(data.summary);
+  document.getElementById('statusText').textContent =
+    'อัปเดตล่าสุด: ' + new Date().toLocaleString('th-TH',{
+      year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'
+    });
+
+  knownSymbols = Array.from(new Set(ALL_SYMBOLS.concat(
+    data.items.map(i => (i.symbol||'').toString().trim().toUpperCase()).filter(Boolean)
+  )));
+
+  data.items.forEach(item => {
+    const sym     = (item.symbol||'').toString().toUpperCase();
+    portfolioMap[sym] = item;
+
+    const plClass = (item.pl||0) >= 0 ? 'pl-plus' : 'pl-minus';
+    const plSign  = (item.pl||0) >= 0 ? '▲' : '▼';
+    const cls = v => v == null ? '' : v >= 0 ? 'txt-plus' : 'txt-minus';
+
+    const card = document.createElement('div');
+    card.className = 'stock-card'; card.dataset.symbol = sym;
+    card.innerHTML = `
+      <div class="stock-top">
         <div>
-          <div id="sellTitle" class="sell-title">ขาย</div>
-          <div id="sellSub" class="sell-sub">–</div>
+          <div class="symbol">${escHtml(sym)}</div>
+          <div class="trend">
+            ${item.trendLabel ? escHtml(item.trendLabel) : '–'}
+            ${item.probUpPct != null ? ' • โอกาสปิดบวก ~ ' + item.probUpPct.toFixed(0) + '%' : ''}
+          </div>
         </div>
-        <button id="sellClose" class="sell-close">✕</button>
-      </div>
-
-      <div class="sell-summary-grid">
-        <div class="sell-summary-item">
-          <div class="sell-label">มูลค่าปัจจุบัน (฿)</div>
-          <div id="sellValueThb" class="sell-value">–</div>
-        </div>
-        <div class="sell-summary-item">
-          <div class="sell-label">มูลค่าปัจจุบัน ($)</div>
-          <div id="sellValueUsd" class="sell-value">–</div>
-        </div>
-        <div class="sell-summary-item">
-          <div class="sell-label">อัตราแลกเปลี่ยน</div>
-          <div id="sellFx" class="sell-value">–</div>
+        <div class="pl-tag ${plClass}">
+          ${plSign} <span>${fmtTHB(item.pl)} (${(item.plPct||0).toFixed(2)}%)</span>
         </div>
       </div>
-
-      <form id="sellForm" class="sell-form">
-        <div class="field">
-          <label for="sellAmount">
-            จำนวนเงินที่จะขาย <span id="sellAmountUnit">(฿)</span>
-          </label>
-          <div class="amount-row">
-            <input id="sellAmount" type="number" step="0.01" inputmode="decimal" />
-            <div class="currency-toggle">
-              <button type="button" class="sell-cur-btn active" data-cur="THB">฿ บาท</button>
-              <button type="button" class="sell-cur-btn" data-cur="USD">$ ดอลลาร์</button>
-            </div>
+      <div class="grid-3">
+        <div><div class="field-label">ราคาเฉลี่ยที่ซื้อ (USD)</div><div class="field-value">${fmt(item.buyPrice)}</div></div>
+        <div><div class="field-label">เงินลงทุนรวม (฿)</div><div class="field-value">${fmtTHB(item.investTHB)}</div></div>
+        <div><div class="field-label">จำนวนหน่วย (ประมาณ)</div><div class="field-value">${(item.shares||0).toFixed(4)}</div></div>
+      </div>
+      <div class="grid-3">
+        <div><div class="field-label">ราคาปัจจุบัน (USD)</div><div class="field-value">${fmt(item.currentPrice)}</div></div>
+        <div><div class="field-label">มูลค่าปัจจุบัน (฿)</div><div class="field-value">${fmtTHB(item.valueNow)}</div></div>
+        <div>
+          <div class="field-label">เปลี่ยนแปลงวันนี้</div>
+          <div class="field-value ${cls(item.dayChangePct)}">
+            ${item.dayChangePct != null ? item.dayChangePct.toFixed(2) + ' %' : '-'}
           </div>
-          <div id="sellMaxHint" class="sell-hint"></div>
         </div>
+      </div>
+      <div class="row-bottom">
+        <span>1 เดือน: <span class="${cls(item.monthChangePct)}">${item.monthChangePct != null ? item.monthChangePct.toFixed(2)+'%' : '-'}</span></span>
+        <span>1 ปี: <span class="${cls(item.yearChangePct)}">${item.yearChangePct != null ? item.yearChangePct.toFixed(2)+'%' : '-'}</span></span>
+      </div>`;
 
-        <button type="submit" class="btn-sell-confirm">ขาย</button>
-        <div id="sellStatus" class="sell-status"></div>
-      </form>
-    </div>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
-  <script>
-    // ===== Spreadsheet ID =====
-    const SPREADSHEET_ID = '1cI6-HcomF6cR5mqKKit9KDwjOIWNAWJaMO5Yb6IGbjU';
-
-    // ===== สัญลักษณ์ที่รองรับ =====
-    const DEFAULT_SYMBOLS = [
-      'NVDA','GOOGL','AMZN','AAPL','MSFT',
-      'TSLA','META','NFLX','ADBE','ORCL',
-      'INTC','AMD','AVGO','QCOM','IBM',
-      'SHOP','BABA','SONY','SHEL'
-    ];
-
-    const EXTENDED_SYMBOLS = [
-      'SPY','QQQ','VTI','VOO','DIA',
-      'IWM','EFA','EEM','XLK','XLV',
-      'XLE','XLF','XLY','XLP','XLI',
-      'XLU','XLB','SMH','SOXX','ARKK',
-      'ARKW','ARKG',
-      'GLD','SLV','GDX','IAU','PPLT',
-      'BTC-USD','ETH-USD','SOL-USD','BNB-USD','DOGE-USD',
-      'BRK-B','TSM','ASML','COST','PEP',
-      'KO','JPM','V','MA','UNH',
-      'LLY','XOM','CVX','NKE','DIS',
-      'KBANK','BBL','SCB','KTB','BAY',
-      'CPALL','PTT','PTTEP','ADVANC','TRUE',
-      'DELTA','GULF','EA','GPSC','AOT',
-      'CPN','CRC','BDMS','BH','BEM',
-      'BTS','MINT','SCC','SCCC','CPF',
-      'OSP','KCE','HANA','STA','TISCO',
-      'MTSGOLD','HGF-GOLD','SCBGOLD','KTGOLD','KFGOLD',
-      'TMB-ES-GOLD','B-INCOMESSF','ONE-UGG',
-      'K-USA-A','K-CHINA-A','K-USA-TECH-A','K-EUROPE-A',
-      'SCBUSA','SCBCHINA','SCBINDIA','SCBSEMI','SCBTECH'
-    ];
-
-    const ALL_SYMBOLS = DEFAULT_SYMBOLS.concat(EXTENDED_SYMBOLS);
-    let knownSymbols = ALL_SYMBOLS.slice();
-
-    // ข้อมูลพอร์ตล่าสุดเก็บไว้ใช้ตอนกดขาย
-    let portfolioMap = {};
-    let latestFxRate = null;
-
-    // ===== เลือกสกุลเงินสำหรับ "จำนวนเงินที่ใช้ซื้อ" =====
-    let currentAmountCurrency = 'THB';
-    const amountUnitSpan = document.getElementById('amountUnit');
-    const currencyButtons = document.querySelectorAll('.currency-btn');
-
-    currencyButtons.forEach(btn => {
-      btn.addEventListener('click', function () {
-        const cur = this.dataset.cur || 'THB';
-        currentAmountCurrency = cur;
-
-        currencyButtons.forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-
-        amountUnitSpan.textContent = cur === 'USD' ? '($)' : '(฿)';
-      });
+    // double-tap → chart
+    let lastTap = 0;
+    card.addEventListener('click', e => {
+      if (card.dataset.swiped === '1') { e.preventDefault(); e.stopPropagation(); return; }
+      const now = Date.now();
+      if (now - lastTap < 300) { openChart(sym); lastTap = 0; }
+      else lastTap = now;
     });
 
-    function formatTHB(num) {
-      num = Number(num) || 0;
-      return num.toLocaleString('th-TH', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      }) + ' ฿';
-    }
+    const row    = document.createElement('div'); row.className = 'stock-row';
+    const action = document.createElement('div'); action.className = 'stock-action-left';
+    const sellBtn = document.createElement('button');
+    sellBtn.className = 'stock-sell-btn'; sellBtn.textContent = 'ขาย';
+    action.appendChild(sellBtn); row.appendChild(action); row.appendChild(card);
 
-    function formatNumber(num) {
-      num = Number(num) || 0;
-      return num.toLocaleString('th-TH', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      });
-    }
+    const onSell = e => { e.stopPropagation(); e.preventDefault(); openSellModal(sym); };
+    action.addEventListener('click',    onSell);
+    action.addEventListener('touchend', onSell);
+    sellBtn.addEventListener('click',    onSell);
+    sellBtn.addEventListener('touchend', onSell);
 
-    function escapeHtml(str) {
-      return String(str || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
+    setupSwipe(card);
+    listEl.appendChild(row);
+  });
+}
 
-    function setSummary(summary) {
-      const sumValueEl = document.getElementById('sumValue');
-      const sumInvestEl = document.getElementById('sumInvest');
-      const sumPLShortEl = document.getElementById('sumPLShort');
-      const sumPLPctEl = document.getElementById('sumPLPct');
-      const sumPLEl = document.getElementById('sumPL');
-      const sumPLBox = document.getElementById('sumPLBox');
+function showError(msg) {
+  document.getElementById('statusText').textContent = 'ผิดพลาด: ' + msg;
+}
 
-      if (!summary) {
-        sumValueEl.textContent = '–';
-        sumInvestEl.textContent = '–';
-        sumPLShortEl.textContent = '–';
-        sumPLPctEl.textContent = '–';
-        sumPLEl.textContent = '–';
-        return;
+// =====================================================
+//  Long-press swipe
+// =====================================================
+function setupSwipe(card) {
+  const OFFSET = 70, LPT = 400;
+  let timer = null, sx = 0, sy = 0, moved = false;
+  const open  = () => { card.style.transform = 'translateX('+OFFSET+'px)'; card.dataset.opened = '1'; };
+  const close = () => { card.style.transform = 'translateX(0)'; card.dataset.opened = '0'; };
+
+  function start(e) {
+    const p = e.touches ? e.touches[0] : e;
+    sx = p.clientX; sy = p.clientY; moved = false;
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => {
+      if (!moved) {
+        card.dataset.opened === '1' ? close() : open();
+        card.dataset.swiped = '1';
+        setTimeout(() => { card.dataset.swiped = '0'; }, 250);
       }
-
-      const totalInvest = Number(summary.totalInvest) || 0;
-      const totalValue = Number(summary.totalValue) || 0;
-      const totalPL = Number(summary.totalPL) || 0;
-      const totalPLPct = Number(summary.totalPLPct) || 0;
-
-      latestFxRate = summary.fxNow || latestFxRate;
-
-      sumValueEl.textContent = formatTHB(totalValue);
-      sumInvestEl.textContent = formatTHB(totalInvest);
-      sumPLShortEl.textContent = formatTHB(totalPL);
-      sumPLPctEl.textContent = totalPLPct.toFixed(2) + ' %';
-
-      const sign = totalPL >= 0 ? '▲' : '▼';
-      sumPLEl.textContent =
-        sign + ' ' + formatTHB(totalPL) + ' (' + totalPLPct.toFixed(2) + '%)';
-
-      sumPLBox.classList.remove('plus', 'minus');
-      if (totalPL >= 0) sumPLBox.classList.add('plus');
-      else sumPLBox.classList.add('minus');
+    }, LPT);
+  }
+  function move(e) {
+    if (!timer) return;
+    const p = e.touches ? e.touches[0] : e;
+    if (Math.abs(p.clientX-sx) > 5 || Math.abs(p.clientY-sy) > 5) {
+      moved = true; clearTimeout(timer); timer = null;
     }
+  }
+  function end() { if (timer) { clearTimeout(timer); timer = null; } }
 
-    function renderPortfolio(data) {
-      const listEl = document.getElementById('list');
-      const statusEl = document.getElementById('statusText');
+  card.addEventListener('touchstart',  start, { passive:true });
+  card.addEventListener('touchmove',   move,  { passive:true });
+  card.addEventListener('touchend',    end);
+  card.addEventListener('touchcancel', end);
+  card.addEventListener('mousedown', e => {
+    start(e);
+    const up = e2 => { end(e2); window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', up);
+  });
+}
 
-      listEl.innerHTML = '';
-      portfolioMap = {};
+// =====================================================
+//  Auto-refresh
+// =====================================================
+let autoTimer = null;
+const AUTO_MS = 10000;
+function startAutoRefresh() {
+  if (autoTimer) clearInterval(autoTimer);
+  autoTimer = setInterval(() => loadPortfolio(true), AUTO_MS);
+}
+function stopAutoRefresh() {
+  if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+}
 
-      if (!data || !data.items || data.items.length === 0) {
-        setSummary(data ? data.summary : null);
-        statusEl.textContent = 'ยังไม่มีข้อมูลในชีต (แถว 2 ลงไปต้องมีข้อมูล)';
-        const empty = document.createElement('div');
-        empty.className = 'empty';
-        empty.textContent = 'เพิ่มหุ้น/กองทุนใน หน้าเว็บ หรือจากฟอร์มด้านบน แล้วกด "รีเฟรช"';
-        listEl.appendChild(empty);
-        return;
-      }
+let loading = false;
+async function loadPortfolio(isAuto) {
+  if (loading) return;
+  loading = true;
+  document.getElementById('statusText').textContent = isAuto
+    ? 'อัปเดตอัตโนมัติ...'
+    : 'กำลังดึงข้อมูล...';
+  try {
+    const data = await callApi({ action: 'getPortfolio' });
+    renderPortfolio(data);
+  } catch(err) {
+    showError(err.message);
+  } finally {
+    loading = false;
+  }
+}
 
-      setSummary(data.summary);
+// =====================================================
+//  ฟอร์มซื้อ
+// =====================================================
+document.getElementById('addForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const symEl = document.getElementById('addSymbol');
+  const priEl = document.getElementById('addPrice');
+  const amtEl = document.getElementById('addAmount');
+  const stEl  = document.getElementById('addStatus');
+  const symbol   = (symEl.value||'').trim().toUpperCase();
+  const price    = parseFloat(priEl.value);
+  const amount   = parseFloat(amtEl.value);
 
-      statusEl.textContent =
-        'อัปเดตล่าสุด: ' +
-        new Date().toLocaleString('th-TH', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
+  if (!symbol || !price || !amount) {
+    stEl.textContent = 'กรอกหุ้น/กองทุน ราคา และจำนวนเงินให้ครบ';
+    stEl.style.color = '#fca5a5'; return;
+  }
+  stEl.textContent = 'กำลังบันทึก...'; stEl.style.color = '';
+  try {
+    await callApi({ action:'addTrade', symbol, price, amount, currency: buyAmountCurrency });
+    stEl.textContent = 'บันทึกสำเร็จ! กำลังรีเฟรช...';
+    symEl.value = ''; priEl.value = ''; amtEl.value = '';
+    hideSuggest(); loadPortfolio(false);
+  } catch(err) {
+    stEl.textContent = 'บันทึกไม่สำเร็จ: ' + err.message;
+    stEl.style.color = '#fca5a5';
+  }
+});
 
-      const sheetSyms = data.items
-        .map(i => (i.symbol || '').toString().trim().toUpperCase())
-        .filter(Boolean);
-      knownSymbols = Array.from(new Set(ALL_SYMBOLS.concat(sheetSyms)));
+// =====================================================
+//  Auto-suggest
+// =====================================================
+const symInput  = document.getElementById('addSymbol');
+const suggestBox = document.getElementById('symbolSuggest');
+function hideSuggest() { suggestBox.style.display='none'; suggestBox.innerHTML=''; }
+function updateSuggest() {
+  const q = (symInput.value||'').trim().toUpperCase();
+  if (!q) { hideSuggest(); return; }
+  const m = knownSymbols.filter(s => s.includes(q)).slice(0,8);
+  if (!m.length) { hideSuggest(); return; }
+  suggestBox.innerHTML = m.map(s => `<div class="suggest-item" data-s="${s}">${escHtml(s)}</div>`).join('');
+  suggestBox.style.display = 'block';
+}
+symInput.addEventListener('input',  updateSuggest);
+symInput.addEventListener('focus',  updateSuggest);
+symInput.addEventListener('blur',   () => setTimeout(hideSuggest, 150));
+suggestBox.addEventListener('click', e => {
+  const item = e.target.closest('.suggest-item');
+  if (!item) return;
+  symInput.value = item.dataset.s || item.textContent.trim();
+  hideSuggest(); symInput.focus();
+});
 
-      data.items.forEach(function (item) {
-        const sym = (item.symbol || '').toString().toUpperCase();
-        portfolioMap[sym] = item;
+// =====================================================
+//  Chart modal
+// =====================================================
+const chartModal    = document.getElementById('chartModal');
+const chartTitleEl  = document.getElementById('chartTitle');
+const chartStatusEl = document.getElementById('chartStatus');
+const chartTabEls   = document.querySelectorAll('.chart-tab');
+let priceChart = null, chartSym = null, chartRange = '1Y';
+let chartRaw   = { dailyLabels:[], dailyCloses:[], intradayLabels:[], intradayCloses:[] };
 
-        const card = document.createElement('div');
-        card.className = 'stock-card';
-        card.dataset.symbol = sym;
+const rangeLabel = r => r==='1D'?'1 วัน':r==='1M'?'1 เดือน':'1 ปี';
+function setActiveTab(r) { chartTabEls.forEach(b => b.classList.toggle('active', b.dataset.range===r)); }
 
-        const plClass = (item.pl || 0) >= 0 ? 'pl-plus' : 'pl-minus';
-        const plSign = (item.pl || 0) >= 0 ? '▲' : '▼';
-        const dayCls =
-          item.dayChangePct == null
-            ? ''
-            : (item.dayChangePct >= 0 ? 'txt-plus' : 'txt-minus');
-        const monthCls =
-          item.monthChangePct == null
-            ? ''
-            : (item.monthChangePct >= 0 ? 'txt-plus' : 'txt-minus');
-        const yearCls =
-          item.yearChangePct == null
-            ? ''
-            : (item.yearChangePct >= 0 ? 'txt-plus' : 'txt-minus');
+chartTabEls.forEach(btn => {
+  btn.addEventListener('click', function() {
+    chartRange = this.dataset.range;
+    setActiveTab(chartRange);
+    if (chartSym) chartTitleEl.textContent = chartSym + ' - กราฟราคา ' + rangeLabel(chartRange);
+    updateChartByRange();
+  });
+});
 
-        card.innerHTML = `
-          <div class="stock-top">
-            <div>
-              <div class="symbol">${escapeHtml(sym)}</div>
-              <div class="trend">
-                ${item.trendLabel ? escapeHtml(item.trendLabel) : '–'}
-                ${item.probUpPct != null ? ' • โอกาสปิดบวก ~ ' + item.probUpPct.toFixed(0) + '%' : ''}
-              </div>
-            </div>
-            <div class="pl-tag ${plClass}">
-              ${plSign}
-              <span>${formatTHB(item.pl)} (${(item.plPct || 0).toFixed(2)}%)</span>
-            </div>
-          </div>
-
-          <div class="grid-3">
-            <div>
-              <div class="field-label">ราคาเฉลี่ยที่ซื้อ (USD)</div>
-              <div class="field-value">${formatNumber(item.buyPrice)}</div>
-            </div>
-            <div>
-              <div class="field-label">เงินลงทุนรวม (฿)</div>
-              <div class="field-value">${formatTHB(item.investTHB)}</div>
-            </div>
-            <div>
-              <div class="field-label">จำนวนหน่วยรวม (ประมาณ)</div>
-              <div class="field-value">${(item.shares || 0).toFixed(4)}</div>
-            </div>
-          </div>
-
-          <div class="grid-3">
-            <div>
-              <div class="field-label">ราคาปัจจุบัน (USD)</div>
-              <div class="field-value">${formatNumber(item.currentPrice)}</div>
-            </div>
-            <div>
-              <div class="field-label">มูลค่าปัจจุบัน (฿)</div>
-              <div class="field-value">${formatTHB(item.valueNow)}</div>
-            </div>
-            <div>
-              <div class="field-label">เปลี่ยนแปลงวันนี้</div>
-              <div class="field-value ${dayCls}">
-                ${item.dayChangePct != null ? item.dayChangePct.toFixed(2) + ' %' : '-'}
-              </div>
-            </div>
-          </div>
-
-          <div class="row-bottom">
-            <span>1 เดือน:
-              <span class="${monthCls}">
-                ${item.monthChangePct != null ? item.monthChangePct.toFixed(2) + ' %' : '-'}
-              </span>
-            </span>
-            <span>1 ปี:
-              <span class="${yearCls}">
-                ${item.yearChangePct != null ? item.yearChangePct.toFixed(2) + ' %' : '-'}
-              </span>
-            </span>
-          </div>
-        `;
-
-        // กด 2 ครั้งติดกันเพื่อเปิดกราฟ
-        let lastTap = 0;
-        card.addEventListener('click', function (e) {
-          if (card.dataset.swiped === '1') {
-            e.preventDefault();
-            e.stopPropagation();
-            return;
-          }
-          const now = Date.now();
-          if (now - lastTap < 300) {
-            openChart(sym);
-            lastTap = 0;
-          } else {
-            lastTap = now;
-          }
-        });
-
-        // row + ปุ่มขาย
-        const row = document.createElement('div');
-        row.className = 'stock-row';
-
-        const action = document.createElement('div');
-        action.className = 'stock-action-left';
-
-        const sellBtn = document.createElement('button');
-        sellBtn.className = 'stock-sell-btn';
-        sellBtn.dataset.symbol = sym;
-        sellBtn.textContent = 'ขาย';
-        action.appendChild(sellBtn);
-
-        row.appendChild(action);
-        row.appendChild(card);
-
-        function handleSellTap(e) {
-          e.stopPropagation();
-          e.preventDefault();
-          openSellModal(sym);
-        }
-
-        action.addEventListener('click', handleSellTap);
-        action.addEventListener('touchend', handleSellTap);
-        sellBtn.addEventListener('click', handleSellTap);
-        sellBtn.addEventListener('touchend', handleSellTap);
-
-        setupSwipe(card);
-        listEl.appendChild(row);
-      });
+async function openChart(symbol) {
+  chartSym = symbol; chartRange = '1Y'; setActiveTab('1Y');
+  chartTitleEl.textContent = symbol + ' - กราฟราคา 1 ปี';
+  chartStatusEl.textContent = 'กำลังโหลดกราฟ...';
+  chartModal.classList.add('show');
+  chartRaw = { dailyLabels:[], dailyCloses:[], intradayLabels:[], intradayCloses:[] };
+  if (priceChart) { priceChart.destroy(); priceChart = null; }
+  try {
+    const res = await callApi({ action:'getStockHistory', symbol });
+    chartRaw.dailyLabels    = res.labelsDaily || res.labels || [];
+    chartRaw.dailyCloses    = res.closesDaily || res.closes || [];
+    chartRaw.intradayLabels = res.intradayLabels || [];
+    chartRaw.intradayCloses = res.intradayCloses || [];
+    if (!chartRaw.dailyLabels.length && !chartRaw.intradayLabels.length) {
+      chartStatusEl.textContent = 'ไม่มีข้อมูลกราฟ'; return;
     }
+    chartStatusEl.textContent = '';
+    updateChartByRange();
+  } catch(err) {
+    chartStatusEl.textContent = 'โหลดกราฟไม่สำเร็จ: ' + err.message;
+  }
+}
 
-    function showError(err) {
-      const statusEl = document.getElementById('statusText');
-      statusEl.textContent = 'ผิดพลาด: ' + (err && err.message ? err.message : err);
+function updateChartByRange() {
+  let labels = [], data = [];
+  if (chartRange === '1D' && chartRaw.intradayLabels.length) {
+    labels = chartRaw.intradayLabels; data = chartRaw.intradayCloses;
+  } else {
+    const n     = chartRaw.dailyLabels.length;
+    if (!n) return;
+    const count = chartRange==='1D' ? Math.min(5,n) : chartRange==='1M' ? Math.min(22,n) : n;
+    const s = Math.max(0, n - count);
+    labels = chartRaw.dailyLabels.slice(s); data = chartRaw.dailyCloses.slice(s);
+  }
+  drawChart(labels, data);
+}
+
+function drawChart(labels, data) {
+  const ctx = document.getElementById('priceChart').getContext('2d');
+  if (priceChart) priceChart.destroy();
+  const n = labels.length;
+  const ticks = n <= 5 ? [...Array(n).keys()] :
+    [0, Math.floor((n-1)*.25), Math.floor((n-1)*.5), Math.floor((n-1)*.75), n-1];
+  const ts = new Set(ticks);
+  priceChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets:[{ label: chartSym+' (USD)', data, borderWidth:2, tension:0.2, pointRadius:0 }] },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      scales: {
+        x: { ticks:{ autoSkip:false, callback:(v,i)=>ts.has(i)?labels[i]:'', color:'#9ca3af', maxRotation:0 }, grid:{display:false} },
+        y: { ticks:{color:'#9ca3af'}, grid:{color:'rgba(55,65,81,0.5)'} }
+      },
+      plugins: { legend:{display:false}, tooltip:{mode:'index',intersect:false} }
     }
-
-    function setupSwipe(card) {
-      const OPEN_OFFSET = 70;
-      const LONGPRESS_MS = 400;
-
-      let pressTimer = null;
-      let startX = 0;
-      let startY = 0;
-      let moved = false;
-
-      function openCard() {
-        card.style.transform = 'translateX(' + OPEN_OFFSET + 'px)';
-        card.dataset.opened = '1';
-      }
-
-      function closeCard() {
-        card.style.transform = 'translateX(0px)';
-        card.dataset.opened = '0';
-      }
-
-      function handleStart(e) {
-        const p = e.touches ? e.touches[0] : e;
-        startX = p.clientX;
-        startY = p.clientY;
-        moved = false;
-
-        if (pressTimer) clearTimeout(pressTimer);
-
-        pressTimer = setTimeout(() => {
-          if (!moved) {
-            if (card.dataset.opened === '1') {
-              closeCard();
-            } else {
-              openCard();
-            }
-            card.dataset.swiped = '1';
-            setTimeout(() => {
-              card.dataset.swiped = '0';
-            }, 250);
-          }
-        }, LONGPRESS_MS);
-      }
-
-      function handleMove(e) {
-        if (!pressTimer) return;
-        const p = e.touches ? e.touches[0] : e;
-        const dx = Math.abs(p.clientX - startX);
-        const dy = Math.abs(p.clientY - startY);
-        if (dx > 5 || dy > 5) {
-          moved = true;
-          clearTimeout(pressTimer);
-          pressTimer = null;
-        }
-      }
-
-      function handleEnd() {
-        if (pressTimer) {
-          clearTimeout(pressTimer);
-          pressTimer = null;
-        }
-      }
-
-      card.addEventListener('touchstart', handleStart, { passive: true });
-      card.addEventListener('touchmove', handleMove,  { passive: true });
-      card.addEventListener('touchend', handleEnd);
-      card.addEventListener('touchcancel', handleEnd);
-
-      card.addEventListener('mousedown', function (e) {
-        handleStart(e);
-        window.addEventListener('mousemove', handleMove);
-        window.addEventListener('mouseup', handleMouseUp);
-      });
-
-      function handleMouseUp(e) {
-        handleEnd(e);
-        window.removeEventListener('mousemove', handleMove);
-        window.removeEventListener('mouseup', handleMouseUp);
-      }
-    }
-
-    // ====== auto refresh พอร์ตทุก 10 วินาที ======
-    let autoRefreshTimer = null;
-    const AUTO_REFRESH_MS = 10 * 1000;
-
-    function startAutoRefresh() {
-      if (autoRefreshTimer) clearInterval(autoRefreshTimer);
-      autoRefreshTimer = setInterval(function () {
-        loadPortfolio(true);
-      }, AUTO_REFRESH_MS);
-    }
-
-    function stopAutoRefresh() {
-      if (autoRefreshTimer) {
-        clearInterval(autoRefreshTimer);
-        autoRefreshTimer = null;
-      }
-    }
-
-    let isLoadingPortfolio = false;
-
-    function loadPortfolio(isAuto) {
-      if (isLoadingPortfolio) return;
-      isLoadingPortfolio = true;
-
-      const statusEl = document.getElementById('statusText');
-      if (!isAuto) {
-        statusEl.textContent = 'กำลังดึงข้อมูลจาก หน้าเว็บ...';
-      } else {
-        statusEl.textContent = 'อัปเดตอัตโนมัติ (เรียลไทม์จาก Yahoo Finance)...';
-      }
-
-      google.script.run
-        .withSuccessHandler(function (res) {
-          isLoadingPortfolio = false;
-          renderPortfolio(res);
-        })
-        .withFailureHandler(function (err) {
-          isLoadingPortfolio = false;
-          showError(err);
-        })
-        .getPortfolio();
-    }
-
-    function handleAdd(e) {
-      e.preventDefault();
-      const symbolEl = document.getElementById('addSymbol');
-      const priceEl = document.getElementById('addPrice');
-      const amountEl = document.getElementById('addAmount');
-      const statusEl = document.getElementById('addStatus');
-
-      const symbol = (symbolEl.value || '').trim().toUpperCase();
-      const price = parseFloat(priceEl.value);
-      const amount = parseFloat(amountEl.value);
-      const currency = currentAmountCurrency;
-
-      if (!symbol || !price || !amount) {
-        statusEl.textContent = 'กรอกหุ้น/กองทุน ราคา และจำนวนเงินให้ครบ';
-        statusEl.style.color = '#fca5a5';
-        return;
-      }
-
-      statusEl.textContent = 'กำลังบันทึกลง หน้าเว็บ...';
-      statusEl.style.color = '';
-
-      google.script.run
-        .withSuccessHandler(function () {
-          statusEl.textContent = 'บันทึกสำเร็จแล้ว! ระบบจะรีเฟรชพอร์ตให้';
-          symbolEl.value = '';
-          priceEl.value = '';
-          amountEl.value = '';
-          hideSuggest();
-          loadPortfolio(false);
-        })
-        .withFailureHandler(function (err) {
-          statusEl.textContent = 'บันทึกไม่สำเร็จ: ' + (err && err.message ? err.message : err);
-          statusEl.style.color = '#fca5a5';
-        })
-        .addTrade(symbol, price, amount, currency);
-    }
-
-    // suggestion symbol
-    const symbolInput = document.getElementById('addSymbol');
-    const suggestBox = document.getElementById('symbolSuggest');
-
-    function hideSuggest() {
-      suggestBox.style.display = 'none';
-      suggestBox.innerHTML = '';
-    }
-
-    function updateSuggest() {
-      const q = (symbolInput.value || '').trim().toUpperCase();
-      if (!q) {
-        hideSuggest();
-        return;
-      }
-      const matches = knownSymbols
-        .filter(sym => sym.toUpperCase().includes(q))
-        .slice(0, 8);
-
-      if (!matches.length) {
-        hideSuggest();
-        return;
-      }
-
-      suggestBox.innerHTML = matches
-        .map(sym => `<div class="suggest-item" data-symbol="${sym}">${escapeHtml(sym)}</div>`)
-        .join('');
-      suggestBox.style.display = 'block';
-    }
-
-    symbolInput.addEventListener('input', updateSuggest);
-    symbolInput.addEventListener('focus', updateSuggest);
-    symbolInput.addEventListener('blur', function () {
-      setTimeout(hideSuggest, 150);
-    });
-
-    suggestBox.addEventListener('click', function (e) {
-      const item = e.target.closest('.suggest-item');
-      if (!item) return;
-      const sym = item.dataset.symbol || item.textContent.trim();
-      symbolInput.value = sym;
-      hideSuggest();
-      symbolInput.focus();
-    });
-
-    // ===== modal กราฟ =====
-    const chartModal = document.getElementById('chartModal');
-    const chartTitleEl = document.getElementById('chartTitle');
-    const chartStatusEl = document.getElementById('chartStatus');
-    const chartCloseBtn = document.getElementById('chartClose');
-    const chartTabEls = document.querySelectorAll('.chart-tab');
-    let priceChart = null;
-    let currentSymbolChart = null;
-    let currentRange = '1Y';
-    let chartRaw = {
-      dailyLabels: [],
-      dailyCloses: [],
-      intradayLabels: [],
-      intradayCloses: []
-    };
-
-    function getRangeLabel(range) {
-      if (range === '1D') return '1 วัน';
-      if (range === '1M') return '1 เดือน';
-      return '1 ปี';
-    }
-
-    function setActiveTab(range) {
-      chartTabEls.forEach(btn => {
-        if (btn.dataset.range === range) btn.classList.add('active');
-        else btn.classList.remove('active');
-      });
-    }
-
-    chartTabEls.forEach(btn => {
-      btn.addEventListener('click', function () {
-        const r = this.dataset.range;
-        if (!r) return;
-        currentRange = r;
-        setActiveTab(r);
-        if (currentSymbolChart) {
-          chartTitleEl.textContent =
-            currentSymbolChart + ' - กราฟราคา ' + getRangeLabel(currentRange);
-        }
-        updateChartByRange();
-      });
-    });
-
-    function openChart(symbol) {
-      const sym = (symbol || '').toString().trim().toUpperCase();
-      if (!sym) return;
-
-      currentSymbolChart = sym;
-      currentRange = '1Y';
-      setActiveTab('1Y');
-      chartTitleEl.textContent =
-        sym + ' - กราฟราคา ' + getRangeLabel(currentRange);
-      chartStatusEl.textContent = 'กำลังโหลดกราฟ...';
-      chartModal.classList.add('show');
-      chartRaw = {
-        dailyLabels: [],
-        dailyCloses: [],
-        intradayLabels: [],
-        intradayCloses: []
-      };
-
-      if (priceChart) {
-        priceChart.destroy();
-        priceChart = null;
-      }
-
-      google.script.run
-        .withSuccessHandler(handleChartFromServer)
-        .withFailureHandler(function (err) {
-          chartStatusEl.textContent =
-            'โหลดกราฟไม่สำเร็จ: ' + (err && err.message ? err.message : err);
-        })
-        .getStockHistory(sym);
-    }
-
-    function handleChartFromServer(res) {
-      if (!res || res.error) {
-        chartStatusEl.textContent = res && res.error ? res.error : 'ไม่มีข้อมูลกราฟ';
-        return;
-      }
-
-      chartRaw.dailyLabels = res.labelsDaily || res.labels || [];
-      chartRaw.dailyCloses = res.closesDaily || res.closes || [];
-      chartRaw.intradayLabels = res.intradayLabels || [];
-      chartRaw.intradayCloses = res.intradayCloses || [];
-
-      if (!chartRaw.dailyLabels.length && !chartRaw.intradayLabels.length) {
-        chartStatusEl.textContent = 'ไม่มีข้อมูลกราฟ';
-        return;
-      }
-      chartStatusEl.textContent = '';
-      updateChartByRange();
-    }
-
-    function updateChartByRange() {
-      let labels = [];
-      let data = [];
-
-      if (currentRange === '1D' && chartRaw.intradayLabels.length) {
-        labels = chartRaw.intradayLabels;
-        data = chartRaw.intradayCloses;
-      } else {
-        if (!chartRaw.dailyLabels.length) return;
-
-        const allLabels = chartRaw.dailyLabels;
-        const allCloses = chartRaw.dailyCloses;
-        const n = allLabels.length;
-
-        let count;
-        if (currentRange === '1D') {
-          count = Math.min(5, n);
-        } else if (currentRange === '1M') {
-          count = Math.min(22, n);
-        } else {
-          count = n;
-        }
-
-        const start = Math.max(0, n - count);
-        labels = allLabels.slice(start);
-        data = allCloses.slice(start);
-      }
-
-      drawChartSeries(labels, data);
-    }
-
-    function drawChartSeries(labels, data) {
-      const ctx = document.getElementById('priceChart').getContext('2d');
-      if (priceChart) {
-        priceChart.destroy();
-      }
-
-      const n = labels.length;
-      let tickIndexes = [];
-      if (n <= 5) {
-        tickIndexes = [...Array(n).keys()];
-      } else {
-        tickIndexes = [
-          0,
-          Math.floor((n - 1) * 0.25),
-          Math.floor((n - 1) * 0.5),
-          Math.floor((n - 1) * 0.75),
-          n - 1
-        ];
-      }
-      const tickSet = new Set(tickIndexes);
-
-      const label = currentSymbolChart ? currentSymbolChart + ' (USD)' : '';
-
-      priceChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: label,
-            data: data,
-            borderWidth: 2,
-            tension: 0.2,
-            pointRadius: 0
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            x: {
-              ticks: {
-                autoSkip: false,
-                callback: function (value, index) {
-                  return tickSet.has(index) ? labels[index] : '';
-                },
-                color: '#9ca3af',
-                maxRotation: 0,
-                minRotation: 0
-              },
-              grid: { display: false }
-            },
-            y: {
-              ticks: { color: '#9ca3af' },
-              grid: { color: 'rgba(55,65,81,0.5)' }
-            }
-          },
-          plugins: {
-            legend: { display: false },
-            tooltip: { mode: 'index', intersect: false }
-          }
-        }
-      });
-    }
-
-    function closeChart() {
-      chartModal.classList.remove('show');
-    }
-
-    chartCloseBtn.addEventListener('click', closeChart);
-    chartModal.addEventListener('click', function (e) {
-      if (e.target === chartModal) closeChart();
-    });
-
-    // ===== modal ขาย =====
-    const sellModal = document.getElementById('sellModal');
-    const sellCloseBtn = document.getElementById('sellClose');
-    const sellTitleEl = document.getElementById('sellTitle');
-    const sellSubEl = document.getElementById('sellSub');
-    const sellValueThbEl = document.getElementById('sellValueThb');
-    const sellValueUsdEl = document.getElementById('sellValueUsd');
-    const sellFxEl = document.getElementById('sellFx');
-    const sellAmountEl = document.getElementById('sellAmount');
-    const sellAmountUnitEl = document.getElementById('sellAmountUnit');
-    const sellMaxHintEl = document.getElementById('sellMaxHint');
-    const sellStatusEl = document.getElementById('sellStatus');
-    const sellCurrencyButtons = document.querySelectorAll('.sell-cur-btn');
-    let currentSellSymbol = null;
-    let currentSellCurrency = 'THB';
-
-    sellCurrencyButtons.forEach(btn => {
-      btn.addEventListener('click', function () {
-        const cur = this.dataset.cur || 'THB';
-        currentSellCurrency = cur;
-        sellCurrencyButtons.forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-        sellAmountUnitEl.textContent = cur === 'USD' ? '($)' : '(฿)';
-      });
-    });
-
-    function openSellModal(symbol) {
-      stopAutoRefresh();
-
-      const sym = (symbol || '').toString().toUpperCase();
-      const item = portfolioMap[sym];
-      if (!item) return;
-
-      currentSellSymbol = sym;
-      currentSellCurrency = 'THB';
-      sellCurrencyButtons.forEach(b => {
-        if (b.dataset.cur === 'THB') b.classList.add('active');
-        else b.classList.remove('active');
-      });
-      sellAmountUnitEl.textContent = '(฿)';
-
-      const fx = latestFxRate || 36;
-      const valueThb = Number(item.valueNow) || 0;
-      const valueUsd = valueThb / fx;
-
-      sellTitleEl.textContent = 'ขาย ' + sym;
-      sellSubEl.textContent = 'จำนวนหน่วยประมาณ ' + (item.shares || 0).toFixed(4);
-
-      sellValueThbEl.textContent = formatTHB(valueThb);
-      sellValueUsdEl.textContent = '$ ' + formatNumber(valueUsd);
-      sellFxEl.textContent = '1 $ ≈ ' + fx.toFixed(2) + ' ฿';
-
-      sellAmountEl.value = '';
-      sellStatusEl.textContent = '';
-      sellStatusEl.style.color = '';
-      sellMaxHintEl.textContent =
-        'ขายได้สูงสุด ' + formatTHB(valueThb) +
-        ' (≈ $ ' + formatNumber(valueUsd) + ')';
-
-      sellModal.classList.add('show');
-    }
-
-    function closeSellModal() {
-      sellModal.classList.remove('show');
-      currentSellSymbol = null;
-      startAutoRefresh();
-    }
-
-    sellCloseBtn.addEventListener('click', closeSellModal);
-    sellModal.addEventListener('click', function (e) {
-      if (e.target === sellModal) closeSellModal();
-    });
-
-    function handleSellSubmit(e) {
-      e.preventDefault();
-      if (!currentSellSymbol) return;
-
-      const item = portfolioMap[currentSellSymbol];
-      if (!item) return;
-
-      const fx = latestFxRate || 36;
-      const totalThb = Number(item.valueNow) || 0;
-      const totalUsd = totalThb / fx;
-
-      const raw = parseFloat(sellAmountEl.value);
-      if (!raw || raw <= 0) {
-        sellStatusEl.textContent = 'กรอกจำนวนเงินที่จะขาย';
-        sellStatusEl.style.color = '#fecaca';
-        return;
-      }
-
-      let amountThbForCheck = raw;
-      if (currentSellCurrency === 'USD') {
-        amountThbForCheck = raw * fx;
-      }
-
-      if (amountThbForCheck > totalThb + 0.01) {
-        sellStatusEl.textContent = 'จำนวนเงินมากกว่ามูลค่าที่มีอยู่ (' + formatTHB(totalThb) + ')';
-        sellStatusEl.style.color = '#fecaca';
-        return;
-      }
-
-      sellStatusEl.textContent = 'กำลังทำรายการขาย...';
-      sellStatusEl.style.color = '';
-
-      google.script.run
-        .withSuccessHandler(function () {
-          sellStatusEl.textContent = 'ถอนสำเร็จแล้ว';
-          sellStatusEl.style.color = '#bbf7d0';
-          setTimeout(function () {
-            closeSellModal();
-            loadPortfolio(false);
-          }, 600);
-        })
-        .withFailureHandler(function (err) {
-          sellStatusEl.textContent =
-            'ขายไม่สำเร็จ: ' + (err && err.message ? err.message : err);
-          sellStatusEl.style.color = '#fecaca';
-        })
-        .sellTrade(currentSellSymbol, raw, currentSellCurrency);
-    }
-
-    document.getElementById('sellForm').addEventListener('submit', handleSellSubmit);
-
-    document.getElementById('refreshBtn').addEventListener('click', function () {
-      loadPortfolio(false);
-    });
-    document.getElementById('addForm').addEventListener('submit', handleAdd);
-
-    window.addEventListener('load', function () {
-      loadPortfolio(false);
-      startAutoRefresh();
-    });
-  </script>
-
+  });
+}
+
+document.getElementById('chartClose').addEventListener('click', () => chartModal.classList.remove('show'));
+chartModal.addEventListener('click', e => { if (e.target===chartModal) chartModal.classList.remove('show'); });
+
+// =====================================================
+//  Sell modal
+// =====================================================
+const sellModal     = document.getElementById('sellModal');
+let sellSym = null, sellCurrency = 'THB';
+
+document.querySelectorAll('.sell-cur-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    sellCurrency = this.dataset.cur;
+    document.querySelectorAll('.sell-cur-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById('sellAmountUnit').textContent = sellCurrency==='USD' ? '($)' : '(฿)';
+  });
+});
+
+function openSellModal(symbol) {
+  stopAutoRefresh();
+  const item = portfolioMap[symbol]; if (!item) return;
+  sellSym = symbol; sellCurrency = 'THB';
+  document.querySelectorAll('.sell-cur-btn').forEach(b => b.classList.toggle('active', b.dataset.cur==='THB'));
+  document.getElementById('sellAmountUnit').textContent = '(฿)';
+
+  const fx = latestFxRate || 36, vThb = Number(item.valueNow)||0, vUsd = vThb/fx;
+  document.getElementById('sellTitle').textContent    = 'ขาย ' + symbol;
+  document.getElementById('sellSub').textContent      = 'จำนวนหน่วยประมาณ ' + (item.shares||0).toFixed(4);
+  document.getElementById('sellValueThb').textContent = fmtTHB(vThb);
+  document.getElementById('sellValueUsd').textContent = '$ ' + fmt(vUsd);
+  document.getElementById('sellFx').textContent       = '1 $ ≈ ' + fx.toFixed(2) + ' ฿';
+  document.getElementById('sellAmount').value         = '';
+  document.getElementById('sellStatus').textContent   = '';
+  document.getElementById('sellStatus').style.color   = '';
+  document.getElementById('sellMaxHint').textContent  = 'ขายได้สูงสุด ' + fmtTHB(vThb) + ' (≈ $' + fmt(vUsd) + ')';
+  sellModal.classList.add('show');
+}
+
+function closeSellModal() {
+  sellModal.classList.remove('show'); sellSym = null; startAutoRefresh();
+}
+
+document.getElementById('sellClose').addEventListener('click', closeSellModal);
+sellModal.addEventListener('click', e => { if (e.target===sellModal) closeSellModal(); });
+
+document.getElementById('sellForm').addEventListener('submit', async function(e) {
+  e.preventDefault(); if (!sellSym) return;
+  const item   = portfolioMap[sellSym];
+  const fx     = latestFxRate || 36;
+  const totThb = Number(item.valueNow)||0;
+  const raw    = parseFloat(document.getElementById('sellAmount').value);
+  const stEl   = document.getElementById('sellStatus');
+
+  if (!raw || raw <= 0) { stEl.textContent='กรอกจำนวนเงินที่จะขาย'; stEl.style.color='#fecaca'; return; }
+  const checkThb = sellCurrency==='USD' ? raw*fx : raw;
+  if (checkThb > totThb + 0.01) {
+    stEl.textContent='จำนวนเงินมากกว่ามูลค่าที่มีอยู่ ('+fmtTHB(totThb)+')';
+    stEl.style.color='#fecaca'; return;
+  }
+  stEl.textContent='กำลังทำรายการขาย...'; stEl.style.color='';
+  try {
+    await callApi({ action:'sellTrade', symbol:sellSym, amount:raw, currency:sellCurrency });
+    stEl.textContent='ถอนสำเร็จแล้ว'; stEl.style.color='#bbf7d0';
+    setTimeout(() => { closeSellModal(); loadPortfolio(false); }, 600);
+  } catch(err) {
+    stEl.textContent='ขายไม่สำเร็จ: '+err.message; stEl.style.color='#fecaca';
+  }
+});
+
+// =====================================================
+//  Init
+// =====================================================
+document.getElementById('refreshBtn').addEventListener('click', () => loadPortfolio(false));
+window.addEventListener('load', () => { loadPortfolio(false); startAutoRefresh(); });
+</script>
 </body>
 </html>
