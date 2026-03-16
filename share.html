@@ -418,6 +418,26 @@
     margin-top: 24px;
   }
 
+  /* ===== Footer ===== */
+  .footer-note {
+    font-size: 10px;
+    color: #4b5563;
+    text-align: center;
+    padding: 8px 0 4px;
+    border-top: 1px solid #1f2937;
+    margin-top: 4px;
+    line-height: 1.6;
+    word-break: break-all;
+  }
+  .footer-note a {
+    color: #6b7280;
+    text-decoration: none;
+  }
+  .footer-note a:hover {
+    color: #9ca3af;
+    text-decoration: underline;
+  }
+
   .chart-modal,
   .sell-modal {
     position: fixed;
@@ -580,11 +600,12 @@
       padding: 24px 24px 32px;
       display: grid;
       grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-      grid-template-rows: auto auto minmax(0, 1fr);
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
       grid-template-areas:
         "header header"
         "add summary"
-        "list list";
+        "list list"
+        "footer footer";
       column-gap: 20px;
       row-gap: 16px;
     }
@@ -609,6 +630,9 @@
     }
     .stock-row {
       margin-bottom: 0;
+    }
+    .footer-note {
+      grid-area: footer;
     }
   }
 </style>
@@ -684,6 +708,12 @@
     </form>
 
     <div id="list" class="list"></div>
+
+    <!-- Footer แสดง Spreadsheet ID -->
+    <div class="footer-note">
+      📊 ข้อมูลดึงมาจาก Google Sheets&nbsp;·&nbsp;
+      Spreadsheet ID:&nbsp;<code>1cI6-HcomF6cR5mqKKit9KDwjOIWNAWJaMO5Yb6IGbjU</code>
+    </div>
   </div>
 
   <!-- modal กราฟหุ้น -->
@@ -755,6 +785,9 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
   <script>
+    // ===== Spreadsheet ID =====
+    const SPREADSHEET_ID = '1cI6-HcomF6cR5mqKKit9KDwjOIWNAWJaMO5Yb6IGbjU';
+
     // ===== สัญลักษณ์ที่รองรับ =====
     const DEFAULT_SYMBOLS = [
       'NVDA','GOOGL','AMZN','AAPL','MSFT',
@@ -1024,7 +1057,6 @@
         row.appendChild(action);
         row.appendChild(card);
 
-        // ให้กรอบแดงทั้งกรอบ + ปุ่ม ขาย รองรับทั้ง click และ touchend
         function handleSellTap(e) {
           e.stopPropagation();
           e.preventDefault();
@@ -1046,7 +1078,6 @@
       statusEl.textContent = 'ผิดพลาด: ' + (err && err.message ? err.message : err);
     }
 
-    // ===== กดค้างที่การ์ดเพื่อเปิด/ปิดปุ่ม "ขาย" =====
     function setupSwipe(card) {
       const OPEN_OFFSET = 70;
       const LONGPRESS_MS = 400;
@@ -1476,7 +1507,7 @@
     });
 
     function openSellModal(symbol) {
-      stopAutoRefresh(); // หยุดอัปเดตอัตโนมัติชั่วคราวตอนเปิดขาย
+      stopAutoRefresh();
 
       const sym = (symbol || '').toString().toUpperCase();
       const item = portfolioMap[sym];
@@ -1514,7 +1545,7 @@
     function closeSellModal() {
       sellModal.classList.remove('show');
       currentSellSymbol = null;
-      startAutoRefresh(); // กลับมาอัปเดตอัตโนมัติอีกครั้ง
+      startAutoRefresh();
     }
 
     sellCloseBtn.addEventListener('click', closeSellModal);
@@ -1573,13 +1604,11 @@
 
     document.getElementById('sellForm').addEventListener('submit', handleSellSubmit);
 
-    // ปุ่มรีเฟรชให้โหลดแบบ manual
     document.getElementById('refreshBtn').addEventListener('click', function () {
       loadPortfolio(false);
     });
     document.getElementById('addForm').addEventListener('submit', handleAdd);
 
-    // เริ่มต้น: โหลดครั้งแรก + start auto-refresh
     window.addEventListener('load', function () {
       loadPortfolio(false);
       startAutoRefresh();
