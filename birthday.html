@@ -270,13 +270,13 @@ const toastEl=document.getElementById('toast');let toastT;
 function showToast(msg){toastEl.textContent=msg;toastEl.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>toastEl.classList.remove('show'),3000);}
 
 const HEART_PIXEL=[
-  " ▒▒▒▒▒      ░▒▒░   ░▒▒░      ▒▒   ▒▒ ",
-  "  ░▒▒      ▒▒▒▒▒▒ ▒▒▒▒▒▒     ▒▒   ▒▒ ",
-  "  ░▒▒      ▒▒▒▒▒▒▒▒▒▒▒▒▒     ▒▒   ▒▒ ",
-  "  ░▒▒       ▒▒▒▒▒▒▒▒▒▒▒      ▒▒   ▒▒ ",
-  "  ░▒▒         ▒▒▒▒▒▒▒        ▒▒   ▒▒ ",
-  "  ░▒▒           ▒▒▒           ▒▒▒▒▒  ",
-  " ▒▒▒▒▒           ▒             ▒▒▒   "
+  " ▒▒▒▒▒      ░▒▒░   ░▒▒░ ",
+  "  ░▒▒      ▒▒▒▒▒▒ ▒▒▒▒▒▒",
+  "  ░▒▒      ▒▒▒▒▒▒▒▒▒▒▒▒▒",
+  "  ░▒▒       ▒▒▒▒▒▒▒▒▒▒▒ ",
+  "  ░▒▒         ▒▒▒▒▒▒▒   ",
+  "  ░▒▒           ▒▒▒     ",
+  " ▒▒▒▒▒           ▒      "
 ];
 const LOADING_CODE=[
   'def draw_heart():',
