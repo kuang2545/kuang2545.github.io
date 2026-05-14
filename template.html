@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Overlay Editor</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+:root{
+  --bg:#f5f5f7;
+  --panel:#ffffff;
+  --border:#dcdcdc;
+  --text:#1d1d1f;
+  --sub:#6e6e73;
+  --blue:#0071e3;
+  --blue-soft:#e8f1ff;
+  --green:#34c759;
+  --green-soft:#e7f8ec;
+}
+
+body{
+  font-family:Inter,sans-serif;
+  background:var(--bg);
+  height:100vh;
+  overflow:hidden;
+  color:var(--text);
+}
+
+.app{
+  display:flex;
+  height:100vh;
+}
+
+/* SIDEBAR */
+.sidebar{
+  width:260px;
+  background:var(--panel);
+  border-right:1px solid var(--border);
+  padding:20px;
+  overflow:auto;
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+
+.logo{
+  font-size:17px;
+  font-weight:700;
+  letter-spacing:-0.01em;
+  margin-bottom:2px;
+}
+
+.logo-sub{
+  font-size:11px;
+  color:var(--sub);
+}
+
+.section{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.label{
+  font-size:11px;
+  font-weight:500;
+  color:var(--sub);
+  text-transform:uppercase;
+  letter-spacing:0.04em;
+}
+
+/* ========== UPLOAD CARD ใหม่ ========== */
+.upload{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  padding:24px 16px;
+  background:linear-gradient(180deg,#fafbfc 0%,#f4f6f9 100%);
+  border:1.5px dashed #cdd3dc;
+  border-radius:14px;
+  cursor:pointer;
+  transition:all .25s cubic-bezier(.4,0,.2,1);
+  text-align:center;
+}
+
+.upload:hover{
+  border-color:var(--blue);
+  background:linear-gradient(180deg,#f3f8ff 0%,#e8f1ff 100%);
+  transform:translateY(-1px);
+  box-shadow:0 4px 16px rgba(0,113,227,.10);
+}
+
+.upload:active{
+  transform:translateY(0);
+}
+
+.upload.has-file{
+  border-style:solid;
+  border-color:var(--green);
+  background:linear-gradient(180deg,var(--green-soft) 0%,#dcf5e3 100%);
+}
+
+.upload input{
+  display:none;
+}
+
+.upload-icon{
+  width:44px;
+  height:44px;
+  border-radius:12px;
+  background:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 2px 8px rgba(0,0,0,.06);
+  transition:all .25s ease;
+}
+
+.upload:hover .upload-icon{
+  transform:scale(1.05);
+  box-shadow:0 4px 12px rgba(0,113,227,.15);
+}
+
+.upload-icon svg{
+  width:22px;
+  height:22px;
+  stroke:var(--blue);
+  stroke-width:2;
+  fill:none;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  transition:stroke .25s ease;
+}
+
+.upload.has-file .upload-icon svg{
+  stroke:var(--green);
+}
+
+.upload-title{
+  font-weight:600;
+  font-size:13px;
+  color:var(--text);
+}
+
+.upload-sub{
+  font-size:11px;
+  color:var(--sub);
+  line-height:1.45;
+}
+
+.upload.has-file .upload-title{
+  color:#0a7d2c;
+}
+
+/* ========== BUTTONS ========== */
+.row{
+  display:flex;
+  gap:8px;
+}
+
+.btn{
+  flex:1;
+  border:none;
+  background:var(--blue);
+  color:white;
+  padding:11px;
+  font-size:12.5px;
+  border-radius:9px;
+  cursor:pointer;
+  font-weight:600;
+  letter-spacing:-0.01em;
+  transition:all .2s ease;
+  font-family:inherit;
+}
+
+.btn:hover{
+  opacity:.92;
+  transform:translateY(-1px);
+  box-shadow:0 4px 12px rgba(0,113,227,.25);
+}
+
+.btn:active{
+  transform:translateY(0);
+}
+
+.btn.secondary{
+  background:#f0f0f3;
+  color:#1d1d1f;
+}
+
+.btn.secondary:hover{
+  background:#e6e6ea;
+  box-shadow:0 2px 8px rgba(0,0,0,.06);
+}
+
+/* ========== STATUS ========== */
+.status{
+  font-size:11.5px;
+  color:var(--sub);
+  padding:8px 12px;
+  background:#f4f6f9;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.status::before{
+  content:'';
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:var(--sub);
+  flex-shrink:0;
+}
+
+.status.ready::before{ background:var(--green); }
+.status.loading::before{ background:#ff9500; animation:pulse 1.4s infinite; }
+.status.error::before{ background:#ff3b30; }
+
+@keyframes pulse{
+  0%,100%{ opacity:1; }
+  50%{ opacity:.3; }
+}
+
+/* PREVIEW */
+.preview{
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  overflow:auto;
+  background:
+    linear-gradient(90deg,#ececec 1px,transparent 1px),
+    linear-gradient(#ececec 1px,transparent 1px);
+  background-size:20px 20px;
+}
+
+.canvas-wrap{
+  position:relative;
+  box-shadow:0 4px 20px rgba(0,0,0,.08);
+  border-radius:14px;
+  overflow:hidden;
+}
+
+canvas{
+  display:block;
+  background:white;
+  max-width:90vw;
+  max-height:90vh;
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <div>
+      <div class="logo">Overlay Editor</div>
+      <div class="logo-sub">ใช้ขนาดจริงของรูป</div>
+    </div>
+
+    <!-- OVERLAY -->
+    <div class="section">
+
+      <div class="label">ไฟล์ด้านบน</div>
+
+      <label class="upload" id="uploadBox">
+
+        <div class="upload-icon">
+          <svg viewBox="0 0 24 24" id="uploadIcon">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </div>
+
+        <div>
+          <div class="upload-title" id="uploadTitle">เลือกไฟล์ Overlay</div>
+          <div class="upload-sub" id="uploadSub">PDF หรือรูปภาพ — วางทับอัตโนมัติ</div>
+        </div>
+
+        <input type="file" id="overlayFile" accept="image/*,application/pdf">
+
+      </label>
+
+    </div>
+
+    <!-- BUTTONS -->
+    <div class="row">
+
+      <button class="btn secondary" id="resetBtn">
+        ล้าง Overlay
+      </button>
+
+      <button class="btn" id="downloadBtn">
+        ดาวน์โหลด
+      </button>
+
+    </div>
+
+    <div class="status ready" id="status">
+      พร้อมใช้งาน
+    </div>
+
+  </div>
+
+  <!-- PREVIEW -->
+  <div class="preview">
+
+    <div class="canvas-wrap">
+      <canvas id="canvas"></canvas>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const { jsPDF } = window.jspdf;
+
+/* ============================
+   CANVAS SIZE — ใช้ขนาดจริงของ base image
+   ============================ */
+let CANVAS_W = 0;
+let CANVAS_H = 0;
+
+/* BACKGROUND IMAGE */
+const BASE_FILE_ID = '1_Ow-rrtZpHm3SqY-0C48lY0VioZqy996';
+
+const BASE_URLS = [
+  `https://drive.google.com/thumbnail?id=${BASE_FILE_ID}&sz=w4000`,
+  `https://lh3.googleusercontent.com/d/${BASE_FILE_ID}=w4000`,
+  `https://drive.google.com/uc?export=view&id=${BASE_FILE_ID}`,
+];
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+const state = {
+  base:null,
+  baseBBox:null,
+  overlay:null
+};
+
+const statusEl = document.getElementById('status');
+const uploadBox = document.getElementById('uploadBox');
+const uploadTitle = document.getElementById('uploadTitle');
+const uploadSub = document.getElementById('uploadSub');
+const uploadIcon = document.getElementById('uploadIcon');
+
+function setStatus(msg, type='ready'){
+  statusEl.textContent = msg;
+  statusEl.className = 'status ' + type;
+}
+
+function setUploadState(hasFile, fileName=''){
+  if(hasFile){
+    uploadBox.classList.add('has-file');
+    uploadTitle.textContent = fileName || 'ไฟล์พร้อมใช้งาน';
+    uploadSub.textContent = 'คลิกเพื่อเปลี่ยนไฟล์';
+    /* เปลี่ยนไอคอนเป็นเครื่องหมายถูก */
+    uploadIcon.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
+  }else{
+    uploadBox.classList.remove('has-file');
+    uploadTitle.textContent = 'เลือกไฟล์ Overlay';
+    uploadSub.textContent = 'PDF หรือรูปภาพ — วางทับอัตโนมัติ';
+    uploadIcon.innerHTML =
+      '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>' +
+      '<polyline points="17 8 12 3 7 8"/>' +
+      '<line x1="12" y1="3" x2="12" y2="15"/>';
+  }
+}
+
+/* LOAD BASE IMAGE */
+
+function loadBaseImage(){
+
+  return new Promise((resolve,reject)=>{
+
+    let idx = 0;
+
+    const tryNext = ()=>{
+
+      if(idx >= BASE_URLS.length){
+        reject(new Error('โหลดรูปพื้นหลังไม่ได้'));
+        return;
+      }
+
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+
+      img.onload = ()=>{
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth;
+        c.height = img.naturalHeight;
+        c.getContext('2d').drawImage(img,0,0);
+
+        CANVAS_W = img.naturalWidth;
+        CANVAS_H = img.naturalHeight;
+        canvas.width = CANVAS_W;
+        canvas.height = CANVAS_H;
+
+        resolve(c);
+      };
+
+      img.onerror = ()=>{ idx++; tryNext(); };
+      img.src = BASE_URLS[idx];
+    };
+
+    tryNext();
+  });
+}
+
+/* LOAD IMAGE FROM FILE */
+
+function loadImageRaw(file){
+  return new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onload = e=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const c = document.createElement('canvas');
+        c.width = img.width;
+        c.height = img.height;
+        const cctx = c.getContext('2d');
+        cctx.imageSmoothingEnabled = true;
+        cctx.imageSmoothingQuality = 'high';
+        cctx.drawImage(img,0,0);
+        resolve(c);
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* LOAD PDF AT HIGH RES */
+
+async function loadPDFRaw(file){
+  const buffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+  const page = await pdf.getPage(1);
+
+  const viewport1 = page.getViewport({ scale: 1 });
+  const renderScale = Math.max(
+    (CANVAS_W * 3) / viewport1.width,
+    (CANVAS_H * 3) / viewport1.height
+  );
+
+  const viewport = page.getViewport({ scale: renderScale });
+  const c = document.createElement('canvas');
+  const ctx2 = c.getContext('2d');
+  c.width = viewport.width;
+  c.height = viewport.height;
+  ctx2.imageSmoothingEnabled = true;
+  ctx2.imageSmoothingQuality = 'high';
+
+  await page.render({
+    canvasContext: ctx2,
+    viewport,
+    intent:'print'
+  }).promise;
+
+  return c;
+}
+
+async function fileToRawCanvas(file){
+  if(file.type === 'application/pdf'){
+    return await loadPDFRaw(file);
+  }
+  return await loadImageRaw(file);
+}
+
+/* ============================
+   ZONES
+   ============================ */
+const ZONES = [
+  { name: 'header',
+    src: { x: 0.00, y: 0.02, w: 0.68, h: 0.12 },
+    dst: { x: 0.08, y: 0.01, w: 0.58, h: 0.13 } },
+
+  { name: 'customer_line1',
+    src: { x: 0.08, y: 0.140, w: 0.60, h: 0.025 },
+    dst: { x: 0.15, y: 0.150, w: 0.52, h: 0.025 } },
+
+  { name: 'customer_line2',
+    src: { x: 0.08, y: 0.170, w: 0.60, h: 0.025 },
+    dst: { x: 0.15, y: 0.185, w: 0.52, h: 0.025 } },
+
+  { name: 'customer_line3',
+    src: { x: 0.08, y: 0.195, w: 0.60, h: 0.050 },
+    dst: { x: 0.14, y: 0.210, w: 0.52, h: 0.050 } },
+
+  { name: 'customer_line4',
+    src: { x: 0.08, y: 0.250, w: 0.60, h: 0.050 },
+    dst: { x: 0.09, y: 0.250, w: 0.52, h: 0.050 } },
+
+  { name: 'meta_date',
+    src: { x: 0.72, y: 0.140, w: 0.22, h: 0.025 },
+    dst: { x: 0.68, y: 0.145, w: 0.18, h: 0.025 } },
+
+  { name: 'meta_no',
+    src: { x: 0.72, y: 0.170, w: 0.22, h: 0.025 },
+    dst: { x: 0.68, y: 0.180, w: 0.18, h: 0.025 } },
+
+  { name: 'meta_po',
+    src: { x: 0.72, y: 0.200, w: 0.22, h: 0.025 },
+    dst: { x: 0.68, y: 0.215, w: 0.18, h: 0.025 } },
+
+  { name: 'meta_credit',
+    src: { x: 0.72, y: 0.230, w: 0.22, h: 0.025 },
+    dst: { x: 0.68, y: 0.250, w: 0.18, h: 0.025 } },
+
+  { name: 'meta_sales',
+    src: { x: 0.72, y: 0.260, w: 0.22, h: 0.025 },
+    dst: { x: 0.68, y: 0.285, w: 0.18, h: 0.025 } },
+
+  { name: 'item_no',
+    src: { x: 0.02, y: 0.340, w: 0.05, h: 0.42 },
+    dst: { x: 0.085, y: 0.370, w: 0.05, h: 0.35 } },
+
+  { name: 'item_desc',
+    src: { x: 0.08, y: 0.340, w: 0.42, h: 0.42 },
+    dst: { x: 0.15, y: 0.370, w: 0.34, h: 0.35 } },
+
+  { name: 'item_qty',
+    src: { x: 0.52, y: 0.340, w: 0.10, h: 0.42 },
+    dst: { x: 0.51, y: 0.370, w: 0.08, h: 0.35 } },
+
+  { name: 'item_unit_price',
+    src: { x: 0.61, y: 0.340, w: 0.13, h: 0.42 },
+    dst: { x: 0.60, y: 0.370, w: 0.10, h: 0.35 } },
+
+  { name: 'item_discount',
+    src: { x: 0.74, y: 0.340, w: 0.10, h: 0.42 },
+    dst: { x: 0.71, y: 0.370, w: 0.08, h: 0.35 } },
+
+  { name: 'item_amount',
+    src: { x: 0.83, y: 0.340, w: 0.16, h: 0.36 },
+    dst: { x: 0.80, y: 0.370, w: 0.12, h: 0.30 } },
+
+  { name: 'totals_all',
+    src: { x: 0.83, y: 0.713, w: 0.16, h: 0.187 },
+    dst: { x: 0.80, y: 0.700, w: 0.12, h: 0.20 } },
+
+  { name: 'money_text',
+    src: { x: 0.05, y: 0.760, w: 0.65, h: 0.150 },
+    dst: { x: 0.11, y: 0.760, w: 0.55, h: 0.150 } },
+];
+
+const HEADER_ZONE = ZONES[0];
+
+/* PROCESS OVERLAY */
+function processOverlay(sourceCanvas){
+  const sw = sourceCanvas.width;
+  const sh = sourceCanvas.height;
+
+  const out = document.createElement('canvas');
+  out.width = CANVAS_W;
+  out.height = CANVAS_H;
+
+  const octx = out.getContext('2d');
+  octx.imageSmoothingEnabled = true;
+  octx.imageSmoothingQuality = 'high';
+
+  for(const zone of ZONES){
+    const srcX = sw * zone.src.x;
+    const srcY = sh * zone.src.y;
+    const srcW = sw * zone.src.w;
+    const srcH = sh * zone.src.h;
+
+    const dstX = CANVAS_W * zone.dst.x;
+    const dstY = CANVAS_H * zone.dst.y;
+    const dstW = CANVAS_W * zone.dst.w;
+    const dstH = CANVAS_H * zone.dst.h;
+
+    octx.drawImage(
+      sourceCanvas,
+      srcX, srcY, srcW, srcH,
+      dstX, dstY, dstW, dstH
+    );
+  }
+
+  const imgData = octx.getImageData(0, 0, CANVAS_W, CANVAS_H);
+  const data = imgData.data;
+
+  for(let i = 0; i < data.length; i += 4){
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    if(r > 240 && g > 240 && b > 240){
+      data[i + 3] = 0;
+    }
+  }
+
+  octx.putImageData(imgData, 0, 0);
+  return out;
+}
+
+/* AUTO LOAD BASE */
+(async()=>{
+  try{
+    setStatus('กำลังโหลดพื้นหลัง...', 'loading');
+    state.base = await loadBaseImage();
+    setStatus('พร้อมใช้งาน', 'ready');
+    render();
+  }catch(err){
+    console.warn(err.message);
+    CANVAS_W = 768;
+    CANVAS_H = 1056;
+    canvas.width = CANVAS_W;
+    canvas.height = CANVAS_H;
+
+    const blank = document.createElement('canvas');
+    blank.width = CANVAS_W;
+    blank.height = CANVAS_H;
+    const bctx = blank.getContext('2d');
+    bctx.fillStyle = '#ffffff';
+    bctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+    state.base = blank;
+    setStatus('ใช้พื้นหลังเปล่า (โหลดรูปไม่ได้)', 'error');
+    render();
+  }
+})();
+
+/* UPLOAD OVERLAY */
+document.getElementById('overlayFile')
+.addEventListener('change',async e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+
+  setStatus('กำลังประมวลผล...', 'loading');
+
+  try{
+    const raw = await fileToRawCanvas(file);
+    state.overlay = processOverlay(raw);
+    setStatus('วางทับเรียบร้อย', 'ready');
+    setUploadState(true, file.name);
+    render();
+  }catch(err){
+    setStatus('เกิดข้อผิดพลาด: ' + err.message, 'error');
+  }
+});
+
+/* RENDER */
+function render(){
+  if(!state.base) return;
+
+  canvas.width = CANVAS_W;
+  canvas.height = CANVAS_H;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(state.base, 0, 0, CANVAS_W, CANVAS_H);
+
+  if(state.overlay){
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(state.overlay, 0, 0, CANVAS_W, CANVAS_H);
+
+    /* ============================
+       VAT TEXT — เติม "7.00" ในช่อง
+       ภาษีมูลค่าเพิ่ม / Value Added Tax
+       ============================ */
+    const vatX = CANVAS_W * 0.92;   /* ชิดขวาในช่อง */
+    const vatY = CANVAS_H * 0.846;  /* บรรทัดที่ 4 ใน totals_all */
+    const fontSize = Math.round(CANVAS_H * 0.014);
+
+    ctx.fillStyle = '#000';
+    ctx.font = `${fontSize}px Inter, sans-serif`;
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('7.00', vatX, vatY);
+  }
+}
+
+/* RESET */
+document.getElementById('resetBtn')
+.addEventListener('click',()=>{
+  state.overlay = null;
+  document.getElementById('overlayFile').value = '';
+  setUploadState(false);
+  setStatus('ล้าง overlay แล้ว', 'ready');
+  render();
+});
+
+/* DOWNLOAD */
+document.getElementById('downloadBtn')
+.addEventListener('click',()=>{
+  if(!state.base) return;
+
+  const imgData = canvas.toDataURL('image/png', 1);
+
+  const pdf = new jsPDF({
+    orientation:
+      canvas.width > canvas.height ? 'landscape' : 'portrait',
+    unit:'mm',
+    format:'letter'
+  });
+
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+
+  const ratio = Math.min(pageW / canvas.width, pageH / canvas.height);
+  const w = canvas.width * ratio;
+  const h = canvas.height * ratio;
+  const x = (pageW - w) / 2;
+  const y = (pageH - h) / 2;
+
+  pdf.addImage(imgData, 'PNG', x, y, w, h);
+  pdf.save('overlay-' + Date.now() + '.pdf');
+});
+</script>
+
+</body>
+</html>
