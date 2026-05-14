@@ -42,7 +42,6 @@ body{
   height:100vh;
 }
 
-/* SIDEBAR */
 .sidebar{
   width:260px;
   background:var(--panel);
@@ -80,7 +79,6 @@ body{
   letter-spacing:0.04em;
 }
 
-/* ========== UPLOAD CARD ใหม่ ========== */
 .upload{
   position:relative;
   display:flex;
@@ -104,9 +102,7 @@ body{
   box-shadow:0 4px 16px rgba(0,113,227,.10);
 }
 
-.upload:active{
-  transform:translateY(0);
-}
+.upload:active{ transform:translateY(0); }
 
 .upload.has-file{
   border-style:solid;
@@ -114,9 +110,7 @@ body{
   background:linear-gradient(180deg,var(--green-soft) 0%,#dcf5e3 100%);
 }
 
-.upload input{
-  display:none;
-}
+.upload input{ display:none; }
 
 .upload-icon{
   width:44px;
@@ -146,9 +140,7 @@ body{
   transition:stroke .25s ease;
 }
 
-.upload.has-file .upload-icon svg{
-  stroke:var(--green);
-}
+.upload.has-file .upload-icon svg{ stroke:var(--green); }
 
 .upload-title{
   font-weight:600;
@@ -162,11 +154,8 @@ body{
   line-height:1.45;
 }
 
-.upload.has-file .upload-title{
-  color:#0a7d2c;
-}
+.upload.has-file .upload-title{ color:#0a7d2c; }
 
-/* ========== BUTTONS ========== */
 .row{
   display:flex;
   gap:8px;
@@ -193,9 +182,7 @@ body{
   box-shadow:0 4px 12px rgba(0,113,227,.25);
 }
 
-.btn:active{
-  transform:translateY(0);
-}
+.btn:active{ transform:translateY(0); }
 
 .btn.secondary{
   background:#f0f0f3;
@@ -207,7 +194,6 @@ body{
   box-shadow:0 2px 8px rgba(0,0,0,.06);
 }
 
-/* ========== STATUS ========== */
 .status{
   font-size:11.5px;
   color:var(--sub);
@@ -237,7 +223,6 @@ body{
   50%{ opacity:.3; }
 }
 
-/* PREVIEW */
 .preview{
   flex:1;
   display:flex;
@@ -270,7 +255,6 @@ canvas{
 
 <div class="app">
 
-  <!-- SIDEBAR -->
   <div class="sidebar">
 
     <div>
@@ -278,13 +262,9 @@ canvas{
       <div class="logo-sub">ใช้ขนาดจริงของรูป</div>
     </div>
 
-    <!-- OVERLAY -->
     <div class="section">
-
       <div class="label">ไฟล์ด้านบน</div>
-
       <label class="upload" id="uploadBox">
-
         <div class="upload-icon">
           <svg viewBox="0 0 24 24" id="uploadIcon">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -292,44 +272,27 @@ canvas{
             <line x1="12" y1="3" x2="12" y2="15"/>
           </svg>
         </div>
-
         <div>
           <div class="upload-title" id="uploadTitle">เลือกไฟล์ Overlay</div>
           <div class="upload-sub" id="uploadSub">PDF หรือรูปภาพ — วางทับอัตโนมัติ</div>
         </div>
-
         <input type="file" id="overlayFile" accept="image/*,application/pdf">
-
       </label>
-
     </div>
 
-    <!-- BUTTONS -->
     <div class="row">
-
-      <button class="btn secondary" id="resetBtn">
-        ล้าง Overlay
-      </button>
-
-      <button class="btn" id="downloadBtn">
-        ดาวน์โหลด
-      </button>
-
+      <button class="btn secondary" id="resetBtn">ล้าง Overlay</button>
+      <button class="btn" id="downloadBtn">ดาวน์โหลด</button>
     </div>
 
-    <div class="status ready" id="status">
-      พร้อมใช้งาน
-    </div>
+    <div class="status ready" id="status">พร้อมใช้งาน</div>
 
   </div>
 
-  <!-- PREVIEW -->
   <div class="preview">
-
     <div class="canvas-wrap">
       <canvas id="canvas"></canvas>
     </div>
-
   </div>
 
 </div>
@@ -340,13 +303,9 @@ pdfjsLib.GlobalWorkerOptions.workerSrc =
 
 const { jsPDF } = window.jspdf;
 
-/* ============================
-   CANVAS SIZE — ใช้ขนาดจริงของ base image
-   ============================ */
 let CANVAS_W = 0;
 let CANVAS_H = 0;
 
-/* BACKGROUND IMAGE */
 const BASE_FILE_ID = '1_Ow-rrtZpHm3SqY-0C48lY0VioZqy996';
 
 const BASE_URLS = [
@@ -380,7 +339,6 @@ function setUploadState(hasFile, fileName=''){
     uploadBox.classList.add('has-file');
     uploadTitle.textContent = fileName || 'ไฟล์พร้อมใช้งาน';
     uploadSub.textContent = 'คลิกเพื่อเปลี่ยนไฟล์';
-    /* เปลี่ยนไอคอนเป็นเครื่องหมายถูก */
     uploadIcon.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
   }else{
     uploadBox.classList.remove('has-file');
@@ -393,47 +351,33 @@ function setUploadState(hasFile, fileName=''){
   }
 }
 
-/* LOAD BASE IMAGE */
-
 function loadBaseImage(){
-
   return new Promise((resolve,reject)=>{
-
     let idx = 0;
-
     const tryNext = ()=>{
-
       if(idx >= BASE_URLS.length){
         reject(new Error('โหลดรูปพื้นหลังไม่ได้'));
         return;
       }
-
       const img = new Image();
       img.crossOrigin = 'anonymous';
-
       img.onload = ()=>{
         const c = document.createElement('canvas');
         c.width = img.naturalWidth;
         c.height = img.naturalHeight;
         c.getContext('2d').drawImage(img,0,0);
-
         CANVAS_W = img.naturalWidth;
         CANVAS_H = img.naturalHeight;
         canvas.width = CANVAS_W;
         canvas.height = CANVAS_H;
-
         resolve(c);
       };
-
       img.onerror = ()=>{ idx++; tryNext(); };
       img.src = BASE_URLS[idx];
     };
-
     tryNext();
   });
 }
-
-/* LOAD IMAGE FROM FILE */
 
 function loadImageRaw(file){
   return new Promise((resolve,reject)=>{
@@ -456,8 +400,6 @@ function loadImageRaw(file){
     reader.readAsDataURL(file);
   });
 }
-
-/* LOAD PDF AT HIGH RES */
 
 async function loadPDFRaw(file){
   const buffer = await file.arrayBuffer();
@@ -494,9 +436,6 @@ async function fileToRawCanvas(file){
   return await loadImageRaw(file);
 }
 
-/* ============================
-   ZONES
-   ============================ */
 const ZONES = [
   { name: 'header',
     src: { x: 0.00, y: 0.02, w: 0.68, h: 0.12 },
@@ -573,7 +512,6 @@ const ZONES = [
 
 const HEADER_ZONE = ZONES[0];
 
-/* PROCESS OVERLAY */
 function processOverlay(sourceCanvas){
   const sw = sourceCanvas.width;
   const sh = sourceCanvas.height;
@@ -620,7 +558,6 @@ function processOverlay(sourceCanvas){
   return out;
 }
 
-/* AUTO LOAD BASE */
 (async()=>{
   try{
     setStatus('กำลังโหลดพื้นหลัง...', 'loading');
@@ -647,7 +584,6 @@ function processOverlay(sourceCanvas){
   }
 })();
 
-/* UPLOAD OVERLAY */
 document.getElementById('overlayFile')
 .addEventListener('change',async e=>{
   const file = e.target.files[0];
@@ -666,7 +602,6 @@ document.getElementById('overlayFile')
   }
 });
 
-/* RENDER */
 function render(){
   if(!state.base) return;
 
@@ -680,13 +615,10 @@ function render(){
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(state.overlay, 0, 0, CANVAS_W, CANVAS_H);
 
-    /* ============================
-       VAT TEXT — เติม "7.00" ในช่อง
-       ภาษีมูลค่าเพิ่ม / Value Added Tax
-       ============================ */
-    const vatX = CANVAS_W * 0.92;   /* ชิดขวาในช่อง */
-    const vatY = CANVAS_H * 0.846;  /* บรรทัดที่ 4 ใน totals_all */
-    const fontSize = Math.round(CANVAS_H * 0.014);
+    /* เขียน "7.00" ในช่อง Value Added Tax */
+    const vatX = CANVAS_W * 0.755;
+    const vatY = CANVAS_H * 0.787;
+    const fontSize = Math.round(CANVAS_H * 0.011);
 
     ctx.fillStyle = '#000';
     ctx.font = `${fontSize}px Inter, sans-serif`;
@@ -696,7 +628,6 @@ function render(){
   }
 }
 
-/* RESET */
 document.getElementById('resetBtn')
 .addEventListener('click',()=>{
   state.overlay = null;
@@ -706,7 +637,6 @@ document.getElementById('resetBtn')
   render();
 });
 
-/* DOWNLOAD */
 document.getElementById('downloadBtn')
 .addEventListener('click',()=>{
   if(!state.base) return;
