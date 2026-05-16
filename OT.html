@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#f2f2f7">
+  <title>OT</title>
+  <style>
+    :root {
+      --bg: #f2f2f7;
+      --bg-elev: #ffffff;
+      --text: #000000;
+      --text-secondary: #3c3c43;
+      --text-tertiary: #6e6e73;
+      --separator: rgba(60, 60, 67, 0.18);
+      --accent: #007aff;
+      --accent-hover: #0056d6;
+      --success: #34c759;
+      --success-bg: rgba(52, 199, 89, 0.15);
+      --error: #ff3b30;
+      --error-bg: rgba(255, 59, 48, 0.12);
+      --warning: #ff9500;
+      --warning-bg: rgba(255, 149, 0, 0.15);
+      --field-bg: #ffffff;
+      --field-border: rgba(0, 0, 0, 0.12);
+      --field-border-focus: #007aff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow-x: hidden; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', 'Sarabun', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.4;
+      font-size: 17px;
+      letter-spacing: -0.022em;
+      padding-bottom: env(safe-area-inset-bottom);
+      overscroll-behavior-y: contain;
+    }
+
+    .top-bar {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(242, 242, 247, 0.85);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      padding: env(safe-area-inset-top) 0 0;
+      border-bottom: 0.5px solid var(--separator);
+    }
+    .top-bar-inner {
+      padding: 10px 16px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      min-height: 44px;
+    }
+    .top-bar h1 { font-size: 18px; font-weight: 600; }
+    .back-btn {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      color: var(--accent);
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-family: inherit;
+      display: none;
+      align-items: center;
+      gap: 4px;
+    }
+    .back-btn.show { display: inline-flex; }
+    .back-btn:active { background: rgba(0,0,0,0.05); }
+
+    .large-title { padding: 12px 20px 18px; }
+    .large-title h2 { font-size: 32px; font-weight: 700; line-height: 1.12; }
+    .large-title p { font-size: 15px; color: var(--text-tertiary); margin-top: 6px; }
+
+    .content { padding: 0 16px; }
+
+    .mode-select { padding: 8px 16px 40px; }
+    .mode-card {
+      background: var(--bg-elev);
+      border-radius: 20px;
+      padding: 28px 22px;
+      margin-bottom: 16px;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      border: 2px solid transparent;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .mode-card:active { transform: scale(0.97); }
+    .mode-card.start { background: linear-gradient(135deg, #34c759 0%, #2da349 100%); color: white; }
+    .mode-card.end { background: linear-gradient(135deg, #ff9500 0%, #ff7a00 100%); color: white; }
+    .mode-card-icon {
+      width: 72px; height: 72px; border-radius: 20px;
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(10px);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 38px; flex-shrink: 0;
+    }
+    .mode-card-text { flex: 1; }
+    .mode-card-title { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 4px; }
+    .mode-card-desc { font-size: 14px; opacity: 0.9; line-height: 1.4; }
+    .mode-card-arrow { font-size: 26px; opacity: 0.7; flex-shrink: 0; }
+    .mode-tip {
+      text-align: center; font-size: 13px; color: var(--text-tertiary);
+      margin-top: 8px; padding: 0 16px; line-height: 1.5;
+    }
+
+    .section-header {
+      font-size: 13px; color: var(--text-tertiary); font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      padding: 20px 4px 10px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .mode-badge {
+      font-size: 11px; padding: 4px 10px; border-radius: 980px;
+      font-weight: 700; letter-spacing: 0.04em;
+    }
+    .mode-badge.clock-in { background: var(--success-bg); color: #1e7a2e; }
+    .mode-badge.clock-out { background: var(--warning-bg); color: #c66800; }
+
+    .field-group { background: var(--bg-elev); border-radius: 14px; padding: 4px; margin-bottom: 4px; }
+    .field { padding: 14px 14px 12px; position: relative; }
+    .field + .field::before {
+      content: ''; position: absolute; top: 0; left: 14px; right: 14px;
+      height: 0.5px; background: var(--separator);
+    }
+    .field-label {
+      display: block; font-size: 13px; font-weight: 600;
+      color: var(--text-secondary); margin-bottom: 8px; letter-spacing: 0.01em;
+    }
+    .field-label .required { color: var(--error); margin-left: 2px; }
+
+    .field-input {
+      width: 100%; padding: 12px 14px;
+      border: 1.5px solid var(--field-border);
+      border-radius: 10px; background: var(--field-bg);
+      font-size: 18px; font-weight: 500; font-family: inherit;
+      color: var(--text); letter-spacing: -0.022em;
+      -webkit-appearance: none; appearance: none;
+      transition: border-color 0.15s, background 0.15s;
+      min-height: 50px;
+    }
+    .field-input:focus { outline: none; border-color: var(--field-border-focus); background: #fff; }
+    .field-input::placeholder { color: #b0b0b5; font-weight: 400; }
+
+    select.field-input {
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236e6e73' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 40px;
+    }
+
+    textarea.field-input { min-height: 100px; resize: none; line-height: 1.5; font-size: 17px; }
+    input[type="date"].field-input, input[type="time"].field-input { font-size: 18px; font-weight: 500; }
+
+    .clock-in-info {
+      background: linear-gradient(135deg, rgba(52, 199, 89, 0.12), rgba(52, 199, 89, 0.05));
+      border: 1.5px solid rgba(52, 199, 89, 0.3);
+      border-radius: 14px; padding: 18px; margin-bottom: 8px;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .clock-in-info .info-title {
+      font-size: 13px; font-weight: 700; color: #1e7a2e;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+    }
+    .clock-in-info .info-time {
+      font-size: 36px; font-weight: 700; color: #15803d;
+      letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+    }
+    .clock-in-info .info-desc { font-size: 14px; color: var(--text-secondary); margin-top: 4px; line-height: 1.5; }
+
+    .warning-box {
+      background: var(--warning-bg);
+      border: 1.5px solid rgba(255, 149, 0, 0.35);
+      border-radius: 14px; padding: 16px 18px; margin-bottom: 8px;
+      font-size: 14px; color: #c66800; line-height: 1.5;
+      animation: fadeIn 0.3s ease;
+    }
+    .warning-box b { font-weight: 700; }
+
+    .empty-active-box {
+      background: var(--error-bg);
+      border: 1.5px solid rgba(255, 59, 48, 0.3);
+      border-radius: 14px; padding: 18px; margin-bottom: 8px;
+      text-align: center; animation: fadeIn 0.3s ease;
+    }
+    .empty-active-box .emoji { font-size: 32px; margin-bottom: 8px; }
+    .empty-active-box .title { font-size: 16px; font-weight: 700; color: #c8201a; margin-bottom: 4px; }
+    .empty-active-box .desc { font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
+
+    .hours-summary {
+      margin-top: 12px; padding: 14px 16px;
+      background: linear-gradient(135deg, rgba(0, 122, 255, 0.08), rgba(0, 122, 255, 0.04));
+      border: 1.5px solid rgba(0, 122, 255, 0.2);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .hours-summary-label { font-size: 13px; color: var(--text-secondary); font-weight: 600; }
+    .hours-summary-value { font-size: 24px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+    .hours-summary.error { background: var(--error-bg); border-color: rgba(255, 59, 48, 0.3); }
+    .hours-summary.error .hours-summary-value { color: var(--error); font-size: 14px; }
+
+    .action-card { background: var(--bg-elev); border-radius: 14px; padding: 18px; margin-bottom: 8px; }
+    .action-card-title { font-size: 16px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+    .action-card-icon { width: 32px; height: 32px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; }
+    .icon-cam { background: #ff9500; color: white; }
+
+    .btn {
+      padding: 16px 22px; border: none; border-radius: 12px;
+      font-size: 17px; font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s, background 0.15s;
+      font-family: inherit; letter-spacing: -0.022em;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; user-select: none;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:active:not(:disabled) { background: var(--accent-hover); transform: scale(0.98); }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-success:active:not(:disabled) { background: #2da349; transform: scale(0.98); }
+    .btn-warning { background: var(--warning); color: #fff; }
+    .btn-warning:active:not(:disabled) { background: #e08600; transform: scale(0.98); }
+    .btn-orange { background: rgba(255, 149, 0, 0.15); color: #c66800; font-weight: 600; }
+    .btn-orange:active:not(:disabled) { background: rgba(255, 149, 0, 0.25); }
+    .btn-tinted { background: rgba(0, 122, 255, 0.12); color: var(--accent); }
+    .btn-tinted:active:not(:disabled) { background: rgba(0, 122, 255, 0.22); }
+    .btn-big { padding: 20px; font-size: 18px; }
+    .btn:disabled { opacity: 0.4; }
+
+    .submit-section { padding: 24px 16px 32px; }
+    .submit-section .btn-primary, .submit-section .btn-warning, .submit-section .btn-success {
+      padding: 18px; font-size: 18px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .status-box { padding: 14px 16px; border-radius: 12px; font-size: 15px; margin-top: 12px; line-height: 1.5; }
+    .status-success { background: var(--success-bg); color: #1e7a2e; }
+    .status-error { background: var(--error-bg); color: #c8201a; }
+
+    #selfiePreview { width: 100%; border-radius: 12px; margin-top: 14px; display: block; max-height: 380px; object-fit: cover; background: #000; }
+
+    .file-label { display: block; cursor: pointer; position: relative; }
+    .file-label input[type="file"] { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 0; }
+
+    .step-status { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-top: 10px; background: rgba(0,0,0,0.04); border-radius: 10px; font-size: 14px; font-weight: 500; }
+    .step-icon { width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; color: white; flex-shrink: 0; font-weight: 700; }
+    .step-active { background: var(--accent); }
+    .step-done { background: var(--success); }
+
+    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: -2px; margin-right: 6px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .view { display: none; }
+    .view.active { display: block; animation: viewIn 0.25s ease; }
+    @keyframes viewIn {
+      from { opacity: 0; transform: translateX(8px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+      z-index: 1000; display: flex; align-items: center; justify-content: center;
+      padding: 24px; opacity: 0; pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .modal-overlay.show { opacity: 1; pointer-events: auto; }
+    .modal-card {
+      background: var(--bg-elev); border-radius: 20px;
+      padding: 32px 24px 24px;
+      width: 100%; max-width: 340px; text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: scale(0.85);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .modal-overlay.show .modal-card { transform: scale(1); }
+    .modal-icon {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: var(--success); color: white; font-size: 44px;
+      display: inline-flex; align-items: center; justify-content: center;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 20px rgba(52, 199, 89, 0.35);
+      animation: bounceIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .modal-icon.warning { background: var(--warning); box-shadow: 0 8px 20px rgba(255, 149, 0, 0.35); }
+    @keyframes bounceIn {
+      0% { transform: scale(0); }
+      60% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+    .modal-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+    .modal-message { font-size: 15px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.5; }
+    .modal-info-box {
+      padding: 12px; background: rgba(0,0,0,0.04);
+      border-radius: 10px; margin-bottom: 20px;
+      font-size: 14px; text-align: left;
+    }
+    .modal-info-box .info-row { display: flex; justify-content: space-between; padding: 4px 0; gap: 12px; }
+    .modal-info-box .info-row b { font-weight: 600; text-align: right; word-break: break-all; }
+    .modal-btn {
+      width: 100%; padding: 14px;
+      border: none; border-radius: 12px;
+      background: var(--accent); color: white;
+      font-size: 17px; font-weight: 600;
+      font-family: inherit; cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .modal-btn:active { background: var(--accent-hover); transform: scale(0.98); }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <div class="top-bar-inner">
+      <button type="button" class="back-btn" id="backBtn" onclick="goToSelectView()">‹ ย้อนกลับ</button>
+      <h1 id="topBarTitle"></h1>
+    </div>
+  </div>
+
+  <!-- ============ VIEW 1: หน้าเลือกโหมด ============ -->
+  <div class="view active" id="selectView">
+    <div class="large-title">
+      <h2>บันทึก OT</h2>
+      <p>เลือกประเภทการบันทึก</p>
+    </div>
+
+    <div class="mode-select">
+      <div class="mode-card start" onclick="goToFormView('clock_in')">
+        <div class="mode-card-icon">⏱️</div>
+        <div class="mode-card-text">
+          <div class="mode-card-title">เริ่มงาน</div>
+          <div class="mode-card-desc">บันทึกเวลาเข้าเริ่ม OT</div>
+        </div>
+        <div class="mode-card-arrow">›</div>
+      </div>
+
+      <div class="mode-card end" onclick="goToFormView('clock_out')">
+        <div class="mode-card-icon">🏁</div>
+        <div class="mode-card-text">
+          <div class="mode-card-title">เลิกงาน</div>
+          <div class="mode-card-desc">เลือกชื่อ + บันทึกเวลาเลิก</div>
+        </div>
+        <div class="mode-card-arrow">›</div>
+      </div>
+
+      <p class="mode-tip">💡 กดเริ่มงานก่อนเริ่มทำ OT<br>แล้วกลับมากด "เลิกงาน" เมื่อเสร็จ</p>
+    </div>
+  </div>
+
+  <!-- ============ VIEW 2: ฟอร์มบันทึก ============ -->
+  <div class="view" id="formView">
+    <div class="large-title">
+      <h2 id="pageTitle">บันทึก OT</h2>
+      <p id="pageDesc">กรอกข้อมูล → ถ่ายรูป → กดเริ่มงาน</p>
+    </div>
+
+    <form id="otForm" onsubmit="handleSubmit(event)">
+      <div class="content">
+
+        <div class="section-header">
+          <span>ข้อมูลพนักงาน</span>
+          <span class="mode-badge clock-in" id="modeBadge">⏱️ เริ่มงาน</span>
+        </div>
+        <div class="field-group">
+          <div class="field">
+            <label class="field-label" for="otDate">วันที่ <span class="required">*</span></label>
+            <input type="date" id="otDate" class="field-input" required onchange="onDateChange()">
+          </div>
+
+          <!-- โหมดเริ่มงาน: input พิมพ์ชื่อ -->
+          <div class="field" id="nameInputField">
+            <label class="field-label" for="employeeName">ชื่อ - นามสกุล <span class="required">*</span></label>
+            <input type="text" id="employeeName" class="field-input" placeholder="พิมพ์ชื่อหรือเลือกจากรายการ" list="employeeList" autocomplete="off" oninput="onNameInput()" onblur="checkClockStatus()">
+            <datalist id="employeeList"></datalist>
+          </div>
+
+          <!-- โหมดเลิกงาน: dropdown เลือกชื่อ -->
+          <div class="field" id="nameSelectField" style="display:none;">
+            <label class="field-label" for="employeeSelect">เลือกชื่อพนักงาน <span class="required">*</span></label>
+            <select id="employeeSelect" class="field-input" onchange="onEmployeeSelected()">
+              <option value="">-- เลือกชื่อ --</option>
+            </select>
+          </div>
+
+          <!-- ชื่อหัวหน้า (โหมดเริ่มงานเท่านั้น) -->
+          <div class="field" id="supervisorField">
+            <label class="field-label" for="supervisorName">ชื่อหัวหน้า <span class="required">*</span></label>
+            <input type="text" id="supervisorName" class="field-input" placeholder="พิมพ์ชื่อหัวหน้าหรือเลือกจากรายการ" list="supervisorList" autocomplete="off">
+            <datalist id="supervisorList"></datalist>
+          </div>
+
+          <div class="field">
+            <label class="field-label" id="timeLabel">เวลาเริ่มงาน <span class="required">*</span></label>
+            <input type="time" id="timeInput" class="field-input" required>
+            <div class="hours-summary" id="hoursSummary" style="display:none;">
+              <span class="hours-summary-label">เวลารวม</span>
+              <span class="hours-summary-value" id="hoursValue">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- กล่องเตือน -->
+        <div id="warningBox" style="display:none;"></div>
+
+        <!-- กล่องแสดงข้อมูล clock-in -->
+        <div id="clockInBox" style="display:none;"></div>
+
+        <!-- รายละเอียดงาน (แสดงเฉพาะโหมดเริ่มงาน) -->
+        <div id="workDetailSection">
+          <div class="section-header">รายละเอียดงาน</div>
+          <div class="field-group">
+            <div class="field">
+              <label class="field-label" for="workDetail">งานที่ทำ</label>
+              <textarea id="workDetail" class="field-input" placeholder="อธิบายงานที่ทำในช่วง OT..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-header" id="selfieHeader">ยืนยันตัวตน</div>
+
+        <div class="action-card" id="selfieCard">
+          <div class="action-card-title">
+            <span class="action-card-icon icon-cam">📸</span>
+            ถ่ายรูป + ระบุตำแหน่ง
+          </div>
+
+          <label class="file-label" id="cameraLabel">
+            <span class="btn btn-orange btn-big" style="pointer-events:none;">
+              📸 เปิดกล้อง (ถ่ายสด)
+            </span>
+            <input type="file" id="cameraInput" accept="image/*" capture="user" onclick="onCameraOpen()" onchange="handleCapture(event)">
+          </label>
+          <img id="selfiePreview" style="display:none;" alt="selfie preview">
+          <div id="captureStatus"></div>
+
+          <button type="button" class="btn btn-tinted" onclick="retakePhoto()" id="retakeBtn" style="display:none; margin-top:10px;">
+            ถ่ายใหม่
+          </button>
+
+          <input type="hidden" id="gpsCoords">
+          <input type="hidden" id="address">
+          <canvas id="canvas" style="display:none;"></canvas>
+        </div>
+      </div>
+
+      <div class="submit-section">
+        <button type="submit" class="btn btn-primary" id="submitBtn">⏱️ เริ่มงาน OT</button>
+        <div id="formStatus"></div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Success Modal -->
+  <div class="modal-overlay" id="successModal" onclick="closeModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-icon" id="modalIcon">✓</div>
+      <div class="modal-title" id="modalTitle">บันทึกสำเร็จ</div>
+      <div class="modal-message" id="modalMessage"></div>
+      <div class="modal-info-box" id="modalInfoBox" style="display:none;"></div>
+      <button class="modal-btn" onclick="closeModal()">ตกลง</button>
+    </div>
+  </div>
+
+  <script>
+    let currentMode = 'clock_in';
+    let existingClockIn = null;
+    let activeClockInsCache = [];
+
+    function escapeHtml(s) {
+      return String(s || '').replace(/[&<>"']/g, c =>
+        ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+    }
+
+    // ====== View Switching ======
+    function goToFormView(mode) {
+      currentMode = mode;
+      existingClockIn = null;
+
+      document.getElementById('otForm').reset();
+      document.getElementById('otDate').valueAsDate = new Date();
+      retakePhoto();
+      document.getElementById('formStatus').innerHTML = '';
+      document.getElementById('warningBox').style.display = 'none';
+      document.getElementById('clockInBox').style.display = 'none';
+      document.getElementById('hoursSummary').style.display = 'none';
+
+      const sel = document.getElementById('employeeSelect');
+      sel.innerHTML = '<option value="">-- เลือกชื่อ --</option>';
+
+      applyModeUI(mode);
+
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('timeInput').value = hh + ':' + mm;
+
+      if (mode === 'clock_in') {
+        loadEmployeeNames();
+        loadSupervisorNames();
+      } else {
+        loadActiveClockIns();
+      }
+
+      document.getElementById('selectView').classList.remove('active');
+      document.getElementById('formView').classList.add('active');
+      document.getElementById('backBtn').classList.add('show');
+      window.scrollTo({ top: 0 });
+    }
+
+    function goToSelectView() {
+      document.getElementById('formView').classList.remove('active');
+      document.getElementById('selectView').classList.add('active');
+      document.getElementById('backBtn').classList.remove('show');
+      window.scrollTo({ top: 0 });
+    }
+
+    function applyModeUI(mode) {
+      const badge = document.getElementById('modeBadge');
+      const title = document.getElementById('pageTitle');
+      const desc = document.getElementById('pageDesc');
+      const timeLabel = document.getElementById('timeLabel');
+      const submitBtn = document.getElementById('submitBtn');
+      const selfieHeader = document.getElementById('selfieHeader');
+      const nameInputField = document.getElementById('nameInputField');
+      const nameSelectField = document.getElementById('nameSelectField');
+      const supervisorField = document.getElementById('supervisorField');
+      const workDetailSection = document.getElementById('workDetailSection');
+
+      if (mode === 'clock_out') {
+        badge.textContent = '🏁 เลิกงาน';
+        badge.className = 'mode-badge clock-out';
+        title.textContent = 'เลิกงาน OT';
+        desc.textContent = 'เลือกชื่อ → บันทึกเวลา → ถ่ายรูป';
+        timeLabel.innerHTML = 'เวลาเลิกงาน <span class="required">*</span>';
+        submitBtn.textContent = '🏁 เลิกงาน';
+        submitBtn.className = 'btn btn-warning';
+        selfieHeader.innerHTML = 'ยืนยันตัวตน (รูปเลิกงาน)';
+
+        nameInputField.style.display = 'none';
+        nameSelectField.style.display = 'block';
+        supervisorField.style.display = 'none';
+        workDetailSection.style.display = 'none';
+      } else {
+        badge.textContent = '⏱️ เริ่มงาน';
+        badge.className = 'mode-badge clock-in';
+        title.textContent = 'บันทึก OT';
+        desc.textContent = 'กรอกข้อมูล → ถ่ายรูป → กดเริ่มงาน';
+        timeLabel.innerHTML = 'เวลาเริ่มงาน <span class="required">*</span>';
+        submitBtn.textContent = '⏱️ เริ่มงาน OT';
+        submitBtn.className = 'btn btn-primary';
+        selfieHeader.innerHTML = 'ยืนยันตัวตน';
+
+        nameInputField.style.display = 'block';
+        nameSelectField.style.display = 'none';
+        supervisorField.style.display = 'block';
+        workDetailSection.style.display = 'block';
+      }
+    }
+
+    function loadEmployeeNames() {
+      google.script.run
+        .withSuccessHandler(function(names) {
+          if (!names || !names.length) return;
+          const dl = document.getElementById('employeeList');
+          dl.innerHTML = names.map(n =>
+            '<option value="' + String(n).replace(/"/g, '&quot;') + '">'
+          ).join('');
+        })
+        .withFailureHandler(function() {})
+        .getEmployeeNames();
+    }
+
+    function loadSupervisorNames() {
+      google.script.run
+        .withSuccessHandler(function(names) {
+          if (!names || !names.length) return;
+          const dl = document.getElementById('supervisorList');
+          dl.innerHTML = names.map(n =>
+            '<option value="' + String(n).replace(/"/g, '&quot;') + '">'
+          ).join('');
+        })
+        .withFailureHandler(function() {})
+        .getSupervisorNames();
+    }
+
+    function loadActiveClockIns() {
+      const date = document.getElementById('otDate').value;
+      const sel = document.getElementById('employeeSelect');
+      const warningBox = document.getElementById('warningBox');
+
+      sel.innerHTML = '<option value="">กำลังโหลด...</option>';
+      sel.disabled = true;
+      warningBox.style.display = 'none';
+
+      google.script.run
+        .withSuccessHandler(function(list) {
+          activeClockInsCache = list || [];
+          sel.disabled = false;
+
+          if (!activeClockInsCache.length) {
+            sel.innerHTML = '<option value="">-- ไม่มีคนกำลังทำงาน --</option>';
+            warningBox.style.display = 'block';
+            warningBox.innerHTML =
+              '<div class="empty-active-box">' +
+              '<div class="emoji">🔍</div>' +
+              '<div class="title">ไม่พบบันทึกเริ่มงาน</div>' +
+              '<div class="desc">วันนี้ยังไม่มีพนักงานคนใดกด "เริ่มงาน" ไว้<br>กรุณากลับไปกดเริ่มงานก่อน</div>' +
+              '</div>';
+            return;
+          }
+
+          sel.innerHTML = '<option value="">-- เลือกชื่อ --</option>' +
+            activeClockInsCache.map((p, idx) =>
+              '<option value="' + idx + '">' +
+              escapeHtml(p.employeeName) + '  ·  เริ่ม ' + p.startTime +
+              '</option>'
+            ).join('');
+        })
+        .withFailureHandler(function(err) {
+          sel.disabled = false;
+          sel.innerHTML = '<option value="">โหลดไม่สำเร็จ</option>';
+        })
+        .getActiveClockIns(date);
+    }
+
+    function onDateChange() {
+      if (currentMode === 'clock_out') {
+        loadActiveClockIns();
+        existingClockIn = null;
+        document.getElementById('clockInBox').style.display = 'none';
+        document.getElementById('hoursSummary').style.display = 'none';
+      } else {
+        checkClockStatus();
+      }
+    }
+
+    function onNameInput() {
+      const value = document.getElementById('employeeName').value;
+      const options = document.querySelectorAll('#employeeList option');
+      for (const opt of options) {
+        if (opt.value === value) {
+          checkClockStatus();
+          return;
+        }
+      }
+    }
+
+    function onEmployeeSelected() {
+      const sel = document.getElementById('employeeSelect');
+      const idx = sel.value;
+      const clockInBox = document.getElementById('clockInBox');
+      const warningBox = document.getElementById('warningBox');
+
+      if (idx === '' || !activeClockInsCache[idx]) {
+        existingClockIn = null;
+        clockInBox.style.display = 'none';
+        document.getElementById('hoursSummary').style.display = 'none';
+        return;
+      }
+
+      const picked = activeClockInsCache[idx];
+      existingClockIn = {
+        rowIndex: null,
+        requestId: picked.requestId,
+        startTime: picked.startTime,
+        supervisor: picked.supervisor,
+        otDate: picked.otDate
+      };
+
+      warningBox.style.display = 'none';
+      clockInBox.style.display = 'block';
+      clockInBox.innerHTML =
+        '<div class="clock-in-info">' +
+        '<div class="info-title">⏱️ บันทึกเริ่มงานไว้แล้ว</div>' +
+        '<div class="info-time">' + picked.startTime + '</div>' +
+        '<div class="info-desc">' +
+          (picked.supervisor ? '👤 หัวหน้า: <b>' + escapeHtml(picked.supervisor) + '</b><br>' : '') +
+          '🆔 ' + escapeHtml(picked.requestId) +
+        '</div>' +
+        '</div>';
+
+      const timeInput = document.getElementById('timeInput');
+      timeInput.removeEventListener('change', calcHoursListener);
+      timeInput.addEventListener('change', calcHoursListener);
+      calcHoursListener();
+    }
+
+    function checkClockStatus() {
+      if (currentMode !== 'clock_in') return;
+
+      const name = document.getElementById('employeeName').value.trim();
+      const date = document.getElementById('otDate').value;
+      const warningBox = document.getElementById('warningBox');
+
+      if (!name || !date) {
+        warningBox.style.display = 'none';
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res.status === 'clocked_in') {
+            warningBox.style.display = 'block';
+            warningBox.innerHTML =
+              '<div class="warning-box">' +
+              '⚠️ <b>คุณมี OT ค้างอยู่!</b><br>' +
+              'เริ่มไว้ตอน <b>' + res.startTime + '</b> ยังไม่ได้กดเลิกงาน<br>' +
+              'กรุณากลับไปกด "เลิกงาน" ก่อน' +
+              '</div>';
+          } else {
+            warningBox.style.display = 'none';
+          }
+        })
+        .withFailureHandler(function() {
+          warningBox.style.display = 'none';
+        })
+        .checkClockStatus(name, date);
+    }
+
+    function calcHoursListener() {
+      if (currentMode !== 'clock_out' || !existingClockIn) return;
+      const end = document.getElementById('timeInput').value;
+      if (!end) return;
+
+      const [sh, sm] = existingClockIn.startTime.split(':').map(Number);
+      const [eh, em] = end.split(':').map(Number);
+      let startMin = sh * 60 + sm;
+      let endMin = eh * 60 + em;
+      if (endMin <= startMin) endMin += 24 * 60;
+
+      const totalMin = endMin - startMin;
+      const box = document.getElementById('hoursSummary');
+      const val = document.getElementById('hoursValue');
+      box.style.display = 'flex';
+
+      if (totalMin <= 0) {
+        box.classList.add('error');
+        val.textContent = 'เวลาไม่ถูกต้อง';
+      } else {
+        box.classList.remove('error');
+        val.textContent = formatDuration(totalMin);
+      }
+    }
+
+    function formatDuration(totalMin) {
+      const h = Math.floor(totalMin / 60);
+      const m = totalMin % 60;
+      if (h === 0) return m + ' นาที';
+      if (m === 0) return h + ' ชม.';
+      return h + ' ชม. ' + m + ' นาที';
+    }
+
+    // ====== GPS - ความแม่นยำสูง ======
+    let gpsPromise = null;
+    let gpsWatchId = null;
+    let gpsBestReading = null;
+    let cameraOpenedAt = 0;
+
+    const GPS_GOOD_ACCURACY = 10;
+    const GPS_ACCEPTABLE = 30;
+    const GPS_MAX_WAIT = 15000;
+
+    function onCameraOpen() {
+      cameraOpenedAt = Date.now();
+
+      if (!navigator.geolocation) {
+        gpsPromise = Promise.reject({ code: 0, message: 'Geolocation not supported' });
+        return;
+      }
+
+      gpsBestReading = null;
+
+      if (gpsWatchId !== null) {
+        try { navigator.geolocation.clearWatch(gpsWatchId); } catch (e) {}
+        gpsWatchId = null;
+      }
+
+      gpsPromise = new Promise(function(resolve, reject) {
+        let resolved = false;
+        let startedAt = Date.now();
+
+        gpsWatchId = navigator.geolocation.watchPosition(
+          function(pos) {
+            const reading = {
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+              acc: pos.coords.accuracy
+            };
+
+            if (!gpsBestReading || reading.acc < gpsBestReading.acc) {
+              gpsBestReading = reading;
+              updateGpsProgress(reading.acc);
+            }
+
+            if (!resolved && reading.acc <= GPS_GOOD_ACCURACY) {
+              resolved = true;
+              stopGpsWatch();
+              resolve(formatReading(gpsBestReading));
+            }
+          },
+          function(err) {
+            if (!resolved && !gpsBestReading) {
+              stopGpsWatch();
+              resolved = true;
+              reject(err);
+            }
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: GPS_MAX_WAIT,
+            maximumAge: 0
+          }
+        );
+
+        setTimeout(function() {
+          if (resolved) return;
+          stopGpsWatch();
+          resolved = true;
+
+          if (gpsBestReading) {
+            resolve(formatReading(gpsBestReading));
+          } else {
+            navigator.geolocation.getCurrentPosition(
+              function(pos) {
+                resolve({
+                  lat: pos.coords.latitude.toFixed(6),
+                  lng: pos.coords.longitude.toFixed(6),
+                  acc: Math.round(pos.coords.accuracy)
+                });
+              },
+              function(err) { reject(err); },
+              { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+            );
+          }
+        }, GPS_MAX_WAIT);
+      });
+    }
+
+    function stopGpsWatch() {
+      if (gpsWatchId !== null) {
+        try { navigator.geolocation.clearWatch(gpsWatchId); } catch (e) {}
+        gpsWatchId = null;
+      }
+    }
+
+    function formatReading(r) {
+      return {
+        lat: r.lat.toFixed(6),
+        lng: r.lng.toFixed(6),
+        acc: Math.round(r.acc)
+      };
+    }
+
+    function updateGpsProgress(currentAcc) {
+      const gpsRow = document.getElementById('gpsRow');
+      if (!gpsRow) return;
+      const accInt = Math.round(currentAcc);
+
+      let icon, msg;
+      if (accInt <= GPS_GOOD_ACCURACY) {
+        icon = '<span class="step-icon step-done">✓</span>';
+        msg = '<span>📍 ความแม่นยำ <b>±' + accInt + ' ม.</b> · กำลังบันทึก...</span>';
+      } else if (accInt <= GPS_ACCEPTABLE) {
+        icon = '<span class="step-icon step-active"><span class="spinner" style="margin:0; width:10px; height:10px;"></span></span>';
+        msg = '<span>📍 ปัจจุบัน ±' + accInt + ' ม. · กำลังหาความแม่นยำที่ดีกว่า...</span>';
+      } else {
+        icon = '<span class="step-icon step-active"><span class="spinner" style="margin:0; width:10px; height:10px;"></span></span>';
+        msg = '<span>📍 ปัจจุบัน ±' + accInt + ' ม. · ' +
+              '<span style="color:#c66800;">ออกที่โล่ง / เปิดที่กลางแจ้งช่วยได้</span></span>';
+      }
+      gpsRow.innerHTML = icon + msg;
+    }
+
+    function handleCapture(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const MAX_AGE_BEFORE_CLICK = 60 * 1000;
+      const fileTime = file.lastModified || 0;
+      const ageBeforeClick = cameraOpenedAt - fileTime;
+
+      if (fileTime > 0 && ageBeforeClick > MAX_AGE_BEFORE_CLICK) {
+        const ageMin = Math.round(ageBeforeClick / 60000);
+        const ageText = ageMin < 60
+          ? ageMin + ' นาทีก่อน'
+          : ageMin < 1440
+            ? Math.round(ageMin / 60) + ' ชั่วโมงก่อน'
+            : Math.round(ageMin / 1440) + ' วันก่อน';
+
+        document.getElementById('captureStatus').innerHTML =
+          '<div class="status-box status-error" style="line-height:1.6;">' +
+          '🚫 <b>ห้ามเลือกรูปจากแกลเลอรี</b><br>' +
+          'ระบบตรวจพบว่ารูปนี้ถ่ายไว้ตั้งแต่ ' + ageText + '<br>' +
+          '<b>กรุณากด "เปิดกล้อง" แล้วถ่ายสดเท่านั้น</b>' +
+          '</div>';
+        event.target.value = '';
+        return;
+      }
+
+      const now = new Date();
+      const photoTimestamp =
+        String(now.getDate()).padStart(2, '0') + '/' +
+        String(now.getMonth() + 1).padStart(2, '0') + '/' +
+        now.getFullYear() + ' ' +
+        String(now.getHours()).padStart(2, '0') + ':' +
+        String(now.getMinutes()).padStart(2, '0') + ':' +
+        String(now.getSeconds()).padStart(2, '0');
+
+      const statusDiv = document.getElementById('captureStatus');
+      statusDiv.innerHTML =
+        '<div class="step-status"><span class="step-icon step-done">✓</span><span>ถ่ายรูปสำเร็จ</span></div>' +
+        '<div class="step-status" id="gpsRow"><span class="step-icon step-active"><span class="spinner" style="margin:0; width:10px; height:10px;"></span></span><span>กำลังหาตำแหน่ง GPS (รอ ~10-15 วิ)...</span></div>';
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        compressImage(e.target.result, function(compressed) {
+          showPreview(compressed, photoTimestamp);
+        });
+      };
+      reader.readAsDataURL(file);
+
+      if (!gpsPromise) onCameraOpen();
+
+      gpsPromise.then(function(g) {
+        setGpsValue(g.lat, g.lng, g.acc);
+      }).catch(function(err) { showGpsError(err); });
+    }
+
+    function showGpsError(err) {
+      let msg = '', help = '';
+      if (err.code === 1) {
+        msg = 'ไม่ได้รับอนุญาตให้ใช้ตำแหน่ง';
+        help = '<div style="margin-top:8px; font-size:13px;"><b>วิธีแก้:</b><br>' +
+          '• <b>iPhone Safari:</b> แตะ <b>"aA"</b> บน address bar → ตั้งค่าเว็บไซต์ → ตำแหน่ง → อนุญาต<br>' +
+          '• <b>Android Chrome:</b> แตะ <b>🔒</b> → สิทธิ์ → ตำแหน่ง</div>';
+      } else if (err.code === 2) msg = 'ไม่พบสัญญาณ GPS';
+      else if (err.code === 3) msg = 'หมดเวลารอ GPS';
+      else msg = err.message || 'เกิดข้อผิดพลาด';
+
+      document.getElementById('captureStatus').innerHTML =
+        '<div class="step-status"><span class="step-icon step-done">✓</span><span>ถ่ายรูปสำเร็จ</span></div>' +
+        '<div class="status-box status-error">❌ ' + msg + help + '</div>';
+    }
+
+    function compressImage(dataUrl, callback) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        const maxDim = 1024;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) { h = h * (maxDim / w); w = maxDim; }
+          else { w = w * (maxDim / h); h = maxDim; }
+        }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        callback(canvas.toDataURL('image/jpeg', 0.7));
+      };
+      img.onerror = function() { callback(dataUrl); };
+      img.src = dataUrl;
+    }
+
+    function showPreview(dataUrl, photoTimestamp) {
+      const preview = document.getElementById('selfiePreview');
+      preview.src = dataUrl;
+      preview.style.display = 'block';
+      preview.dataset.base64 = dataUrl;
+      preview.dataset.timestamp = photoTimestamp || '';
+      document.getElementById('cameraLabel').style.display = 'none';
+      document.getElementById('retakeBtn').style.display = 'flex';
+    }
+
+    function setGpsValue(lat, lng, acc) {
+      document.getElementById('gpsCoords').value = lat + ', ' + lng;
+      const mapsUrl = 'https://maps.google.com/?q=' + lat + ',' + lng;
+      document.getElementById('address').value = mapsUrl;
+
+      const gpsRow = document.getElementById('gpsRow');
+      if (!gpsRow) return;
+
+      let accColor, accLabel;
+      if (acc <= GPS_GOOD_ACCURACY) {
+        accColor = 'var(--success)';
+        accLabel = '✓ แม่นยำสูง';
+      } else if (acc <= GPS_ACCEPTABLE) {
+        accColor = '#c66800';
+        accLabel = '⚠️ พอใช้ได้';
+      } else {
+        accColor = 'var(--error)';
+        accLabel = '⚠️ ไม่แม่นยำ';
+      }
+
+      gpsRow.innerHTML =
+        '<span class="step-icon step-done">✓</span>' +
+        '<span>📍 ' + lat + ', ' + lng + ' · ' +
+        '<b style="color:' + accColor + ';">±' + acc + ' ม.</b> ' +
+        '<span style="color:' + accColor + ';font-size:12px;">(' + accLabel + ')</span> · ' +
+        '<a href="' + mapsUrl + '" target="_blank">ดูแผนที่</a></span>';
+    }
+
+    function retakePhoto() {
+      const preview = document.getElementById('selfiePreview');
+      preview.style.display = 'none';
+      preview.dataset.base64 = '';
+      preview.dataset.timestamp = '';
+      document.getElementById('retakeBtn').style.display = 'none';
+      document.getElementById('cameraLabel').style.display = 'block';
+      document.getElementById('captureStatus').innerHTML = '';
+      document.getElementById('cameraInput').value = '';
+      document.getElementById('gpsCoords').value = '';
+      document.getElementById('address').value = '';
+      gpsPromise = null;
+      gpsBestReading = null;
+      stopGpsWatch();
+    }
+
+    function showSuccessModal(type, message, info) {
+      const icon = document.getElementById('modalIcon');
+      const title = document.getElementById('modalTitle');
+      const msg = document.getElementById('modalMessage');
+      const infoBox = document.getElementById('modalInfoBox');
+
+      if (type === 'clock_in') {
+        icon.textContent = '⏱️';
+        icon.className = 'modal-icon warning';
+        title.textContent = 'เริ่มงานแล้ว';
+      } else {
+        icon.textContent = '✓';
+        icon.className = 'modal-icon';
+        title.textContent = 'เลิกงานสำเร็จ';
+      }
+      msg.textContent = message;
+
+      if (info) {
+        infoBox.style.display = 'block';
+        infoBox.innerHTML = info;
+      } else {
+        infoBox.style.display = 'none';
+      }
+
+      document.getElementById('successModal').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal(e) {
+      if (e && e.target.id && e.target.id !== 'successModal') return;
+      document.getElementById('successModal').classList.remove('show');
+      document.body.style.overflow = '';
+      goToSelectView();
+    }
+
+    function handleSubmit(e) {
+      e.preventDefault();
+      const status = document.getElementById('formStatus');
+      const btn = document.getElementById('submitBtn');
+      status.innerHTML = '';
+
+      const otDate = document.getElementById('otDate').value;
+      const time = document.getElementById('timeInput').value;
+      const workDetail = document.getElementById('workDetail').value.trim();
+
+      if (!otDate || !time) {
+        status.innerHTML = '<div class="status-box status-error">กรุณากรอกข้อมูลให้ครบ</div>';
+        return;
+      }
+
+      const selfie = document.getElementById('selfiePreview').dataset.base64 || '';
+      const gps = document.getElementById('gpsCoords').value;
+
+      if (!selfie) {
+        status.innerHTML = '<div class="status-box status-error">กรุณากดปุ่ม "เปิดกล้อง" เพื่อถ่ายรูปก่อน</div>';
+        return;
+      }
+      if (!gps) {
+        status.innerHTML = '<div class="status-box status-error">ยังไม่มีพิกัด GPS</div>';
+        return;
+      }
+
+      if (currentMode === 'clock_out') {
+        const sel = document.getElementById('employeeSelect');
+        const idx = sel.value;
+        if (idx === '' || !activeClockInsCache[idx]) {
+          status.innerHTML = '<div class="status-box status-error">กรุณาเลือกชื่อพนักงาน</div>';
+          return;
+        }
+        const picked = activeClockInsCache[idx];
+
+        const data = {
+          employeeName: picked.employeeName,
+          otDate: picked.otDate,
+          endTime: time,
+          workDetail: '',
+          gpsCoords: gps,
+          address: document.getElementById('address').value,
+          selfieBase64: selfie,
+          photoTimestamp: document.getElementById('selfiePreview').dataset.timestamp || ''
+        };
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span>กำลังบันทึก...';
+
+        google.script.run
+          .withSuccessHandler(function(res) {
+            btn.disabled = false;
+            btn.innerHTML = '🏁 เลิกงาน';
+            if (res.success) {
+              const info =
+                '<div class="info-row"><span>ชื่อ</span><b>' + escapeHtml(picked.employeeName) + '</b></div>' +
+                (picked.supervisor ? '<div class="info-row"><span>หัวหน้า</span><b>' + escapeHtml(picked.supervisor) + '</b></div>' : '') +
+                '<div class="info-row"><span>เวลาเริ่ม</span><b>' + res.startTime + '</b></div>' +
+                '<div class="info-row"><span>เวลาเลิก</span><b>' + res.endTime + '</b></div>' +
+                '<div class="info-row" style="border-top:1px solid rgba(0,0,0,0.1); margin-top:6px; padding-top:8px;"><span>รวม</span><b style="color:var(--success); font-size:18px;">' + res.hours + '</b></div>';
+              showSuccessModal('clock_out', 'บันทึกเวลาเลิกงานเรียบร้อย', info);
+            } else {
+              status.innerHTML = '<div class="status-box status-error">' + res.message + '</div>';
+            }
+          })
+          .withFailureHandler(function(err) {
+            btn.disabled = false;
+            btn.innerHTML = '🏁 เลิกงาน';
+            status.innerHTML = '<div class="status-box status-error">' + err.message + '</div>';
+          })
+          .clockOut(data);
+
+      } else {
+        const employeeName = document.getElementById('employeeName').value.trim();
+        const supervisorName = document.getElementById('supervisorName').value.trim();
+
+        if (!employeeName) {
+          status.innerHTML = '<div class="status-box status-error">กรุณากรอกชื่อพนักงาน</div>';
+          return;
+        }
+        if (!supervisorName) {
+          status.innerHTML = '<div class="status-box status-error">กรุณากรอกชื่อหัวหน้า</div>';
+          return;
+        }
+
+        const data = {
+          otDate, employeeName,
+          supervisorName,
+          startTime: time,
+          workDetail,
+          gpsCoords: gps,
+          address: document.getElementById('address').value,
+          selfieBase64: selfie,
+          photoTimestamp: document.getElementById('selfiePreview').dataset.timestamp || ''
+        };
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span>กำลังบันทึก...';
+
+        google.script.run
+          .withSuccessHandler(function(res) {
+            btn.disabled = false;
+            btn.innerHTML = '⏱️ เริ่มงาน OT';
+            if (res.success) {
+              const info =
+                '<div class="info-row"><span>ชื่อ</span><b>' + escapeHtml(employeeName) + '</b></div>' +
+                '<div class="info-row"><span>หัวหน้า</span><b>' + escapeHtml(supervisorName) + '</b></div>' +
+                '<div class="info-row"><span>เวลาเริ่ม</span><b style="color:var(--success); font-size:18px;">' + res.startTime + '</b></div>' +
+                '<div class="info-row"><span>รหัส</span><b style="font-family:monospace; font-size:11px;">' + res.requestId + '</b></div>';
+              showSuccessModal('clock_in', 'บันทึกเวลาเริ่มงานเรียบร้อย กลับมากดเลิกงานเมื่อเสร็จ', info);
+            } else {
+              status.innerHTML = '<div class="status-box status-error">' + res.message + '</div>';
+            }
+          })
+          .withFailureHandler(function(err) {
+            btn.disabled = false;
+            btn.innerHTML = '⏱️ เริ่มงาน OT';
+            status.innerHTML = '<div class="status-box status-error">' + err.message + '</div>';
+          })
+          .clockIn(data);
+      }
+    }
+  </script>
+</body>
+</html>
