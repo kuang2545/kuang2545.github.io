@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OT Admin</title>
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --bg-elev: #ffffff;
+      --text: #111827;
+      --text-secondary: #4b5563;
+      --text-tertiary: #6b7280;
+      --border: #e5e7eb;
+      --border-strong: #d1d5db;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --success: #16a34a;
+      --success-bg: #dcfce7;
+      --success-text: #15803d;
+      --warning: #d97706;
+      --warning-bg: #fef3c7;
+      --warning-text: #b45309;
+      --error: #dc2626;
+      --error-bg: #fee2e2;
+      --error-text: #b91c1c;
+      --info: #0ea5e9;
+      --info-bg: #e0f2fe;
+      --info-text: #0369a1;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Sarabun', sans-serif;
+      background: var(--bg); color: var(--text);
+      font-size: 14px; line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .header {
+      background: var(--bg-elev);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      position: sticky; top: 0; z-index: 50;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+    }
+    .header-left h1 { font-size: 22px; font-weight: 700; }
+    .header-left p { font-size: 13px; color: var(--text-tertiary); margin-top: 2px; }
+    .header-right { display: flex; gap: 8px; align-items: center; }
+
+    .btn {
+      padding: 8px 16px;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px; background: white; color: var(--text);
+      font-size: 14px; font-weight: 500;
+      cursor: pointer; font-family: inherit;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: all 0.15s;
+    }
+    .btn:hover { background: #f9fafb; border-color: var(--text-tertiary); }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+    .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+    .btn-success { background: var(--success); color: white; border-color: var(--success); }
+    .btn-success:hover { background: #15803d; border-color: #15803d; }
+    .btn-danger { background: var(--error); color: white; border-color: var(--error); }
+    .btn-danger:hover { background: #b91c1c; border-color: #b91c1c; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .container { padding: 24px; max-width: 1800px; margin: 0 auto; }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .summary-card {
+      background: var(--bg-elev); border-radius: 12px;
+      padding: 16px 18px; border: 1px solid var(--border);
+    }
+    .summary-label {
+      font-size: 12px; color: var(--text-tertiary);
+      text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;
+    }
+    .summary-value {
+      font-size: 28px; font-weight: 700; margin-top: 4px;
+      display: flex; align-items: baseline; gap: 6px;
+    }
+    .summary-value small { font-size: 13px; color: var(--text-tertiary); font-weight: 500; }
+    .summary-card.warning { border-left: 4px solid var(--warning); }
+    .summary-card.success { border-left: 4px solid var(--success); }
+    .summary-card.info    { border-left: 4px solid var(--accent); }
+    .summary-card.working { border-left: 4px solid var(--info); }
+
+    .filter-bar {
+      background: var(--bg-elev);
+      border-radius: 12px 12px 0 0;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      padding: 14px 18px;
+      display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    }
+    .filter-bar input, .filter-bar select {
+      padding: 8px 12px;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      font-size: 14px; font-family: inherit;
+      background: white; color: var(--text);
+      min-width: 160px;
+    }
+    .filter-bar input:focus, .filter-bar select:focus {
+      outline: none; border-color: var(--accent);
+    }
+    .filter-bar input[type="search"] { flex: 1; min-width: 200px; }
+    .filter-bar .count { margin-left: auto; font-size: 13px; color: var(--text-tertiary); }
+
+    .table-wrapper {
+      background: var(--bg-elev);
+      border-radius: 0 0 12px 12px;
+      border: 1px solid var(--border);
+      overflow: auto;
+      max-height: calc(100vh - 280px);
+    }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; }
+    thead { position: sticky; top: 0; z-index: 5; background: #f9fafb; }
+    th, td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    th {
+      font-size: 12px; font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+    tbody tr:hover { background: #f9fafb; }
+    tbody tr:last-child td { border-bottom: none; }
+
+    td.cell-name { font-weight: 600; }
+    td.cell-supervisor { color: var(--text-secondary); white-space: nowrap; }
+    td.cell-hours {
+      text-align: center; font-weight: 700; font-size: 14px;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    td.cell-time {
+      font-variant-numeric: tabular-nums;
+      font-size: 13px; white-space: nowrap;
+    }
+    td.cell-time .time-range {
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    td.cell-time .arrow { color: var(--text-tertiary); }
+    td.cell-detail { max-width: 240px; }
+    td.cell-detail .truncate {
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden; line-height: 1.4; white-space: pre-line;
+    }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: 980px;
+      font-size: 12px; font-weight: 600;
+      white-space: nowrap;
+    }
+    .badge-working  { background: var(--info-bg);    color: var(--info-text); }
+    .badge-pending  { background: var(--warning-bg); color: var(--warning-text); }
+    .badge-approved { background: var(--success-bg); color: var(--success-text); }
+    .badge-rejected { background: var(--error-bg);   color: var(--error-text); }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    .badge-working { animation: pulse 2s ease-in-out infinite; }
+
+    .thumb {
+      width: 60px; height: 60px;
+      object-fit: cover; border-radius: 8px;
+      cursor: pointer; border: 1px solid var(--border);
+      background: #f3f4f6; transition: transform 0.15s;
+    }
+    .thumb:hover { transform: scale(1.05); }
+    .no-thumb {
+      width: 60px; height: 60px; border-radius: 8px;
+      background: #f3f4f6;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; color: var(--text-tertiary);
+    }
+    .photo-cell {
+      display: flex; flex-direction: column; gap: 4px;
+      align-items: flex-start;
+    }
+    .photo-time {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      line-height: 1.3;
+    }
+
+    .actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+    .icon-btn {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--border-strong);
+      background: white; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 14px; transition: all 0.15s;
+    }
+    .icon-btn:hover { background: #f3f4f6; }
+    .icon-btn.approve { color: var(--success); border-color: #86efac; }
+    .icon-btn.approve:hover { background: var(--success-bg); }
+    .icon-btn.reject { color: var(--error); border-color: #fca5a5; }
+    .icon-btn.reject:hover { background: var(--error-bg); }
+    .icon-btn.delete { color: var(--text-tertiary); }
+    .icon-btn.delete:hover { background: var(--error-bg); color: var(--error); }
+
+    a.link { color: var(--accent); text-decoration: none; font-size: 12px; }
+    a.link:hover { text-decoration: underline; }
+
+    .empty-state { padding: 60px 20px; text-align: center; color: var(--text-tertiary); }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+    .loading { padding: 60px; text-align: center; color: var(--text-tertiary); }
+    .spinner {
+      display: inline-block;
+      width: 28px; height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center; justify-content: center;
+      z-index: 100; padding: 20px;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: white; border-radius: 14px;
+      max-width: 500px; width: 100%;
+      max-height: 90vh; overflow: auto;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    }
+    .modal-image {
+      background: white; border-radius: 14px;
+      max-width: 90vw; max-height: 90vh;
+      padding: 0; overflow: hidden;
+    }
+    .modal-image img { display: block; max-width: 100%; max-height: 90vh; }
+    .modal-header {
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-header h3 { font-size: 17px; font-weight: 700; }
+    .modal-close {
+      width: 32px; height: 32px;
+      border: none; background: transparent;
+      font-size: 22px; cursor: pointer; color: var(--text-tertiary);
+      border-radius: 8px;
+    }
+    .modal-close:hover { background: #f3f4f6; color: var(--text); }
+    .modal-body { padding: 22px; }
+    .modal-body label {
+      display: block; font-size: 13px; font-weight: 600;
+      margin-bottom: 6px; color: var(--text-secondary);
+    }
+    .modal-body textarea {
+      width: 100%; padding: 10px 12px;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      font-family: inherit; font-size: 14px;
+      min-height: 80px; resize: vertical; line-height: 1.5;
+    }
+    .modal-body textarea:focus { outline: none; border-color: var(--accent); }
+    .modal-footer {
+      padding: 14px 22px;
+      border-top: 1px solid var(--border);
+      display: flex; gap: 8px; justify-content: flex-end;
+    }
+    .info-line { font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; }
+    .info-line b { color: var(--text); }
+
+    .toast {
+      position: fixed;
+      top: 20px; right: 20px;
+      background: var(--text); color: white;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 14px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      z-index: 200;
+      opacity: 0; transform: translateY(-10px);
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--error); }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="header-left">
+      <h1>🛠️ OT Admin</h1>
+      <p>จัดการคำขอ OT ทั้งหมด</p>
+    </div>
+    <div class="header-right">
+      <button class="btn" onclick="loadData()">🔄 รีเฟรช</button>
+      <button class="btn" onclick="exportCSV()">⬇️ ดาวน์โหลด CSV</button>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <div class="summary" id="summary">
+      <div class="summary-card info">
+        <div class="summary-label">คำขอทั้งหมด</div>
+        <div class="summary-value" id="sumTotal">- <small>คำขอ</small></div>
+      </div>
+      <div class="summary-card working">
+        <div class="summary-label">🔵 กำลังทำงาน</div>
+        <div class="summary-value" id="sumWorking">- <small>คน</small></div>
+      </div>
+      <div class="summary-card warning">
+        <div class="summary-label">รออนุมัติ</div>
+        <div class="summary-value" id="sumPending">- <small>คำขอ</small></div>
+      </div>
+      <div class="summary-card success">
+        <div class="summary-label">อนุมัติแล้ว</div>
+        <div class="summary-value" id="sumApproved">- <small>คำขอ</small></div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">เวลารวมที่อนุมัติ</div>
+        <div class="summary-value" id="sumHours" style="font-size: 22px;">-</div>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <input type="search" id="searchInput" placeholder="🔍 ค้นหาชื่อ, หัวหน้า, รหัส, หรืองาน..." oninput="renderTable()">
+      <select id="statusFilter" onchange="renderTable()">
+        <option value="">ทุกสถานะ</option>
+        <option value="กำลังทำงาน">กำลังทำงาน</option>
+        <option value="รออนุมัติ">รออนุมัติ</option>
+        <option value="อนุมัติ">อนุมัติ</option>
+        <option value="ไม่อนุมัติ">ไม่อนุมัติ</option>
+      </select>
+      <select id="supervisorFilter" onchange="renderTable()">
+        <option value="">ทุกหัวหน้า</option>
+      </select>
+      <input type="date" id="dateFrom" onchange="renderTable()" title="วันที่เริ่ม">
+      <span style="color: var(--text-tertiary);">ถึง</span>
+      <input type="date" id="dateTo" onchange="renderTable()" title="วันที่สิ้นสุด">
+      <span class="count" id="recordCount">0 รายการ</span>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>รหัส</th>
+            <th>ส่งเมื่อ</th>
+            <th>วัน OT</th>
+            <th>ชื่อ</th>
+            <th>หัวหน้า</th>
+            <th>เวลาเริ่ม–เลิก</th>
+            <th>เวลารวม</th>
+            <th>งานที่ทำ</th>
+            <th>รูปเริ่ม</th>
+            <th>ตำแหน่งเริ่ม</th>
+            <th>รูปเลิก</th>
+            <th>ตำแหน่งเลิก</th>
+            <th>สถานะ</th>
+            <th>หมายเหตุ</th>
+            <th style="text-align:center;">การจัดการ</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="15">
+            <div class="loading">
+              <div class="spinner"></div>
+              <div>กำลังโหลดข้อมูล...</div>
+            </div>
+          </td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="actionModal" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="actionTitle">อนุมัติคำขอ</h3>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="info-line"><b>รหัส:</b> <span id="actionReqId"></span></div>
+        <div class="info-line"><b>ชื่อ:</b> <span id="actionName"></span></div>
+        <div class="info-line"><b>หัวหน้า:</b> <span id="actionSupervisor"></span></div>
+        <div class="info-line"><b>เวลา:</b> <span id="actionTime"></span></div>
+        <div class="info-line"><b>เวลารวม:</b> <span id="actionHours"></span></div>
+        <div class="info-line" style="margin-bottom: 14px;"><b>วันที่:</b> <span id="actionDate"></span></div>
+        <label for="noteInput">หมายเหตุ (ถ้ามี)</label>
+        <textarea id="noteInput" placeholder="เพิ่มหมายเหตุ..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal()">ยกเลิก</button>
+        <button class="btn" id="confirmBtn" onclick="confirmAction()">ยืนยัน</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="imageModal" onclick="if(event.target===this) closeImageModal()">
+    <div class="modal-image">
+      <img id="modalImg" src="" alt="selfie">
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ============================================================
+    // ⚠️ ใส่ Web App URL ของคุณตรงนี้ (ตัวเดียวกับ index.html)
+    // ============================================================
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzUnBvZvRtG_pK6UVWLbL8pD-_zTGDMz2mrm95kAzYjHu_04mZZZ9MiqwHMESTnaMwCww/exec';
+
+    let allData = [];
+    let currentAction = null;
+
+    // ====== API call ======
+    async function apiCall(action, payload) {
+      const body = JSON.stringify(Object.assign({ action: action }, payload || {}));
+      const res = await fetch(WEB_APP_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: body,
+        redirect: 'follow'
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const text = await res.text();
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        throw new Error('ตอบกลับไม่ใช่ JSON: ' + text.slice(0, 200));
+      }
+    }
+
+    async function loadData() {
+      const body = document.getElementById('tableBody');
+      body.innerHTML =
+        '<tr><td colspan="15"><div class="loading"><div class="spinner"></div><div>กำลังโหลดข้อมูล...</div></div></td></tr>';
+
+      // Timeout 60 วินาที
+      let timedOut = false;
+      const timeout = setTimeout(function() {
+        timedOut = true;
+        body.innerHTML =
+          '<tr><td colspan="15"><div class="empty-state">' +
+          '<div class="icon">⏱️</div>' +
+          '<div><b>หมดเวลารอ (60 วินาที)</b></div>' +
+          '<div style="margin-top:8px;font-size:13px;">เซิร์ฟเวอร์ไม่ตอบกลับ — ลอง:</div>' +
+          '<div style="margin-top:8px;font-size:13px;">1. รีเฟรชหน้า<br>2. รัน <b>debugSheet</b> ใน Apps Script editor เพื่อดู log<br>3. รัน <b>forceMigrate</b> ถ้าคอลัมน์ไม่ครบ</div>' +
+          '<button class="btn btn-primary" style="margin-top:14px;" onclick="loadData()">🔄 ลองใหม่</button>' +
+          '</div></td></tr>';
+      }, 60000);
+
+      try {
+        const res = await apiCall('getAllRequests');
+        if (timedOut) return;
+        clearTimeout(timeout);
+        if (res.success) {
+          allData = res.data;
+          populateSupervisorFilter();
+          renderTable();
+        } else {
+          body.innerHTML =
+            '<tr><td colspan="15"><div class="empty-state">' +
+            '<div class="icon">⚠️</div>' +
+            '<div><b>เซิร์ฟเวอร์แจ้ง error:</b></div>' +
+            '<div style="margin-top:8px;color:var(--error);">' + escapeHtml(res.message || 'ไม่ทราบสาเหตุ') + '</div>' +
+            '<button class="btn btn-primary" style="margin-top:14px;" onclick="loadData()">🔄 ลองใหม่</button>' +
+            '</div></td></tr>';
+        }
+      } catch (err) {
+        if (timedOut) return;
+        clearTimeout(timeout);
+        body.innerHTML =
+          '<tr><td colspan="15"><div class="empty-state">' +
+          '<div class="icon">❌</div>' +
+          '<div><b>โหลดไม่สำเร็จ</b></div>' +
+          '<div style="margin-top:8px;color:var(--error);font-size:13px;">' + escapeHtml(err.message || err) + '</div>' +
+          '<button class="btn btn-primary" style="margin-top:14px;" onclick="loadData()">🔄 ลองใหม่</button>' +
+          '</div></td></tr>';
+      }
+
+      // โหลด summary
+      try {
+        const s = await apiCall('getAdminSummary');
+        if (!s.success) return;
+        document.getElementById('sumTotal').innerHTML = s.total + ' <small>คำขอ</small>';
+        document.getElementById('sumWorking').innerHTML = (s.working || 0) + ' <small>คน</small>';
+        document.getElementById('sumPending').innerHTML = s.pending + ' <small>คำขอ · ' + (s.pendingHoursText || '0') + '</small>';
+        document.getElementById('sumApproved').innerHTML = s.approved + ' <small>คำขอ</small>';
+        document.getElementById('sumHours').innerHTML = (s.approvedHoursText || '0');
+      } catch (e) { /* ignore summary error */ }
+    }
+
+    function populateSupervisorFilter() {
+      const sel = document.getElementById('supervisorFilter');
+      const current = sel.value;
+      const names = Array.from(new Set(
+        allData.map(r => (r.supervisor || '').trim()).filter(n => n.length > 0)
+      )).sort((a, b) => a.localeCompare(b, 'th'));
+
+      sel.innerHTML = '<option value="">ทุกหัวหน้า</option>' +
+        names.map(n => '<option value="' + escapeHtml(n) + '">' + escapeHtml(n) + '</option>').join('');
+
+      if (current && names.indexOf(current) !== -1) sel.value = current;
+    }
+
+    function renderTable() {
+      const search = document.getElementById('searchInput').value.toLowerCase().trim();
+      const statusF = document.getElementById('statusFilter').value;
+      const supervisorF = document.getElementById('supervisorFilter').value;
+      const dateFrom = document.getElementById('dateFrom').value;
+      const dateTo = document.getElementById('dateTo').value;
+
+      let filtered = allData.filter(r => {
+        if (search) {
+          const hay = (r.requestId + ' ' + r.employeeName + ' ' + (r.supervisor || '') + ' ' + r.workDetail + ' ' + r.department).toLowerCase();
+          if (!hay.includes(search)) return false;
+        }
+        if (statusF && r.status !== statusF) return false;
+        if (supervisorF && (r.supervisor || '').trim() !== supervisorF) return false;
+        if (dateFrom || dateTo) {
+          const otDate = parseDDMMYYYY(r.otDate);
+          if (dateFrom && otDate < new Date(dateFrom).getTime()) return false;
+          if (dateTo) {
+            const to = new Date(dateTo); to.setHours(23,59,59,999);
+            if (otDate > to.getTime()) return false;
+          }
+        }
+        return true;
+      });
+
+      document.getElementById('recordCount').textContent = filtered.length + ' รายการ';
+
+      const body = document.getElementById('tableBody');
+
+      if (filtered.length === 0) {
+        body.innerHTML =
+          '<tr><td colspan="15"><div class="empty-state">' +
+          '<div class="icon">📭</div><div>ไม่พบข้อมูล</div></div></td></tr>';
+        return;
+      }
+
+      body.innerHTML = filtered.map(r => {
+        const badgeClass = r.status === 'อนุมัติ' ? 'badge-approved'
+                        : r.status === 'ไม่อนุมัติ' ? 'badge-rejected'
+                        : r.status === 'กำลังทำงาน' ? 'badge-working'
+                        : 'badge-pending';
+
+        function buildThumb(embedUrl, photoTime) {
+          let thumbHtml;
+          if (!embedUrl) {
+            thumbHtml = `<div class="no-thumb">—</div>`;
+          } else {
+            thumbHtml = `<img class="thumb" src="${escapeHtml(embedUrl)}" onclick="showImage('${escapeJs(embedUrl)}')" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" alt="selfie"><div class="no-thumb" style="display:none;">📷</div>`;
+          }
+          const timeHtml = photoTime
+            ? `<div class="photo-time">📅 ${escapeHtml(photoTime)}</div>`
+            : '';
+          return `<div class="photo-cell">${thumbHtml}${timeHtml}</div>`;
+        }
+        function buildMap(mapUrl) {
+          if (!mapUrl) return '<span style="color:var(--text-tertiary);font-size:12px;">—</span>';
+          return `<a class="link" href="${escapeHtml(mapUrl)}" target="_blank">📍 ดูแผนที่</a>`;
+        }
+
+        const thumbIn  = buildThumb(r.selfieInEmbed, r.photoTimeIn);
+        const thumbOut = buildThumb(r.selfieOutEmbed, r.photoTimeOut);
+        const mapInLink  = buildMap(r.mapIn);
+        const mapOutLink = buildMap(r.mapOut);
+
+        const isPending = r.status === 'รออนุมัติ';
+        const isWorking = r.status === 'กำลังทำงาน';
+
+        let timeRange;
+        if (isWorking) {
+          timeRange = `<span class="time-range"><b>${escapeHtml(r.startTime)}</b><span class="arrow">→</span><span style="color:var(--info-text);font-weight:600;">⏳</span></span>`;
+        } else if (r.startTime && r.endTime) {
+          timeRange = `<span class="time-range"><b>${escapeHtml(r.startTime)}</b><span class="arrow">→</span><b>${escapeHtml(r.endTime)}</b></span>`;
+        } else {
+          timeRange = '<span style="color:var(--text-tertiary);">—</span>';
+        }
+
+        const recordJson = JSON.stringify(r).replace(/'/g, "\\'");
+
+        let actionButtons = '';
+        if (isPending) {
+          actionButtons = `
+            <button class="icon-btn approve" title="อนุมัติ" onclick='openAction(${r.rowIndex}, "อนุมัติ", ${recordJson})'>✓</button>
+            <button class="icon-btn reject" title="ไม่อนุมัติ" onclick='openAction(${r.rowIndex}, "ไม่อนุมัติ", ${recordJson})'>✕</button>
+          `;
+        } else if (!isWorking) {
+          actionButtons = `<button class="icon-btn" title="เปลี่ยนสถานะ" onclick='openAction(${r.rowIndex}, "เปลี่ยน", ${recordJson})'>✎</button>`;
+        }
+
+        const supervisorCell = r.supervisor
+          ? `<span>${escapeHtml(r.supervisor)}</span>`
+          : `<span style="color:var(--text-tertiary);">—</span>`;
+
+        return `
+        <tr>
+          <td style="font-family:monospace;font-size:12px;color:var(--text-secondary);">${escapeHtml(r.requestId)}</td>
+          <td style="font-size:12px;color:var(--text-tertiary);">${escapeHtml(r.submittedAt)}</td>
+          <td style="font-weight:500;">${escapeHtml(r.otDate)}</td>
+          <td class="cell-name">${escapeHtml(r.employeeName || '—')}</td>
+          <td class="cell-supervisor">${supervisorCell}</td>
+          <td class="cell-time">${timeRange}</td>
+          <td class="cell-hours">${escapeHtml(r.hours || (isWorking ? '⏳' : ''))}</td>
+          <td class="cell-detail"><div class="truncate" title="${escapeHtml(r.workDetail || '')}">${escapeHtml(r.workDetail || '—')}</div></td>
+          <td>${thumbIn}</td>
+          <td>${mapInLink}</td>
+          <td>${thumbOut}</td>
+          <td>${mapOutLink}</td>
+          <td><span class="badge ${badgeClass}">${escapeHtml(r.status)}</span></td>
+          <td style="font-size:13px;color:var(--text-secondary);max-width:160px;">${escapeHtml(r.note || '—')}</td>
+          <td>
+            <div class="actions">
+              ${actionButtons}
+              <button class="icon-btn delete" title="ลบ" onclick="deleteRow(${r.rowIndex}, '${escapeJs(r.requestId)}')">🗑</button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    function parseDDMMYYYY(s) {
+      if (!s) return 0;
+      const parts = s.split('/');
+      if (parts.length !== 3) return 0;
+      return new Date(+parts[2], +parts[1]-1, +parts[0]).getTime();
+    }
+
+    function openAction(rowIndex, status, record) {
+      currentAction = { rowIndex, status, record };
+
+      const titleEl = document.getElementById('actionTitle');
+      const confirmBtn = document.getElementById('confirmBtn');
+
+      if (status === 'อนุมัติ') {
+        titleEl.textContent = '✓ อนุมัติคำขอ';
+        confirmBtn.textContent = 'อนุมัติ';
+        confirmBtn.className = 'btn btn-success';
+      } else if (status === 'ไม่อนุมัติ') {
+        titleEl.textContent = '✕ ไม่อนุมัติคำขอ';
+        confirmBtn.textContent = 'ไม่อนุมัติ';
+        confirmBtn.className = 'btn btn-danger';
+      } else {
+        titleEl.textContent = '✎ เปลี่ยนสถานะ';
+        confirmBtn.textContent = 'บันทึก';
+        confirmBtn.className = 'btn btn-primary';
+        const choice = prompt('เปลี่ยนสถานะเป็น:\n1 = รออนุมัติ\n2 = อนุมัติ\n3 = ไม่อนุมัติ', '1');
+        if (!choice) { currentAction = null; return; }
+        const map = { '1': 'รออนุมัติ', '2': 'อนุมัติ', '3': 'ไม่อนุมัติ' };
+        if (!map[choice]) { showToast('ตัวเลือกไม่ถูกต้อง', 'error'); currentAction = null; return; }
+        currentAction.status = map[choice];
+      }
+
+      document.getElementById('actionReqId').textContent = record.requestId;
+      document.getElementById('actionName').textContent = record.employeeName;
+      document.getElementById('actionSupervisor').textContent = record.supervisor || '—';
+      document.getElementById('actionTime').textContent =
+        (record.startTime && record.endTime) ? (record.startTime + ' → ' + record.endTime) : '—';
+      document.getElementById('actionHours').textContent = record.hours || '—';
+      document.getElementById('actionDate').textContent = record.otDate;
+      document.getElementById('noteInput').value = record.note || '';
+
+      document.getElementById('actionModal').classList.add('show');
+      document.getElementById('noteInput').focus();
+    }
+
+    function closeModal() {
+      document.getElementById('actionModal').classList.remove('show');
+      currentAction = null;
+    }
+
+    async function confirmAction() {
+      if (!currentAction) return;
+      const note = document.getElementById('noteInput').value.trim();
+      const btn = document.getElementById('confirmBtn');
+      const original = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'กำลังบันทึก...';
+
+      try {
+        const res = await apiCall('updateRequestStatus', {
+          rowIndex: currentAction.rowIndex,
+          status: currentAction.status,
+          note: note
+        });
+        btn.disabled = false;
+        btn.textContent = original;
+        if (res.success) {
+          closeModal();
+          showToast('บันทึกสำเร็จ', 'success');
+          loadData();
+        } else {
+          showToast('ผิดพลาด: ' + res.message, 'error');
+        }
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = original;
+        showToast('ผิดพลาด: ' + err.message, 'error');
+      }
+    }
+
+    async function deleteRow(rowIndex, requestId) {
+      if (!confirm('ลบคำขอ ' + requestId + ' ?')) return;
+      try {
+        const res = await apiCall('deleteRequest', { rowIndex: rowIndex });
+        if (res.success) { showToast('ลบสำเร็จ', 'success'); loadData(); }
+        else { showToast('ผิดพลาด: ' + res.message, 'error'); }
+      } catch (err) {
+        showToast('ผิดพลาด: ' + err.message, 'error');
+      }
+    }
+
+    function showImage(url) {
+      document.getElementById('modalImg').src = url;
+      document.getElementById('imageModal').classList.add('show');
+    }
+    function closeImageModal() {
+      document.getElementById('imageModal').classList.remove('show');
+    }
+
+    function showToast(msg, type) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + (type || '');
+      setTimeout(() => t.className = 'toast ' + (type || ''), 2500);
+    }
+
+    function exportCSV() {
+      if (!allData.length) { showToast('ไม่มีข้อมูล', 'error'); return; }
+      const headers = ['รหัสคำขอ','ส่งเมื่อ','วันที่ OT','ชื่อ','หัวหน้า','แผนก','เวลาเริ่ม','เวลาเลิก','เวลารวม','งานที่ทำ','GPS เริ่ม','แผนที่เริ่ม','รูปเริ่ม','เวลาถ่ายรูปเริ่ม','GPS เลิก','แผนที่เลิก','รูปเลิก','เวลาถ่ายรูปเลิก','สถานะ','หมายเหตุ'];
+      const rows = allData.map(r => [
+        r.requestId, r.submittedAt, r.otDate, r.employeeName, r.supervisor || '', r.department,
+        r.startTime, r.endTime, r.hours, r.workDetail,
+        r.gpsIn, r.mapIn, r.selfieIn, r.photoTimeIn || '',
+        r.gpsOut, r.mapOut, r.selfieOut, r.photoTimeOut || '',
+        r.status, r.note
+      ]);
+      const csv = [headers, ...rows].map(row =>
+        row.map(cell => '"' + String(cell || '').replace(/"/g, '""') + '"').join(',')
+      ).join('\n');
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'OT_Records_' + new Date().toISOString().slice(0,10) + '.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function escapeHtml(s) {
+      if (s === null || s === undefined) return '';
+      return String(s).replace(/[&<>"']/g, c =>
+        ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+    }
+    function escapeJs(s) {
+      return String(s || '').replace(/['"\\]/g, '\\$&');
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
