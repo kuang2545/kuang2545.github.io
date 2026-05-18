@@ -2,738 +2,447 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="theme-color" content="#f2f2f7">
-  <title>OT</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OT Admin</title>
   <style>
     :root {
-      --bg: #f2f2f7;
+      --bg: #f3f4f6;
       --bg-elev: #ffffff;
-      --text: #000000;
-      --text-secondary: #3c3c43;
-      --text-tertiary: #6e6e73;
-      --separator: rgba(60, 60, 67, 0.18);
-      --accent: #007aff;
-      --accent-hover: #0056d6;
-      --success: #34c759;
-      --success-bg: rgba(52, 199, 89, 0.15);
-      --error: #ff3b30;
-      --error-bg: rgba(255, 59, 48, 0.12);
-      --warning: #ff9500;
-      --warning-bg: rgba(255, 149, 0, 0.15);
-      --field-bg: #ffffff;
-      --field-border: rgba(0, 0, 0, 0.12);
-      --field-border-focus: #007aff;
+      --text: #111827;
+      --text-secondary: #4b5563;
+      --text-tertiary: #6b7280;
+      --border: #e5e7eb;
+      --border-strong: #d1d5db;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --success: #16a34a;
+      --success-bg: #dcfce7;
+      --success-text: #15803d;
+      --warning: #d97706;
+      --warning-bg: #fef3c7;
+      --warning-text: #b45309;
+      --error: #dc2626;
+      --error-bg: #fee2e2;
+      --error-text: #b91c1c;
+      --info: #0ea5e9;
+      --info-bg: #e0f2fe;
+      --info-text: #0369a1;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
-    html, body { height: 100%; overflow-x: hidden; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', 'Sarabun', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.4;
-      font-size: 17px;
-      letter-spacing: -0.022em;
-      padding-bottom: env(safe-area-inset-bottom);
-      overscroll-behavior-y: contain;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Sarabun', sans-serif;
+      background: var(--bg); color: var(--text);
+      font-size: 14px; line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* ============ LINE Block Screen ============ */
-    .line-block-screen {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: linear-gradient(135deg, #00b900 0%, #00a000 100%);
-      z-index: 9999;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 32px 24px;
-      color: white;
-      text-align: center;
-      overflow-y: auto;
-    }
-    .line-block-screen.show { display: flex; }
-    .line-block-icon {
-      font-size: 80px;
-      margin-bottom: 20px;
-    }
-    .line-block-title {
-      font-size: 28px;
-      font-weight: 800;
-      margin-bottom: 14px;
-      line-height: 1.3;
-    }
-    .line-block-desc {
-      font-size: 16px;
-      line-height: 1.6;
-      margin-bottom: 28px;
-      opacity: 0.95;
-      max-width: 320px;
-    }
-    .line-action-btn {
-      background: white;
-      color: #00a000;
-      border: none;
-      padding: 18px 28px;
-      border-radius: 14px;
-      font-size: 17px;
-      font-weight: 700;
-      font-family: inherit;
-      cursor: pointer;
-      width: 100%;
-      max-width: 340px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
-      margin-bottom: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-    }
-    .line-action-btn:active { transform: scale(0.98); }
-    .line-action-btn .icon { font-size: 22px; }
-
-    .line-divider {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      width: 100%;
-      max-width: 340px;
-      margin: 8px 0 14px;
-      color: rgba(255,255,255,0.7);
-      font-size: 13px;
-    }
-    .line-divider::before, .line-divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: rgba(255,255,255,0.3);
-    }
-
-    .line-manual-card {
-      background: rgba(255,255,255,0.15);
-      backdrop-filter: blur(10px);
-      border-radius: 16px;
-      padding: 18px 20px;
-      max-width: 340px;
-      width: 100%;
-      text-align: left;
-      font-size: 14px;
-      line-height: 1.7;
-      border: 1px solid rgba(255,255,255,0.2);
-    }
-    .line-manual-card b { font-weight: 700; }
-    .line-manual-step {
-      display: flex;
-      gap: 10px;
-      padding: 5px 0;
-    }
-    .line-manual-step-num {
-      flex-shrink: 0;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background: white;
-      color: #00a000;
-      font-weight: 700;
-      font-size: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-top: 2px;
-    }
-
-    .top-bar {
-      position: sticky; top: 0; z-index: 50;
-      background: rgba(242, 242, 247, 0.85);
-      backdrop-filter: saturate(180%) blur(20px);
-      -webkit-backdrop-filter: saturate(180%) blur(20px);
-      padding: env(safe-area-inset-top) 0 0;
-      border-bottom: 0.5px solid var(--separator);
-    }
-    .top-bar-inner {
-      padding: 10px 16px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      min-height: 44px;
-    }
-    .top-bar h1 { font-size: 18px; font-weight: 600; }
-    .back-btn {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: transparent;
-      border: none;
-      color: var(--accent);
-      font-size: 16px;
-      font-weight: 500;
-      cursor: pointer;
-      padding: 6px 10px;
-      border-radius: 8px;
-      font-family: inherit;
-      display: none;
-      align-items: center;
-      gap: 4px;
-    }
-    .back-btn.show { display: inline-flex; }
-    .back-btn:active { background: rgba(0,0,0,0.05); }
-
-    .large-title { padding: 12px 20px 18px; }
-    .large-title h2 { font-size: 32px; font-weight: 700; line-height: 1.12; }
-    .large-title p { font-size: 15px; color: var(--text-tertiary); margin-top: 6px; }
-
-    .content { padding: 0 16px; }
-
-    .mode-select { padding: 8px 16px 40px; }
-    .mode-card {
+    .header {
       background: var(--bg-elev);
-      border-radius: 20px;
-      padding: 28px 22px;
-      margin-bottom: 16px;
-      cursor: pointer;
-      transition: transform 0.15s, box-shadow 0.15s;
-      border: 2px solid transparent;
-      display: flex;
-      align-items: center;
-      gap: 18px;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-      user-select: none;
-      -webkit-user-select: none;
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      position: sticky; top: 0; z-index: 50;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
     }
-    .mode-card:active { transform: scale(0.97); }
-    .mode-card.start { background: linear-gradient(135deg, #34c759 0%, #2da349 100%); color: white; }
-    .mode-card.end { background: linear-gradient(135deg, #ff9500 0%, #ff7a00 100%); color: white; }
-    .mode-card-icon {
-      width: 72px; height: 72px; border-radius: 20px;
-      background: rgba(255, 255, 255, 0.25);
-      backdrop-filter: blur(10px);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 38px; flex-shrink: 0;
-    }
-    .mode-card-text { flex: 1; }
-    .mode-card-title { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 4px; }
-    .mode-card-desc { font-size: 14px; opacity: 0.9; line-height: 1.4; }
-    .mode-card-arrow { font-size: 26px; opacity: 0.7; flex-shrink: 0; }
-    .mode-tip {
-      text-align: center; font-size: 13px; color: var(--text-tertiary);
-      margin-top: 8px; padding: 0 16px; line-height: 1.5;
-    }
-
-    .section-header {
-      font-size: 13px; color: var(--text-tertiary); font-weight: 600;
-      text-transform: uppercase; letter-spacing: 0.08em;
-      padding: 20px 4px 10px;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .mode-badge {
-      font-size: 11px; padding: 4px 10px; border-radius: 980px;
-      font-weight: 700; letter-spacing: 0.04em;
-    }
-    .mode-badge.clock-in { background: var(--success-bg); color: #1e7a2e; }
-    .mode-badge.clock-out { background: var(--warning-bg); color: #c66800; }
-
-    .field-group { background: var(--bg-elev); border-radius: 14px; padding: 4px; margin-bottom: 4px; }
-    .field { padding: 14px 14px 12px; position: relative; }
-    .field + .field::before {
-      content: ''; position: absolute; top: 0; left: 14px; right: 14px;
-      height: 0.5px; background: var(--separator);
-    }
-    .field-label {
-      display: block; font-size: 13px; font-weight: 600;
-      color: var(--text-secondary); margin-bottom: 8px; letter-spacing: 0.01em;
-    }
-    .field-label .required { color: var(--error); margin-left: 2px; }
-
-    .field-input {
-      width: 100%; padding: 12px 14px;
-      border: 1.5px solid var(--field-border);
-      border-radius: 10px; background: var(--field-bg);
-      font-size: 18px; font-weight: 500; font-family: inherit;
-      color: var(--text); letter-spacing: -0.022em;
-      -webkit-appearance: none; appearance: none;
-      transition: border-color 0.15s, background 0.15s;
-      min-height: 50px;
-    }
-    .field-input:focus { outline: none; border-color: var(--field-border-focus); background: #fff; }
-    .field-input::placeholder { color: #b0b0b5; font-weight: 400; }
-
-    select.field-input {
-      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236e6e73' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
-      background-repeat: no-repeat;
-      background-position: right 14px center;
-      padding-right: 40px;
-    }
-
-    textarea.field-input { min-height: 100px; resize: none; line-height: 1.5; font-size: 17px; }
-    input[type="date"].field-input, input[type="time"].field-input { font-size: 18px; font-weight: 500; }
-
-    .clock-in-info {
-      background: linear-gradient(135deg, rgba(52, 199, 89, 0.12), rgba(52, 199, 89, 0.05));
-      border: 1.5px solid rgba(52, 199, 89, 0.3);
-      border-radius: 14px; padding: 18px; margin-bottom: 8px;
-      animation: fadeIn 0.3s ease;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-5px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .clock-in-info .info-title {
-      font-size: 13px; font-weight: 700; color: #1e7a2e;
-      text-transform: uppercase; letter-spacing: 0.05em;
-      margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
-    }
-    .clock-in-info .info-time {
-      font-size: 36px; font-weight: 700; color: #15803d;
-      letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
-    }
-    .clock-in-info .info-desc { font-size: 14px; color: var(--text-secondary); margin-top: 4px; line-height: 1.5; }
-
-    .warning-box {
-      background: var(--warning-bg);
-      border: 1.5px solid rgba(255, 149, 0, 0.35);
-      border-radius: 14px; padding: 16px 18px; margin-bottom: 8px;
-      font-size: 14px; color: #c66800; line-height: 1.5;
-      animation: fadeIn 0.3s ease;
-    }
-    .warning-box b { font-weight: 700; }
-
-    .empty-active-box {
-      background: var(--error-bg);
-      border: 1.5px solid rgba(255, 59, 48, 0.3);
-      border-radius: 14px; padding: 18px; margin-bottom: 8px;
-      text-align: center; animation: fadeIn 0.3s ease;
-    }
-    .empty-active-box .emoji { font-size: 32px; margin-bottom: 8px; }
-    .empty-active-box .title { font-size: 16px; font-weight: 700; color: #c8201a; margin-bottom: 4px; }
-    .empty-active-box .desc { font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
-
-    .hours-summary {
-      margin-top: 12px; padding: 14px 16px;
-      background: linear-gradient(135deg, rgba(0, 122, 255, 0.08), rgba(0, 122, 255, 0.04));
-      border: 1.5px solid rgba(0, 122, 255, 0.2);
-      border-radius: 12px;
-      display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    }
-    .hours-summary-label { font-size: 13px; color: var(--text-secondary); font-weight: 600; }
-    .hours-summary-value { font-size: 24px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
-    .hours-summary.error { background: var(--error-bg); border-color: rgba(255, 59, 48, 0.3); }
-    .hours-summary.error .hours-summary-value { color: var(--error); font-size: 14px; }
-
-    .action-card { background: var(--bg-elev); border-radius: 14px; padding: 18px; margin-bottom: 8px; }
-    .action-card-title { font-size: 16px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
-    .action-card-icon { width: 32px; height: 32px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; }
-    .icon-cam { background: #ff9500; color: white; }
+    .header-left h1 { font-size: 22px; font-weight: 700; }
+    .header-left p { font-size: 13px; color: var(--text-tertiary); margin-top: 2px; }
+    .header-right { display: flex; gap: 8px; align-items: center; }
 
     .btn {
-      padding: 16px 22px; border: none; border-radius: 12px;
-      font-size: 17px; font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.15s, transform 0.1s, background 0.15s;
-      font-family: inherit; letter-spacing: -0.022em;
-      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      width: 100%; user-select: none;
+      padding: 8px 16px;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px; background: white; color: var(--text);
+      font-size: 14px; font-weight: 500;
+      cursor: pointer; font-family: inherit;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: all 0.15s;
     }
-    .btn-primary { background: var(--accent); color: #fff; }
-    .btn-primary:active:not(:disabled) { background: var(--accent-hover); transform: scale(0.98); }
-    .btn-success { background: var(--success); color: #fff; }
-    .btn-success:active:not(:disabled) { background: #2da349; transform: scale(0.98); }
-    .btn-warning { background: var(--warning); color: #fff; }
-    .btn-warning:active:not(:disabled) { background: #e08600; transform: scale(0.98); }
-    .btn-orange { background: rgba(255, 149, 0, 0.15); color: #c66800; font-weight: 600; }
-    .btn-orange:active:not(:disabled) { background: rgba(255, 149, 0, 0.25); }
-    .btn-tinted { background: rgba(0, 122, 255, 0.12); color: var(--accent); }
-    .btn-tinted:active:not(:disabled) { background: rgba(0, 122, 255, 0.22); }
-    .btn-big { padding: 20px; font-size: 18px; }
-    .btn:disabled { opacity: 0.4; }
+    .btn:hover { background: #f9fafb; border-color: var(--text-tertiary); }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+    .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+    .btn-success { background: var(--success); color: white; border-color: var(--success); }
+    .btn-success:hover { background: #15803d; border-color: #15803d; }
+    .btn-danger { background: var(--error); color: white; border-color: var(--error); }
+    .btn-danger:hover { background: #b91c1c; border-color: #b91c1c; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    .submit-section { padding: 24px 16px 32px; }
-    .submit-section .btn-primary, .submit-section .btn-warning, .submit-section .btn-success {
-      padding: 18px; font-size: 18px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    .container { padding: 24px; max-width: 1800px; margin: 0 auto; }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .summary-card {
+      background: var(--bg-elev); border-radius: 12px;
+      padding: 16px 18px; border: 1px solid var(--border);
+    }
+    .summary-label {
+      font-size: 12px; color: var(--text-tertiary);
+      text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;
+    }
+    .summary-value {
+      font-size: 28px; font-weight: 700; margin-top: 4px;
+      display: flex; align-items: baseline; gap: 6px;
+    }
+    .summary-value small { font-size: 13px; color: var(--text-tertiary); font-weight: 500; }
+    .summary-card.warning { border-left: 4px solid var(--warning); }
+    .summary-card.success { border-left: 4px solid var(--success); }
+    .summary-card.info    { border-left: 4px solid var(--accent); }
+    .summary-card.working { border-left: 4px solid var(--info); }
+
+    .filter-bar {
+      background: var(--bg-elev);
+      border-radius: 12px 12px 0 0;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      padding: 14px 18px;
+      display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    }
+    .filter-bar input, .filter-bar select {
+      padding: 8px 12px;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      font-size: 14px; font-family: inherit;
+      background: white; color: var(--text);
+      min-width: 160px;
+    }
+    .filter-bar input:focus, .filter-bar select:focus {
+      outline: none; border-color: var(--accent);
+    }
+    .filter-bar input[type="search"] { flex: 1; min-width: 200px; }
+    .filter-bar .count { margin-left: auto; font-size: 13px; color: var(--text-tertiary); }
+
+    .table-wrapper {
+      background: var(--bg-elev);
+      border-radius: 0 0 12px 12px;
+      border: 1px solid var(--border);
+      overflow: auto;
+      max-height: calc(100vh - 280px);
+    }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; }
+    thead { position: sticky; top: 0; z-index: 5; background: #f9fafb; }
+    th, td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    th {
+      font-size: 12px; font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+    tbody tr:hover { background: #f9fafb; }
+    tbody tr:last-child td { border-bottom: none; }
+
+    td.cell-name { font-weight: 600; }
+    td.cell-supervisor { color: var(--text-secondary); white-space: nowrap; }
+    td.cell-hours {
+      text-align: center; font-weight: 700; font-size: 14px;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    td.cell-time {
+      font-variant-numeric: tabular-nums;
+      font-size: 13px; white-space: nowrap;
+    }
+    td.cell-time .time-range {
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    td.cell-time .arrow { color: var(--text-tertiary); }
+    td.cell-detail { max-width: 240px; }
+    td.cell-detail .truncate {
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden; line-height: 1.4; white-space: pre-line;
     }
 
-    .status-box { padding: 14px 16px; border-radius: 12px; font-size: 15px; margin-top: 12px; line-height: 1.5; }
-    .status-success { background: var(--success-bg); color: #1e7a2e; }
-    .status-error { background: var(--error-bg); color: #c8201a; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: 980px;
+      font-size: 12px; font-weight: 600;
+      white-space: nowrap;
+    }
+    .badge-working  { background: var(--info-bg);    color: var(--info-text); }
+    .badge-pending  { background: var(--warning-bg); color: var(--warning-text); }
+    .badge-approved { background: var(--success-bg); color: var(--success-text); }
+    .badge-rejected { background: var(--error-bg);   color: var(--error-text); }
 
-    #selfiePreview { width: 100%; border-radius: 12px; margin-top: 14px; display: block; max-height: 380px; object-fit: cover; background: #000; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    .badge-working { animation: pulse 2s ease-in-out infinite; }
 
-    .file-label { display: block; cursor: pointer; position: relative; }
-    .file-label input[type="file"] { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 0; }
+    .thumb {
+      width: 60px; height: 60px;
+      object-fit: cover; border-radius: 8px;
+      cursor: pointer; border: 1px solid var(--border);
+      background: #f3f4f6; transition: transform 0.15s;
+    }
+    .thumb:hover { transform: scale(1.05); }
+    .no-thumb {
+      width: 60px; height: 60px; border-radius: 8px;
+      background: #f3f4f6;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; color: var(--text-tertiary);
+    }
+    .photo-cell {
+      display: flex; flex-direction: column; gap: 4px;
+      align-items: flex-start;
+    }
+    .photo-time {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      line-height: 1.3;
+    }
 
-    .step-status { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-top: 10px; background: rgba(0,0,0,0.04); border-radius: 10px; font-size: 14px; font-weight: 500; }
-    .step-icon { width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; color: white; flex-shrink: 0; font-weight: 700; }
-    .step-active { background: var(--accent); }
-    .step-done { background: var(--success); }
+    .actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+    .icon-btn {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--border-strong);
+      background: white; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 14px; transition: all 0.15s;
+    }
+    .icon-btn:hover { background: #f3f4f6; }
+    .icon-btn.approve { color: var(--success); border-color: #86efac; }
+    .icon-btn.approve:hover { background: var(--success-bg); }
+    .icon-btn.reject { color: var(--error); border-color: #fca5a5; }
+    .icon-btn.reject:hover { background: var(--error-bg); }
+    .icon-btn.delete { color: var(--text-tertiary); }
+    .icon-btn.delete:hover { background: var(--error-bg); color: var(--error); }
 
-    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: -2px; margin-right: 6px; }
+    a.link { color: var(--accent); text-decoration: none; font-size: 12px; }
+    a.link:hover { text-decoration: underline; }
+
+    .empty-state { padding: 60px 20px; text-align: center; color: var(--text-tertiary); }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+    .loading { padding: 60px; text-align: center; color: var(--text-tertiary); }
+    .spinner {
+      display: inline-block;
+      width: 28px; height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 12px;
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .view { display: none; }
-    .view.active { display: block; animation: viewIn 0.25s ease; }
-    @keyframes viewIn {
-      from { opacity: 0; transform: translateX(8px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-
     .modal-overlay {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
-      z-index: 1000; display: flex; align-items: center; justify-content: center;
-      padding: 24px; opacity: 0; pointer-events: none;
-      transition: opacity 0.25s ease;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center; justify-content: center;
+      z-index: 100; padding: 20px;
     }
-    .modal-overlay.show { opacity: 1; pointer-events: auto; }
-    .modal-card {
-      background: var(--bg-elev); border-radius: 20px;
-      padding: 32px 24px 24px;
-      width: 100%; max-width: 340px; text-align: center;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-      transform: scale(0.85);
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: white; border-radius: 14px;
+      max-width: 500px; width: 100%;
+      max-height: 90vh; overflow: auto;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
     }
-    .modal-overlay.show .modal-card { transform: scale(1); }
-    .modal-icon {
-      width: 80px; height: 80px; border-radius: 50%;
-      background: var(--success); color: white; font-size: 44px;
-      display: inline-flex; align-items: center; justify-content: center;
-      margin-bottom: 16px;
-      box-shadow: 0 8px 20px rgba(52, 199, 89, 0.35);
-      animation: bounceIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    .modal-image {
+      background: white; border-radius: 14px;
+      max-width: 90vw; max-height: 90vh;
+      padding: 0; overflow: hidden;
     }
-    .modal-icon.warning { background: var(--warning); box-shadow: 0 8px 20px rgba(255, 149, 0, 0.35); }
-    @keyframes bounceIn {
-      0% { transform: scale(0); }
-      60% { transform: scale(1.15); }
-      100% { transform: scale(1); }
+    .modal-image img { display: block; max-width: 100%; max-height: 90vh; }
+    .modal-header {
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
     }
-    .modal-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
-    .modal-message { font-size: 15px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.5; }
-    .modal-info-box {
-      padding: 12px; background: rgba(0,0,0,0.04);
-      border-radius: 10px; margin-bottom: 20px;
-      font-size: 14px; text-align: left;
+    .modal-header h3 { font-size: 17px; font-weight: 700; }
+    .modal-close {
+      width: 32px; height: 32px;
+      border: none; background: transparent;
+      font-size: 22px; cursor: pointer; color: var(--text-tertiary);
+      border-radius: 8px;
     }
-    .modal-info-box .info-row { display: flex; justify-content: space-between; padding: 4px 0; gap: 12px; }
-    .modal-info-box .info-row b { font-weight: 600; text-align: right; word-break: break-all; }
-    .modal-btn {
-      width: 100%; padding: 14px;
-      border: none; border-radius: 12px;
-      background: var(--accent); color: white;
-      font-size: 17px; font-weight: 600;
-      font-family: inherit; cursor: pointer;
-      transition: background 0.15s, transform 0.1s;
+    .modal-close:hover { background: #f3f4f6; color: var(--text); }
+    .modal-body { padding: 22px; }
+    .modal-body label {
+      display: block; font-size: 13px; font-weight: 600;
+      margin-bottom: 6px; color: var(--text-secondary);
     }
-    .modal-btn:active { background: var(--accent-hover); transform: scale(0.98); }
+    .modal-body textarea {
+      width: 100%; padding: 10px 12px;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      font-family: inherit; font-size: 14px;
+      min-height: 80px; resize: vertical; line-height: 1.5;
+    }
+    .modal-body textarea:focus { outline: none; border-color: var(--accent); }
+    .modal-footer {
+      padding: 14px 22px;
+      border-top: 1px solid var(--border);
+      display: flex; gap: 8px; justify-content: flex-end;
+    }
+    .info-line { font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; }
+    .info-line b { color: var(--text); }
+
+    .toast {
+      position: fixed;
+      top: 20px; right: 20px;
+      background: var(--text); color: white;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 14px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      z-index: 200;
+      opacity: 0; transform: translateY(-10px);
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--error); }
   </style>
 </head>
 <body>
 
-  <!-- ============ LINE Block Screen ============ -->
-  <div class="line-block-screen" id="lineBlock">
-    <div class="line-block-icon">📍</div>
-    <div class="line-block-title">เปิดในเบราว์เซอร์ก่อน</div>
-    <div class="line-block-desc">
-      ระบบต้องใช้ GPS ซึ่งใช้ใน LINE ไม่ได้<br>
-      <b>คัดลอกลิงก์</b> แล้วเปิดใน Safari / Chrome
+  <div class="header">
+    <div class="header-left">
+      <h1>🛠️ OT Admin</h1>
+      <p>จัดการคำขอ OT ทั้งหมด</p>
     </div>
-
-    <button class="line-action-btn" onclick="copyLink()">
-      <span class="icon">📋</span>
-      <span>คัดลอกลิงก์</span>
-    </button>
-
-    <div class="line-divider">หรือเปิดด้วยตัวเอง</div>
-
-    <div class="line-manual-card">
-      <div class="line-manual-step" id="iosSteps" style="display:none;">
-        <div class="line-manual-step-num">i</div>
-        <div>
-          <b>iPhone:</b> กดปุ่ม <b>⋯</b> มุมขวาบน<br>
-          → เลือก <b>"เปิดในเบราว์เซอร์อื่น"</b>
-        </div>
-      </div>
-      <div class="line-manual-step" id="androidSteps" style="display:none;">
-        <div class="line-manual-step-num">A</div>
-        <div>
-          <b>Android:</b> กดปุ่ม <b>⋮</b> มุมขวาบน<br>
-          → เลือก <b>"เปิดในเบราว์เซอร์อื่น"</b>
-        </div>
-      </div>
+    <div class="header-right">
+      <button class="btn" onclick="loadData()">🔄 รีเฟรช</button>
+      <button class="btn" onclick="exportCSV()">⬇️ ดาวน์โหลด CSV</button>
     </div>
   </div>
 
-  <div class="top-bar">
-    <div class="top-bar-inner">
-      <button type="button" class="back-btn" id="backBtn" onclick="goToSelectView()">‹ ย้อนกลับ</button>
-      <h1 id="topBarTitle"></h1>
-    </div>
-  </div>
+  <div class="container">
 
-  <!-- ============ VIEW 1: หน้าเลือกโหมด ============ -->
-  <div class="view active" id="selectView">
-    <div class="large-title">
-      <h2>บันทึก OT</h2>
-      <p>เลือกประเภทการบันทึก</p>
-    </div>
-
-    <div class="mode-select">
-      <div class="mode-card start" onclick="goToFormView('clock_in')">
-        <div class="mode-card-icon">⏱️</div>
-        <div class="mode-card-text">
-          <div class="mode-card-title">เริ่มงาน</div>
-          <div class="mode-card-desc">บันทึกเวลาเข้าเริ่ม OT</div>
-        </div>
-        <div class="mode-card-arrow">›</div>
+    <div class="summary" id="summary">
+      <div class="summary-card info">
+        <div class="summary-label">คำขอทั้งหมด</div>
+        <div class="summary-value" id="sumTotal">- <small>คำขอ</small></div>
       </div>
-
-      <div class="mode-card end" onclick="goToFormView('clock_out')">
-        <div class="mode-card-icon">🏁</div>
-        <div class="mode-card-text">
-          <div class="mode-card-title">เลิกงาน</div>
-          <div class="mode-card-desc">เลือกชื่อ + บันทึกเวลาเลิก</div>
-        </div>
-        <div class="mode-card-arrow">›</div>
+      <div class="summary-card working">
+        <div class="summary-label">🔵 กำลังทำงาน</div>
+        <div class="summary-value" id="sumWorking">- <small>คน</small></div>
       </div>
-
-      <p class="mode-tip">💡 กดเริ่มงานก่อนเริ่มทำ OT<br>แล้วกลับมากด "เลิกงาน" เมื่อเสร็จ</p>
+      <div class="summary-card warning">
+        <div class="summary-label">รออนุมัติ</div>
+        <div class="summary-value" id="sumPending">- <small>คำขอ</small></div>
+      </div>
+      <div class="summary-card success">
+        <div class="summary-label">อนุมัติแล้ว</div>
+        <div class="summary-value" id="sumApproved">- <small>คำขอ</small></div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">เวลารวมที่อนุมัติ</div>
+        <div class="summary-value" id="sumHours" style="font-size: 22px;">-</div>
+      </div>
     </div>
-  </div>
 
-  <!-- ============ VIEW 2: ฟอร์มบันทึก ============ -->
-  <div class="view" id="formView">
-    <div class="large-title">
-      <h2 id="pageTitle">บันทึก OT</h2>
-      <p id="pageDesc">กรอกข้อมูล → ถ่ายรูป → กดเริ่มงาน</p>
+    <div class="filter-bar">
+      <input type="search" id="searchInput" placeholder="🔍 ค้นหาชื่อ, หัวหน้า, รหัส, หรืองาน..." oninput="renderTable()">
+      <select id="statusFilter" onchange="renderTable()">
+        <option value="">ทุกสถานะ</option>
+        <option value="กำลังทำงาน">กำลังทำงาน</option>
+        <option value="รออนุมัติ">รออนุมัติ</option>
+        <option value="อนุมัติ">อนุมัติ</option>
+        <option value="ไม่อนุมัติ">ไม่อนุมัติ</option>
+      </select>
+      <select id="supervisorFilter" onchange="renderTable()">
+        <option value="">ทุกหัวหน้า</option>
+      </select>
+      <input type="date" id="dateFrom" onchange="renderTable()" title="วันที่เริ่ม">
+      <span style="color: var(--text-tertiary);">ถึง</span>
+      <input type="date" id="dateTo" onchange="renderTable()" title="วันที่สิ้นสุด">
+      <span class="count" id="recordCount">0 รายการ</span>
     </div>
 
-    <form id="otForm" onsubmit="handleSubmit(event)">
-      <div class="content">
-
-        <div class="section-header">
-          <span>ข้อมูลพนักงาน</span>
-          <span class="mode-badge clock-in" id="modeBadge">⏱️ เริ่มงาน</span>
-        </div>
-        <div class="field-group">
-          <div class="field">
-            <label class="field-label" for="otDate">วันที่ <span class="required">*</span></label>
-            <input type="date" id="otDate" class="field-input" required onchange="onDateChange()">
-          </div>
-
-          <div class="field" id="nameInputField">
-            <label class="field-label" for="employeeName">ชื่อ - นามสกุล <span class="required">*</span></label>
-            <input type="text" id="employeeName" class="field-input" placeholder="พิมพ์ชื่อหรือเลือกจากรายการ" list="employeeList" autocomplete="off" oninput="onNameInput()" onblur="checkClockStatusUI()">
-            <datalist id="employeeList"></datalist>
-          </div>
-
-          <div class="field" id="nameSelectField" style="display:none;">
-            <label class="field-label" for="employeeSelect">เลือกชื่อพนักงาน <span class="required">*</span></label>
-            <select id="employeeSelect" class="field-input" onchange="onEmployeeSelected()">
-              <option value="">-- เลือกชื่อ --</option>
-            </select>
-          </div>
-
-          <div class="field" id="supervisorField">
-            <label class="field-label" for="supervisorName">ชื่อหัวหน้า <span class="required">*</span></label>
-            <input type="text" id="supervisorName" class="field-input" placeholder="พิมพ์ชื่อหัวหน้าหรือเลือกจากรายการ" list="supervisorList" autocomplete="off">
-            <datalist id="supervisorList"></datalist>
-          </div>
-
-          <div class="field">
-            <label class="field-label" id="timeLabel">เวลาเริ่มงาน <span class="required">*</span></label>
-            <input type="time" id="timeInput" class="field-input" required>
-            <div class="hours-summary" id="hoursSummary" style="display:none;">
-              <span class="hours-summary-label">เวลารวม</span>
-              <span class="hours-summary-value" id="hoursValue">0</span>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>รหัส</th>
+            <th>ส่งเมื่อ</th>
+            <th>วัน OT</th>
+            <th>ชื่อ</th>
+            <th>หัวหน้า</th>
+            <th>เวลาเริ่ม–เลิก</th>
+            <th>เวลารวม</th>
+            <th>งานที่ทำ</th>
+            <th>รูปเริ่ม</th>
+            <th>ตำแหน่งเริ่ม</th>
+            <th>รูปเลิก</th>
+            <th>ตำแหน่งเลิก</th>
+            <th>สถานะ</th>
+            <th>หมายเหตุ</th>
+            <th style="text-align:center;">การจัดการ</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="15">
+            <div class="loading">
+              <div class="spinner"></div>
+              <div>กำลังโหลดข้อมูล...</div>
             </div>
-          </div>
-        </div>
-
-        <div id="warningBox" style="display:none;"></div>
-        <div id="clockInBox" style="display:none;"></div>
-
-        <div id="workDetailSection">
-          <div class="section-header">รายละเอียดงาน</div>
-          <div class="field-group">
-            <div class="field">
-              <label class="field-label" for="workDetail">งานที่ทำ</label>
-              <textarea id="workDetail" class="field-input" placeholder="อธิบายงานที่ทำในช่วง OT..."></textarea>
-            </div>
-          </div>
-        </div>
-
-        <div class="section-header" id="selfieHeader">ยืนยันตัวตน</div>
-
-        <div class="action-card" id="selfieCard">
-          <div class="action-card-title">
-            <span class="action-card-icon icon-cam">📸</span>
-            ถ่ายรูป + ระบุตำแหน่ง
-          </div>
-
-          <label class="file-label" id="cameraLabel">
-            <span class="btn btn-orange btn-big" style="pointer-events:none;">
-              📸 เปิดกล้อง (ถ่ายสด)
-            </span>
-            <input type="file" id="cameraInput" accept="image/*" capture="user" onclick="onCameraOpen()" onchange="handleCapture(event)">
-          </label>
-          <img id="selfiePreview" style="display:none;" alt="selfie preview">
-          <div id="captureStatus"></div>
-
-          <button type="button" class="btn btn-tinted" onclick="retakePhoto()" id="retakeBtn" style="display:none; margin-top:10px;">
-            ถ่ายใหม่
-          </button>
-
-          <input type="hidden" id="gpsCoords">
-          <input type="hidden" id="address">
-          <canvas id="canvas" style="display:none;"></canvas>
-        </div>
-      </div>
-
-      <div class="submit-section">
-        <button type="submit" class="btn btn-primary" id="submitBtn">⏱️ เริ่มงาน OT</button>
-        <div id="formStatus"></div>
-      </div>
-    </form>
-  </div>
-
-  <div class="modal-overlay" id="successModal" onclick="closeModal(event)">
-    <div class="modal-card" onclick="event.stopPropagation()">
-      <div class="modal-icon" id="modalIcon">✓</div>
-      <div class="modal-title" id="modalTitle">บันทึกสำเร็จ</div>
-      <div class="modal-message" id="modalMessage"></div>
-      <div class="modal-info-box" id="modalInfoBox" style="display:none;"></div>
-      <button class="modal-btn" onclick="closeModal()">ตกลง</button>
+          </td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
+
+  <div class="modal-overlay" id="actionModal" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="actionTitle">อนุมัติคำขอ</h3>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="info-line"><b>รหัส:</b> <span id="actionReqId"></span></div>
+        <div class="info-line"><b>ชื่อ:</b> <span id="actionName"></span></div>
+        <div class="info-line"><b>หัวหน้า:</b> <span id="actionSupervisor"></span></div>
+        <div class="info-line"><b>เวลา:</b> <span id="actionTime"></span></div>
+        <div class="info-line"><b>เวลารวม:</b> <span id="actionHours"></span></div>
+        <div class="info-line" style="margin-bottom: 14px;"><b>วันที่:</b> <span id="actionDate"></span></div>
+        <label for="noteInput">หมายเหตุ (ถ้ามี)</label>
+        <textarea id="noteInput" placeholder="เพิ่มหมายเหตุ..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal()">ยกเลิก</button>
+        <button class="btn" id="confirmBtn" onclick="confirmAction()">ยืนยัน</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="imageModal" onclick="if(event.target===this) closeImageModal()">
+    <div class="modal-image">
+      <img id="modalImg" src="" alt="selfie">
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
 
   <script>
     // ============================================================
-    // ⚠️ ใส่ Web App URL ของคุณตรงนี้
+    // ⚠️ ใส่ Web App URL ของคุณตรงนี้ (ตัวเดียวกับ index.html)
     // ============================================================
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzUnBvZvRtG_pK6UVWLbL8pD-_zTGDMz2mrm95kAzYjHu_04mZZZ9MiqwHMESTnaMwCww/exec';
 
-    // ============================================================
-    // 🔍 ตรวจจับ LINE / Device
-    // ============================================================
-    function detectBrowser() {
-      const ua = navigator.userAgent || '';
-      const isLine = /Line\//i.test(ua);
-      const isFb = /FBAN|FBAV|FB_IAB/i.test(ua);
-      const isIg = /Instagram/i.test(ua);
-      const isMessenger = /Messenger/i.test(ua);
-      const isIOS = /iPhone|iPad|iPod/i.test(ua);
-      const isAndroid = /Android/i.test(ua);
-      return {
-        isInApp: isLine || isFb || isIg || isMessenger,
-        isLine: isLine,
-        isIOS: isIOS,
-        isAndroid: isAndroid
-      };
-    }
+    let allData = [];
+    let currentAction = null;
 
-    // ============================================================
-    // 🎯 LINE openExternalBrowser=1 TRICK
-    // ถ้าเปิดใน LINE และยังไม่มี ?openExternalBrowser=1
-    // → redirect ตัวเอง เพิ่ม parameter → LINE จะเปิดในเบราว์เซอร์ภายนอกอัตโนมัติ
-    // ============================================================
-    (function() {
-      const det = detectBrowser();
-      const url = new URL(window.location.href);
-      const alreadyTried = url.searchParams.get('openExternalBrowser') === '1';
-      const userSkipped = sessionStorage.getItem('skipExternalBrowser') === '1';
-
-      // ถ้าอยู่ใน LINE และยังไม่ได้พยายามเปิดข้างนอก
-      if (det.isLine && !alreadyTried && !userSkipped) {
-        // เพิ่ม ?openExternalBrowser=1 แล้ว reload
-        // LINE จะ detect parameter นี้ และเปิดใน Safari/Chrome อัตโนมัติ
-        url.searchParams.set('openExternalBrowser', '1');
-        window.location.replace(url.toString());
-        return;
-      }
-
-      // กรณีอื่น ๆ (FB, IG, Messenger) — แสดงหน้าเตือนแบบเดิม
-      // หรือถ้าเป็น LINE แต่ trick ไม่ work (รุ่นเก่า) — แสดงหน้าเตือนด้วย
-      if (det.isInApp && !userSkipped) {
-        // ใส่ delay 500ms — ถ้าผ่านไปแล้วยังอยู่ในแอป = trick ไม่ work → แสดงหน้าเตือน
-        setTimeout(function() {
-          // เช็คซ้ำว่ายังอยู่ใน in-app browser ไหม
-          const stillInApp = detectBrowser().isInApp;
-          if (stillInApp) {
-            showLineBlockScreen(det);
-          }
-        }, det.isLine && alreadyTried ? 800 : 0);
-      }
-    })();
-
-    function showLineBlockScreen(det) {
-      const screen = document.getElementById('lineBlock');
-      screen.classList.add('show');
-
-      // แสดงคำแนะนำตาม device
-      if (det.isIOS) {
-        document.getElementById('iosSteps').style.display = 'flex';
-      } else if (det.isAndroid) {
-        document.getElementById('androidSteps').style.display = 'flex';
-      } else {
-        // unknown — แสดงทั้งสอง
-        document.getElementById('iosSteps').style.display = 'flex';
-        document.getElementById('androidSteps').style.display = 'flex';
-      }
-    }
-
-    function copyLink() {
-      // ใช้ลิงก์เดิม (ไม่มี ?openExternalBrowser) เพื่อความสะอาด
-      const url = new URL(window.location.href);
-      url.searchParams.delete('openExternalBrowser');
-      const cleanUrl = url.toString();
-
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(cleanUrl).then(function() {
-          alert('✓ คัดลอกลิงก์แล้ว!\n\n1. ปิดหน้านี้\n2. เปิดแอป Safari (iPhone) หรือ Chrome (Android)\n3. วางลิงก์ที่ช่อง URL ด้านบน');
-        }).catch(function() {
-          fallbackCopy(cleanUrl);
-        });
-      } else {
-        fallbackCopy(cleanUrl);
-      }
-    }
-
-    function fallbackCopy(text) {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.select();
-      try {
-        document.execCommand('copy');
-        alert('✓ คัดลอกลิงก์แล้ว!\n\nเปิด Safari / Chrome แล้ววางลิงก์');
-      } catch (e) {
-        prompt('คัดลอกลิงก์นี้:', text);
-      }
-      document.body.removeChild(ta);
-    }
-
-    let currentMode = 'clock_in';
-    let existingClockIn = null;
-    let activeClockInsCache = [];
-
-    function escapeHtml(s) {
-      return String(s || '').replace(/[&<>"']/g, c =>
-        ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
-    }
-
+    // ====== API call ======
     async function apiCall(action, payload) {
-      if (!WEB_APP_URL || WEB_APP_URL.indexOf('PASTE_YOUR') === 0) {
-        throw new Error('ยังไม่ได้ตั้ง WEB_APP_URL ในไฟล์ HTML');
-      }
       const body = JSON.stringify(Object.assign({ action: action }, payload || {}));
       const res = await fetch(WEB_APP_URL, {
         method: 'POST',
@@ -750,776 +459,335 @@
       }
     }
 
-    function goToFormView(mode) {
-      currentMode = mode;
-      existingClockIn = null;
+    async function loadData() {
+      const body = document.getElementById('tableBody');
+      body.innerHTML =
+        '<tr><td colspan="15"><div class="loading"><div class="spinner"></div><div>กำลังโหลดข้อมูล...</div></div></td></tr>';
 
-      document.getElementById('otForm').reset();
-      document.getElementById('otDate').valueAsDate = new Date();
-      retakePhoto();
-      document.getElementById('formStatus').innerHTML = '';
-      document.getElementById('warningBox').style.display = 'none';
-      document.getElementById('clockInBox').style.display = 'none';
-      document.getElementById('hoursSummary').style.display = 'none';
-
-      const sel = document.getElementById('employeeSelect');
-      sel.innerHTML = '<option value="">-- เลือกชื่อ --</option>';
-
-      applyModeUI(mode);
-
-      const now = new Date();
-      const hh = String(now.getHours()).padStart(2, '0');
-      const mm = String(now.getMinutes()).padStart(2, '0');
-      document.getElementById('timeInput').value = hh + ':' + mm;
-
-      if (mode === 'clock_in') {
-        loadEmployeeNames();
-        loadSupervisorNames();
-      } else {
-        loadActiveClockIns();
-      }
-
-      document.getElementById('selectView').classList.remove('active');
-      document.getElementById('formView').classList.add('active');
-      document.getElementById('backBtn').classList.add('show');
-      window.scrollTo({ top: 0 });
-    }
-
-    function goToSelectView() {
-      document.getElementById('formView').classList.remove('active');
-      document.getElementById('selectView').classList.add('active');
-      document.getElementById('backBtn').classList.remove('show');
-      window.scrollTo({ top: 0 });
-    }
-
-    function applyModeUI(mode) {
-      const badge = document.getElementById('modeBadge');
-      const title = document.getElementById('pageTitle');
-      const desc = document.getElementById('pageDesc');
-      const timeLabel = document.getElementById('timeLabel');
-      const submitBtn = document.getElementById('submitBtn');
-      const selfieHeader = document.getElementById('selfieHeader');
-      const nameInputField = document.getElementById('nameInputField');
-      const nameSelectField = document.getElementById('nameSelectField');
-      const supervisorField = document.getElementById('supervisorField');
-      const workDetailSection = document.getElementById('workDetailSection');
-
-      if (mode === 'clock_out') {
-        badge.textContent = '🏁 เลิกงาน';
-        badge.className = 'mode-badge clock-out';
-        title.textContent = 'เลิกงาน OT';
-        desc.textContent = 'เลือกชื่อ → บันทึกเวลา → ถ่ายรูป';
-        timeLabel.innerHTML = 'เวลาเลิกงาน <span class="required">*</span>';
-        submitBtn.textContent = '🏁 เลิกงาน';
-        submitBtn.className = 'btn btn-warning';
-        selfieHeader.innerHTML = 'ยืนยันตัวตน (รูปเลิกงาน)';
-
-        nameInputField.style.display = 'none';
-        nameSelectField.style.display = 'block';
-        supervisorField.style.display = 'none';
-        workDetailSection.style.display = 'none';
-      } else {
-        badge.textContent = '⏱️ เริ่มงาน';
-        badge.className = 'mode-badge clock-in';
-        title.textContent = 'บันทึก OT';
-        desc.textContent = 'กรอกข้อมูล → ถ่ายรูป → กดเริ่มงาน';
-        timeLabel.innerHTML = 'เวลาเริ่มงาน <span class="required">*</span>';
-        submitBtn.textContent = '⏱️ เริ่มงาน OT';
-        submitBtn.className = 'btn btn-primary';
-        selfieHeader.innerHTML = 'ยืนยันตัวตน';
-
-        nameInputField.style.display = 'block';
-        nameSelectField.style.display = 'none';
-        supervisorField.style.display = 'block';
-        workDetailSection.style.display = 'block';
-      }
-    }
-
-    async function loadEmployeeNames() {
-      try {
-        const res = await apiCall('getEmployeeNames');
-        const names = res.data || [];
-        if (!names.length) return;
-        const dl = document.getElementById('employeeList');
-        dl.innerHTML = names.map(n =>
-          '<option value="' + String(n).replace(/"/g, '&quot;') + '">'
-        ).join('');
-      } catch (e) { /* ignore */ }
-    }
-
-    async function loadSupervisorNames() {
-      try {
-        const res = await apiCall('getSupervisorNames');
-        const names = res.data || [];
-        if (!names.length) return;
-        const dl = document.getElementById('supervisorList');
-        dl.innerHTML = names.map(n =>
-          '<option value="' + String(n).replace(/"/g, '&quot;') + '">'
-        ).join('');
-      } catch (e) { /* ignore */ }
-    }
-
-    async function loadActiveClockIns() {
-      const date = document.getElementById('otDate').value;
-      const sel = document.getElementById('employeeSelect');
-      const warningBox = document.getElementById('warningBox');
-
-      sel.innerHTML = '<option value="">กำลังโหลด...</option>';
-      sel.disabled = true;
-      warningBox.style.display = 'none';
+      // Timeout 60 วินาที
+      let timedOut = false;
+      const timeout = setTimeout(function() {
+        timedOut = true;
+        body.innerHTML =
+          '<tr><td colspan="15"><div class="empty-state">' +
+          '<div class="icon">⏱️</div>' +
+          '<div><b>หมดเวลารอ (60 วินาที)</b></div>' +
+          '<div style="margin-top:8px;font-size:13px;">เซิร์ฟเวอร์ไม่ตอบกลับ — ลอง:</div>' +
+          '<div style="margin-top:8px;font-size:13px;">1. รีเฟรชหน้า<br>2. รัน <b>debugSheet</b> ใน Apps Script editor เพื่อดู log<br>3. รัน <b>forceMigrate</b> ถ้าคอลัมน์ไม่ครบ</div>' +
+          '<button class="btn btn-primary" style="margin-top:14px;" onclick="loadData()">🔄 ลองใหม่</button>' +
+          '</div></td></tr>';
+      }, 60000);
 
       try {
-        const res = await apiCall('getActiveClockIns', { otDate: date });
-        activeClockInsCache = res.data || [];
-        sel.disabled = false;
-
-        if (!activeClockInsCache.length) {
-          sel.innerHTML = '<option value="">-- ไม่มีคนกำลังทำงาน --</option>';
-          warningBox.style.display = 'block';
-          warningBox.innerHTML =
-            '<div class="empty-active-box">' +
-            '<div class="emoji">🔍</div>' +
-            '<div class="title">ไม่พบบันทึกเริ่มงาน</div>' +
-            '<div class="desc">วันนี้ยังไม่มีพนักงานคนใดกด "เริ่มงาน" ไว้<br>กรุณากลับไปกดเริ่มงานก่อน</div>' +
-            '</div>';
-          return;
-        }
-
-        sel.innerHTML = '<option value="">-- เลือกชื่อ --</option>' +
-          activeClockInsCache.map((p, idx) =>
-            '<option value="' + idx + '">' +
-            escapeHtml(p.employeeName) + '  ·  เริ่ม ' + p.startTime +
-            '</option>'
-          ).join('');
-      } catch (err) {
-        sel.disabled = false;
-        sel.innerHTML = '<option value="">โหลดไม่สำเร็จ</option>';
-        warningBox.style.display = 'block';
-        warningBox.innerHTML = '<div class="warning-box">❌ โหลดข้อมูลไม่ได้: ' + escapeHtml(err.message) + '</div>';
-      }
-    }
-
-    function onDateChange() {
-      if (currentMode === 'clock_out') {
-        loadActiveClockIns();
-        existingClockIn = null;
-        document.getElementById('clockInBox').style.display = 'none';
-        document.getElementById('hoursSummary').style.display = 'none';
-      } else {
-        checkClockStatusUI();
-      }
-    }
-
-    function onNameInput() {
-      const value = document.getElementById('employeeName').value;
-      const options = document.querySelectorAll('#employeeList option');
-      for (const opt of options) {
-        if (opt.value === value) {
-          checkClockStatusUI();
-          return;
-        }
-      }
-    }
-
-    function onEmployeeSelected() {
-      const sel = document.getElementById('employeeSelect');
-      const idx = sel.value;
-      const clockInBox = document.getElementById('clockInBox');
-      const warningBox = document.getElementById('warningBox');
-
-      if (idx === '' || !activeClockInsCache[idx]) {
-        existingClockIn = null;
-        clockInBox.style.display = 'none';
-        document.getElementById('hoursSummary').style.display = 'none';
-        return;
-      }
-
-      const picked = activeClockInsCache[idx];
-      existingClockIn = {
-        rowIndex: null,
-        requestId: picked.requestId,
-        startTime: picked.startTime,
-        supervisor: picked.supervisor,
-        otDate: picked.otDate
-      };
-
-      warningBox.style.display = 'none';
-      clockInBox.style.display = 'block';
-      clockInBox.innerHTML =
-        '<div class="clock-in-info">' +
-        '<div class="info-title">⏱️ บันทึกเริ่มงานไว้แล้ว</div>' +
-        '<div class="info-time">' + picked.startTime + '</div>' +
-        '<div class="info-desc">' +
-          (picked.supervisor ? '👤 หัวหน้า: <b>' + escapeHtml(picked.supervisor) + '</b><br>' : '') +
-          '🆔 ' + escapeHtml(picked.requestId) +
-        '</div>' +
-        '</div>';
-
-      const timeInput = document.getElementById('timeInput');
-      timeInput.removeEventListener('change', calcHoursListener);
-      timeInput.addEventListener('change', calcHoursListener);
-      calcHoursListener();
-    }
-
-    async function checkClockStatusUI() {
-      if (currentMode !== 'clock_in') return;
-
-      const name = document.getElementById('employeeName').value.trim();
-      const date = document.getElementById('otDate').value;
-      const warningBox = document.getElementById('warningBox');
-
-      if (!name || !date) {
-        warningBox.style.display = 'none';
-        return;
-      }
-
-      try {
-        const res = await apiCall('checkClockStatus', { employeeName: name, otDate: date });
-        if (res.status === 'clocked_in') {
-          warningBox.style.display = 'block';
-          warningBox.innerHTML =
-            '<div class="warning-box">' +
-            '⚠️ <b>คุณมี OT ค้างอยู่!</b><br>' +
-            'เริ่มไว้ตอน <b>' + res.startTime + '</b> ยังไม่ได้กดเลิกงาน<br>' +
-            'กรุณากลับไปกด "เลิกงาน" ก่อน' +
-            '</div>';
+        const res = await apiCall('getAllRequests');
+        if (timedOut) return;
+        clearTimeout(timeout);
+        if (res.success) {
+          allData = res.data;
+          populateSupervisorFilter();
+          renderTable();
         } else {
-          warningBox.style.display = 'none';
+          body.innerHTML =
+            '<tr><td colspan="15"><div class="empty-state">' +
+            '<div class="icon">⚠️</div>' +
+            '<div><b>เซิร์ฟเวอร์แจ้ง error:</b></div>' +
+            '<div style="margin-top:8px;color:var(--error);">' + escapeHtml(res.message || 'ไม่ทราบสาเหตุ') + '</div>' +
+            '<button class="btn btn-primary" style="margin-top:14px;" onclick="loadData()">🔄 ลองใหม่</button>' +
+            '</div></td></tr>';
         }
-      } catch (e) {
-        warningBox.style.display = 'none';
+      } catch (err) {
+        if (timedOut) return;
+        clearTimeout(timeout);
+        body.innerHTML =
+          '<tr><td colspan="15"><div class="empty-state">' +
+          '<div class="icon">❌</div>' +
+          '<div><b>โหลดไม่สำเร็จ</b></div>' +
+          '<div style="margin-top:8px;color:var(--error);font-size:13px;">' + escapeHtml(err.message || err) + '</div>' +
+          '<button class="btn btn-primary" style="margin-top:14px;" onclick="loadData()">🔄 ลองใหม่</button>' +
+          '</div></td></tr>';
       }
+
+      // โหลด summary
+      try {
+        const s = await apiCall('getAdminSummary');
+        if (!s.success) return;
+        document.getElementById('sumTotal').innerHTML = s.total + ' <small>คำขอ</small>';
+        document.getElementById('sumWorking').innerHTML = (s.working || 0) + ' <small>คน</small>';
+        document.getElementById('sumPending').innerHTML = s.pending + ' <small>คำขอ · ' + (s.pendingHoursText || '0') + '</small>';
+        document.getElementById('sumApproved').innerHTML = s.approved + ' <small>คำขอ</small>';
+        document.getElementById('sumHours').innerHTML = (s.approvedHoursText || '0');
+      } catch (e) { /* ignore summary error */ }
     }
 
-    function calcHoursListener() {
-      if (currentMode !== 'clock_out' || !existingClockIn) return;
-      const end = document.getElementById('timeInput').value;
-      if (!end) return;
+    function populateSupervisorFilter() {
+      const sel = document.getElementById('supervisorFilter');
+      const current = sel.value;
+      const names = Array.from(new Set(
+        allData.map(r => (r.supervisor || '').trim()).filter(n => n.length > 0)
+      )).sort((a, b) => a.localeCompare(b, 'th'));
 
-      const [sh, sm] = existingClockIn.startTime.split(':').map(Number);
-      const [eh, em] = end.split(':').map(Number);
-      let startMin = sh * 60 + sm;
-      let endMin = eh * 60 + em;
-      if (endMin <= startMin) endMin += 24 * 60;
+      sel.innerHTML = '<option value="">ทุกหัวหน้า</option>' +
+        names.map(n => '<option value="' + escapeHtml(n) + '">' + escapeHtml(n) + '</option>').join('');
 
-      const totalMin = endMin - startMin;
-      const box = document.getElementById('hoursSummary');
-      const val = document.getElementById('hoursValue');
-      box.style.display = 'flex';
-
-      if (totalMin <= 0) {
-        box.classList.add('error');
-        val.textContent = 'เวลาไม่ถูกต้อง';
-      } else {
-        box.classList.remove('error');
-        val.textContent = formatDuration(totalMin);
-      }
+      if (current && names.indexOf(current) !== -1) sel.value = current;
     }
 
-    function formatDuration(totalMin) {
-      const h = Math.floor(totalMin / 60);
-      const m = totalMin % 60;
-      if (h === 0) return m + ' นาที';
-      if (m === 0) return h + ' ชม.';
-      return h + ' ชม. ' + m + ' นาที';
-    }
+    function renderTable() {
+      const search = document.getElementById('searchInput').value.toLowerCase().trim();
+      const statusF = document.getElementById('statusFilter').value;
+      const supervisorF = document.getElementById('supervisorFilter').value;
+      const dateFrom = document.getElementById('dateFrom').value;
+      const dateTo = document.getElementById('dateTo').value;
 
-    // ====== GPS ======
-    let gpsPromise = null;
-    let gpsWatchId = null;
-    let gpsBestReading = null;
-    let cameraOpenedAt = 0;
-
-    const GPS_GOOD_ACCURACY = 10;
-    const GPS_ACCEPTABLE = 30;
-    const GPS_MAX_WAIT = 15000;
-
-    function onCameraOpen() {
-      cameraOpenedAt = Date.now();
-      startGpsLookup();
-    }
-
-    function startGpsLookup() {
-      if (!navigator.geolocation) {
-        gpsPromise = Promise.reject({ code: 0, message: 'เบราว์เซอร์ไม่รองรับ GPS' });
-        return;
-      }
-
-      const isSecure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-      if (!isSecure) {
-        gpsPromise = Promise.reject({ code: 1, message: 'GPS ต้องใช้บน HTTPS เท่านั้น (ตอนนี้คือ ' + location.protocol + ')' });
-        return;
-      }
-
-      gpsBestReading = null;
-
-      if (gpsWatchId !== null) {
-        try { navigator.geolocation.clearWatch(gpsWatchId); } catch (e) {}
-        gpsWatchId = null;
-      }
-
-      gpsPromise = new Promise(function(resolve, reject) {
-        let resolved = false;
-        let firstFixReceived = false;
-
-        navigator.geolocation.getCurrentPosition(
-          function(pos) {
-            firstFixReceived = true;
-            const reading = {
-              lat: pos.coords.latitude,
-              lng: pos.coords.longitude,
-              acc: pos.coords.accuracy
-            };
-            gpsBestReading = reading;
-            updateGpsProgress(reading.acc);
-
-            if (!resolved && reading.acc <= GPS_GOOD_ACCURACY) {
-              resolved = true;
-              resolve(formatReading(reading));
-              return;
-            }
-
-            if (!resolved) {
-              startWatch();
-            }
-          },
-          function(err) {
-            if (!resolved) {
-              startWatch();
-              setTimeout(function() {
-                if (resolved) return;
-                if (gpsBestReading) {
-                  resolved = true;
-                  stopGpsWatch();
-                  resolve(formatReading(gpsBestReading));
-                } else {
-                  resolved = true;
-                  stopGpsWatch();
-                  reject(err);
-                }
-              }, GPS_MAX_WAIT);
-            }
-          },
-          { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
-        );
-
-        function startWatch() {
-          gpsWatchId = navigator.geolocation.watchPosition(
-            function(pos) {
-              const reading = {
-                lat: pos.coords.latitude,
-                lng: pos.coords.longitude,
-                acc: pos.coords.accuracy
-              };
-
-              if (!gpsBestReading || reading.acc < gpsBestReading.acc) {
-                gpsBestReading = reading;
-                updateGpsProgress(reading.acc);
-              }
-
-              if (!resolved && reading.acc <= GPS_GOOD_ACCURACY) {
-                resolved = true;
-                stopGpsWatch();
-                resolve(formatReading(gpsBestReading));
-              }
-            },
-            function(err) { /* ignore */ },
-            { enableHighAccuracy: true, timeout: GPS_MAX_WAIT, maximumAge: 0 }
-          );
+      let filtered = allData.filter(r => {
+        if (search) {
+          const hay = (r.requestId + ' ' + r.employeeName + ' ' + (r.supervisor || '') + ' ' + r.workDetail + ' ' + r.department).toLowerCase();
+          if (!hay.includes(search)) return false;
         }
-
-        setTimeout(function() {
-          if (resolved) return;
-          stopGpsWatch();
-
-          if (gpsBestReading) {
-            resolved = true;
-            resolve(formatReading(gpsBestReading));
-          } else if (!firstFixReceived) {
-            navigator.geolocation.getCurrentPosition(
-              function(pos) {
-                if (resolved) return;
-                resolved = true;
-                resolve({
-                  lat: pos.coords.latitude.toFixed(6),
-                  lng: pos.coords.longitude.toFixed(6),
-                  acc: Math.round(pos.coords.accuracy)
-                });
-              },
-              function(err) {
-                if (resolved) return;
-                resolved = true;
-                reject(err);
-              },
-              { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
-            );
+        if (statusF && r.status !== statusF) return false;
+        if (supervisorF && (r.supervisor || '').trim() !== supervisorF) return false;
+        if (dateFrom || dateTo) {
+          const otDate = parseDDMMYYYY(r.otDate);
+          if (dateFrom && otDate < new Date(dateFrom).getTime()) return false;
+          if (dateTo) {
+            const to = new Date(dateTo); to.setHours(23,59,59,999);
+            if (otDate > to.getTime()) return false;
           }
-        }, GPS_MAX_WAIT);
+        }
+        return true;
       });
-    }
 
-    function stopGpsWatch() {
-      if (gpsWatchId !== null) {
-        try { navigator.geolocation.clearWatch(gpsWatchId); } catch (e) {}
-        gpsWatchId = null;
-      }
-    }
+      document.getElementById('recordCount').textContent = filtered.length + ' รายการ';
 
-    function formatReading(r) {
-      return {
-        lat: r.lat.toFixed(6),
-        lng: r.lng.toFixed(6),
-        acc: Math.round(r.acc)
-      };
-    }
+      const body = document.getElementById('tableBody');
 
-    function updateGpsProgress(currentAcc) {
-      const gpsRow = document.getElementById('gpsRow');
-      if (!gpsRow) return;
-      const accInt = Math.round(currentAcc);
-
-      let icon, msg;
-      if (accInt <= GPS_GOOD_ACCURACY) {
-        icon = '<span class="step-icon step-done">✓</span>';
-        msg = '<span>📍 ความแม่นยำ <b>±' + accInt + ' ม.</b> · กำลังบันทึก...</span>';
-      } else if (accInt <= GPS_ACCEPTABLE) {
-        icon = '<span class="step-icon step-active"><span class="spinner" style="margin:0; width:10px; height:10px;"></span></span>';
-        msg = '<span>📍 ปัจจุบัน ±' + accInt + ' ม. · กำลังหาความแม่นยำที่ดีกว่า...</span>';
-      } else {
-        icon = '<span class="step-icon step-active"><span class="spinner" style="margin:0; width:10px; height:10px;"></span></span>';
-        msg = '<span>📍 ปัจจุบัน ±' + accInt + ' ม. · ' +
-              '<span style="color:#c66800;">ออกที่โล่ง / เปิดที่กลางแจ้งช่วยได้</span></span>';
-      }
-      gpsRow.innerHTML = icon + msg;
-    }
-
-    function handleCapture(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      if (!cameraOpenedAt) cameraOpenedAt = Date.now();
-
-      const MAX_AGE_BEFORE_CLICK = 60 * 1000;
-      const fileTime = file.lastModified || 0;
-      const ageBeforeClick = cameraOpenedAt - fileTime;
-
-      if (fileTime > 0 && ageBeforeClick > MAX_AGE_BEFORE_CLICK) {
-        const ageMin = Math.round(ageBeforeClick / 60000);
-        const ageText = ageMin < 60
-          ? ageMin + ' นาทีก่อน'
-          : ageMin < 1440
-            ? Math.round(ageMin / 60) + ' ชั่วโมงก่อน'
-            : Math.round(ageMin / 1440) + ' วันก่อน';
-
-        document.getElementById('captureStatus').innerHTML =
-          '<div class="status-box status-error" style="line-height:1.6;">' +
-          '🚫 <b>ห้ามเลือกรูปจากแกลเลอรี</b><br>' +
-          'ระบบตรวจพบว่ารูปนี้ถ่ายไว้ตั้งแต่ ' + ageText + '<br>' +
-          '<b>กรุณากด "เปิดกล้อง" แล้วถ่ายสดเท่านั้น</b>' +
-          '</div>';
-        event.target.value = '';
-        cameraOpenedAt = 0;
+      if (filtered.length === 0) {
+        body.innerHTML =
+          '<tr><td colspan="15"><div class="empty-state">' +
+          '<div class="icon">📭</div><div>ไม่พบข้อมูล</div></div></td></tr>';
         return;
       }
 
-      const now = new Date();
-      const photoTimestamp =
-        String(now.getDate()).padStart(2, '0') + '/' +
-        String(now.getMonth() + 1).padStart(2, '0') + '/' +
-        now.getFullYear() + ' ' +
-        String(now.getHours()).padStart(2, '0') + ':' +
-        String(now.getMinutes()).padStart(2, '0') + ':' +
-        String(now.getSeconds()).padStart(2, '0');
+      body.innerHTML = filtered.map(r => {
+        const badgeClass = r.status === 'อนุมัติ' ? 'badge-approved'
+                        : r.status === 'ไม่อนุมัติ' ? 'badge-rejected'
+                        : r.status === 'กำลังทำงาน' ? 'badge-working'
+                        : 'badge-pending';
 
-      const statusDiv = document.getElementById('captureStatus');
-      statusDiv.innerHTML =
-        '<div class="step-status"><span class="step-icon step-done">✓</span><span>ถ่ายรูปสำเร็จ</span></div>' +
-        '<div class="step-status" id="gpsRow"><span class="step-icon step-active"><span class="spinner" style="margin:0; width:10px; height:10px;"></span></span><span>กำลังหาตำแหน่ง GPS (รอ ~10-15 วิ)...</span></div>';
+        function buildThumb(embedUrl, photoTime) {
+          let thumbHtml;
+          if (!embedUrl) {
+            thumbHtml = `<div class="no-thumb">—</div>`;
+          } else {
+            thumbHtml = `<img class="thumb" src="${escapeHtml(embedUrl)}" onclick="showImage('${escapeJs(embedUrl)}')" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" alt="selfie"><div class="no-thumb" style="display:none;">📷</div>`;
+          }
+          const timeHtml = photoTime
+            ? `<div class="photo-time">📅 ${escapeHtml(photoTime)}</div>`
+            : '';
+          return `<div class="photo-cell">${thumbHtml}${timeHtml}</div>`;
+        }
+        function buildMap(mapUrl) {
+          if (!mapUrl) return '<span style="color:var(--text-tertiary);font-size:12px;">—</span>';
+          return `<a class="link" href="${escapeHtml(mapUrl)}" target="_blank">📍 ดูแผนที่</a>`;
+        }
 
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        compressImage(e.target.result, function(compressed) {
-          showPreview(compressed, photoTimestamp);
+        const thumbIn  = buildThumb(r.selfieInEmbed, r.photoTimeIn);
+        const thumbOut = buildThumb(r.selfieOutEmbed, r.photoTimeOut);
+        const mapInLink  = buildMap(r.mapIn);
+        const mapOutLink = buildMap(r.mapOut);
+
+        const isPending = r.status === 'รออนุมัติ';
+        const isWorking = r.status === 'กำลังทำงาน';
+
+        let timeRange;
+        if (isWorking) {
+          timeRange = `<span class="time-range"><b>${escapeHtml(r.startTime)}</b><span class="arrow">→</span><span style="color:var(--info-text);font-weight:600;">⏳</span></span>`;
+        } else if (r.startTime && r.endTime) {
+          timeRange = `<span class="time-range"><b>${escapeHtml(r.startTime)}</b><span class="arrow">→</span><b>${escapeHtml(r.endTime)}</b></span>`;
+        } else {
+          timeRange = '<span style="color:var(--text-tertiary);">—</span>';
+        }
+
+        const recordJson = JSON.stringify(r).replace(/'/g, "\\'");
+
+        let actionButtons = '';
+        if (isPending) {
+          actionButtons = `
+            <button class="icon-btn approve" title="อนุมัติ" onclick='openAction(${r.rowIndex}, "อนุมัติ", ${recordJson})'>✓</button>
+            <button class="icon-btn reject" title="ไม่อนุมัติ" onclick='openAction(${r.rowIndex}, "ไม่อนุมัติ", ${recordJson})'>✕</button>
+          `;
+        } else if (!isWorking) {
+          actionButtons = `<button class="icon-btn" title="เปลี่ยนสถานะ" onclick='openAction(${r.rowIndex}, "เปลี่ยน", ${recordJson})'>✎</button>`;
+        }
+
+        const supervisorCell = r.supervisor
+          ? `<span>${escapeHtml(r.supervisor)}</span>`
+          : `<span style="color:var(--text-tertiary);">—</span>`;
+
+        return `
+        <tr>
+          <td style="font-family:monospace;font-size:12px;color:var(--text-secondary);">${escapeHtml(r.requestId)}</td>
+          <td style="font-size:12px;color:var(--text-tertiary);">${escapeHtml(r.submittedAt)}</td>
+          <td style="font-weight:500;">${escapeHtml(r.otDate)}</td>
+          <td class="cell-name">${escapeHtml(r.employeeName || '—')}</td>
+          <td class="cell-supervisor">${supervisorCell}</td>
+          <td class="cell-time">${timeRange}</td>
+          <td class="cell-hours">${escapeHtml(r.hours || (isWorking ? '⏳' : ''))}</td>
+          <td class="cell-detail"><div class="truncate" title="${escapeHtml(r.workDetail || '')}">${escapeHtml(r.workDetail || '—')}</div></td>
+          <td>${thumbIn}</td>
+          <td>${mapInLink}</td>
+          <td>${thumbOut}</td>
+          <td>${mapOutLink}</td>
+          <td><span class="badge ${badgeClass}">${escapeHtml(r.status)}</span></td>
+          <td style="font-size:13px;color:var(--text-secondary);max-width:160px;">${escapeHtml(r.note || '—')}</td>
+          <td>
+            <div class="actions">
+              ${actionButtons}
+              <button class="icon-btn delete" title="ลบ" onclick="deleteRow(${r.rowIndex}, '${escapeJs(r.requestId)}')">🗑</button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    function parseDDMMYYYY(s) {
+      if (!s) return 0;
+      const parts = s.split('/');
+      if (parts.length !== 3) return 0;
+      return new Date(+parts[2], +parts[1]-1, +parts[0]).getTime();
+    }
+
+    function openAction(rowIndex, status, record) {
+      currentAction = { rowIndex, status, record };
+
+      const titleEl = document.getElementById('actionTitle');
+      const confirmBtn = document.getElementById('confirmBtn');
+
+      if (status === 'อนุมัติ') {
+        titleEl.textContent = '✓ อนุมัติคำขอ';
+        confirmBtn.textContent = 'อนุมัติ';
+        confirmBtn.className = 'btn btn-success';
+      } else if (status === 'ไม่อนุมัติ') {
+        titleEl.textContent = '✕ ไม่อนุมัติคำขอ';
+        confirmBtn.textContent = 'ไม่อนุมัติ';
+        confirmBtn.className = 'btn btn-danger';
+      } else {
+        titleEl.textContent = '✎ เปลี่ยนสถานะ';
+        confirmBtn.textContent = 'บันทึก';
+        confirmBtn.className = 'btn btn-primary';
+        const choice = prompt('เปลี่ยนสถานะเป็น:\n1 = รออนุมัติ\n2 = อนุมัติ\n3 = ไม่อนุมัติ', '1');
+        if (!choice) { currentAction = null; return; }
+        const map = { '1': 'รออนุมัติ', '2': 'อนุมัติ', '3': 'ไม่อนุมัติ' };
+        if (!map[choice]) { showToast('ตัวเลือกไม่ถูกต้อง', 'error'); currentAction = null; return; }
+        currentAction.status = map[choice];
+      }
+
+      document.getElementById('actionReqId').textContent = record.requestId;
+      document.getElementById('actionName').textContent = record.employeeName;
+      document.getElementById('actionSupervisor').textContent = record.supervisor || '—';
+      document.getElementById('actionTime').textContent =
+        (record.startTime && record.endTime) ? (record.startTime + ' → ' + record.endTime) : '—';
+      document.getElementById('actionHours').textContent = record.hours || '—';
+      document.getElementById('actionDate').textContent = record.otDate;
+      document.getElementById('noteInput').value = record.note || '';
+
+      document.getElementById('actionModal').classList.add('show');
+      document.getElementById('noteInput').focus();
+    }
+
+    function closeModal() {
+      document.getElementById('actionModal').classList.remove('show');
+      currentAction = null;
+    }
+
+    async function confirmAction() {
+      if (!currentAction) return;
+      const note = document.getElementById('noteInput').value.trim();
+      const btn = document.getElementById('confirmBtn');
+      const original = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'กำลังบันทึก...';
+
+      try {
+        const res = await apiCall('updateRequestStatus', {
+          rowIndex: currentAction.rowIndex,
+          status: currentAction.status,
+          note: note
         });
-      };
-      reader.readAsDataURL(file);
-
-      if (!gpsPromise) {
-        startGpsLookup();
-      }
-
-      gpsPromise.then(function(g) {
-        setGpsValue(g.lat, g.lng, g.acc);
-      }).catch(function(err) {
-        console.error('GPS error:', err);
-        showGpsError(err);
-      });
-    }
-
-    function showGpsError(err) {
-      let msg = '', help = '';
-      const code = (err && err.code !== undefined) ? err.code : -1;
-      const errMsg = (err && err.message) ? err.message : '';
-
-      const det = detectBrowser();
-      if (det.isInApp) {
-        msg = 'GPS ไม่ทำงานใน LINE';
-        help = '<div style="margin-top:10px;">' +
-          '<button onclick="copyLink()" style="background:#00b900;color:white;border:none;padding:12px 20px;border-radius:10px;font-family:inherit;font-weight:700;cursor:pointer;font-size:15px;width:100%;">📋 คัดลอกลิงก์ไปเปิดในเบราว์เซอร์</button>' +
-          '</div>';
-        document.getElementById('captureStatus').innerHTML =
-          '<div class="step-status"><span class="step-icon step-done">✓</span><span>ถ่ายรูปสำเร็จ</span></div>' +
-          '<div class="status-box status-error">❌ ' + msg + help + '</div>';
-        return;
-      }
-
-      if (code === 1) {
-        msg = 'ไม่ได้รับอนุญาตให้ใช้ตำแหน่ง';
-        help = '<div style="margin-top:8px; font-size:13px;"><b>วิธีแก้:</b><br>' +
-          '• <b>iPhone Safari:</b> Settings → Safari → Location → Ask / Allow<br>' +
-          '• <b>Android Chrome:</b> แตะ <b>🔒</b> ที่ address bar → Permissions → Location → Allow<br>' +
-          '• โหลดหน้านี้ใหม่หลังเปิดสิทธิ์แล้ว</div>';
-      } else if (code === 2) {
-        msg = 'ไม่พบสัญญาณ GPS — ลองออกกลางแจ้ง';
-        help = '<div style="margin-top:6px; font-size:13px;">' + escapeHtml(errMsg) + '</div>';
-      } else if (code === 3) {
-        msg = 'หมดเวลารอ GPS — ลองอีกครั้ง';
-        help = '<div style="margin-top:6px; font-size:13px;">กดปุ่ม "ถ่ายใหม่" แล้วลองอีกครั้ง</div>';
-      } else {
-        msg = errMsg || 'เกิดข้อผิดพลาด GPS';
-        help = '<div style="margin-top:6px; font-size:13px;">รหัสข้อผิดพลาด: ' + code + '</div>';
-      }
-
-      document.getElementById('captureStatus').innerHTML =
-        '<div class="step-status"><span class="step-icon step-done">✓</span><span>ถ่ายรูปสำเร็จ</span></div>' +
-        '<div class="status-box status-error">❌ ' + msg + help + '</div>';
-    }
-
-    function compressImage(dataUrl, callback) {
-      const img = new Image();
-      img.onload = function() {
-        const canvas = document.createElement('canvas');
-        let w = img.width, h = img.height;
-        const maxDim = 1024;
-        if (w > maxDim || h > maxDim) {
-          if (w > h) { h = h * (maxDim / w); w = maxDim; }
-          else { w = w * (maxDim / h); h = maxDim; }
+        btn.disabled = false;
+        btn.textContent = original;
+        if (res.success) {
+          closeModal();
+          showToast('บันทึกสำเร็จ', 'success');
+          loadData();
+        } else {
+          showToast('ผิดพลาด: ' + res.message, 'error');
         }
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        callback(canvas.toDataURL('image/jpeg', 0.7));
-      };
-      img.onerror = function() { callback(dataUrl); };
-      img.src = dataUrl;
-    }
-
-    function showPreview(dataUrl, photoTimestamp) {
-      const preview = document.getElementById('selfiePreview');
-      preview.src = dataUrl;
-      preview.style.display = 'block';
-      preview.dataset.base64 = dataUrl;
-      preview.dataset.timestamp = photoTimestamp || '';
-      document.getElementById('cameraLabel').style.display = 'none';
-      document.getElementById('retakeBtn').style.display = 'flex';
-    }
-
-    function setGpsValue(lat, lng, acc) {
-      document.getElementById('gpsCoords').value = lat + ', ' + lng;
-      const mapsUrl = 'https://maps.google.com/?q=' + lat + ',' + lng;
-      document.getElementById('address').value = mapsUrl;
-
-      const gpsRow = document.getElementById('gpsRow');
-      if (!gpsRow) return;
-
-      let accColor, accLabel;
-      if (acc <= GPS_GOOD_ACCURACY) {
-        accColor = 'var(--success)';
-        accLabel = '✓ แม่นยำสูง';
-      } else if (acc <= GPS_ACCEPTABLE) {
-        accColor = '#c66800';
-        accLabel = '⚠️ พอใช้ได้';
-      } else {
-        accColor = 'var(--error)';
-        accLabel = '⚠️ ไม่แม่นยำ';
-      }
-
-      gpsRow.innerHTML =
-        '<span class="step-icon step-done">✓</span>' +
-        '<span>📍 ' + lat + ', ' + lng + ' · ' +
-        '<b style="color:' + accColor + ';">±' + acc + ' ม.</b> ' +
-        '<span style="color:' + accColor + ';font-size:12px;">(' + accLabel + ')</span> · ' +
-        '<a href="' + mapsUrl + '" target="_blank">ดูแผนที่</a></span>';
-    }
-
-    function retakePhoto() {
-      const preview = document.getElementById('selfiePreview');
-      preview.style.display = 'none';
-      preview.dataset.base64 = '';
-      preview.dataset.timestamp = '';
-      document.getElementById('retakeBtn').style.display = 'none';
-      document.getElementById('cameraLabel').style.display = 'block';
-      document.getElementById('captureStatus').innerHTML = '';
-      document.getElementById('cameraInput').value = '';
-      document.getElementById('gpsCoords').value = '';
-      document.getElementById('address').value = '';
-      gpsPromise = null;
-      gpsBestReading = null;
-      stopGpsWatch();
-    }
-
-    function showSuccessModal(type, message, info) {
-      const icon = document.getElementById('modalIcon');
-      const title = document.getElementById('modalTitle');
-      const msg = document.getElementById('modalMessage');
-      const infoBox = document.getElementById('modalInfoBox');
-
-      if (type === 'clock_in') {
-        icon.textContent = '⏱️';
-        icon.className = 'modal-icon warning';
-        title.textContent = 'เริ่มงานแล้ว';
-      } else {
-        icon.textContent = '✓';
-        icon.className = 'modal-icon';
-        title.textContent = 'เลิกงานสำเร็จ';
-      }
-      msg.textContent = message;
-
-      if (info) {
-        infoBox.style.display = 'block';
-        infoBox.innerHTML = info;
-      } else {
-        infoBox.style.display = 'none';
-      }
-
-      document.getElementById('successModal').classList.add('show');
-      document.body.style.overflow = 'hidden';
-    }
-
-    function closeModal(e) {
-      if (e && e.target.id && e.target.id !== 'successModal') return;
-      document.getElementById('successModal').classList.remove('show');
-      document.body.style.overflow = '';
-      goToSelectView();
-    }
-
-    async function handleSubmit(e) {
-      e.preventDefault();
-      const status = document.getElementById('formStatus');
-      const btn = document.getElementById('submitBtn');
-      status.innerHTML = '';
-
-      const otDate = document.getElementById('otDate').value;
-      const time = document.getElementById('timeInput').value;
-      const workDetail = document.getElementById('workDetail').value.trim();
-
-      if (!otDate || !time) {
-        status.innerHTML = '<div class="status-box status-error">กรุณากรอกข้อมูลให้ครบ</div>';
-        return;
-      }
-
-      const selfie = document.getElementById('selfiePreview').dataset.base64 || '';
-      const gps = document.getElementById('gpsCoords').value;
-
-      if (!selfie) {
-        status.innerHTML = '<div class="status-box status-error">กรุณากดปุ่ม "เปิดกล้อง" เพื่อถ่ายรูปก่อน</div>';
-        return;
-      }
-      if (!gps) {
-        status.innerHTML = '<div class="status-box status-error">ยังไม่มีพิกัด GPS</div>';
-        return;
-      }
-
-      if (currentMode === 'clock_out') {
-        const sel = document.getElementById('employeeSelect');
-        const idx = sel.value;
-        if (idx === '' || !activeClockInsCache[idx]) {
-          status.innerHTML = '<div class="status-box status-error">กรุณาเลือกชื่อพนักงาน</div>';
-          return;
-        }
-        const picked = activeClockInsCache[idx];
-
-        const data = {
-          employeeName: picked.employeeName,
-          otDate: picked.otDate,
-          endTime: time,
-          workDetail: '',
-          gpsCoords: gps,
-          address: document.getElementById('address').value,
-          selfieBase64: selfie,
-          photoTimestamp: document.getElementById('selfiePreview').dataset.timestamp || ''
-        };
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner"></span>กำลังบันทึก...';
-
-        try {
-          const res = await apiCall('clockOut', data);
-          btn.disabled = false;
-          btn.innerHTML = '🏁 เลิกงาน';
-          if (res.success) {
-            const info =
-              '<div class="info-row"><span>ชื่อ</span><b>' + escapeHtml(picked.employeeName) + '</b></div>' +
-              (picked.supervisor ? '<div class="info-row"><span>หัวหน้า</span><b>' + escapeHtml(picked.supervisor) + '</b></div>' : '') +
-              '<div class="info-row"><span>เวลาเริ่ม</span><b>' + res.startTime + '</b></div>' +
-              '<div class="info-row"><span>เวลาเลิก</span><b>' + res.endTime + '</b></div>' +
-              '<div class="info-row" style="border-top:1px solid rgba(0,0,0,0.1); margin-top:6px; padding-top:8px;"><span>รวม</span><b style="color:var(--success); font-size:18px;">' + res.hours + '</b></div>';
-            showSuccessModal('clock_out', 'บันทึกเวลาเลิกงานเรียบร้อย', info);
-          } else {
-            status.innerHTML = '<div class="status-box status-error">' + escapeHtml(res.message) + '</div>';
-          }
-        } catch (err) {
-          btn.disabled = false;
-          btn.innerHTML = '🏁 เลิกงาน';
-          status.innerHTML = '<div class="status-box status-error">' + escapeHtml(err.message) + '</div>';
-        }
-
-      } else {
-        const employeeName = document.getElementById('employeeName').value.trim();
-        const supervisorName = document.getElementById('supervisorName').value.trim();
-
-        if (!employeeName) {
-          status.innerHTML = '<div class="status-box status-error">กรุณากรอกชื่อพนักงาน</div>';
-          return;
-        }
-        if (!supervisorName) {
-          status.innerHTML = '<div class="status-box status-error">กรุณากรอกชื่อหัวหน้า</div>';
-          return;
-        }
-
-        const data = {
-          otDate, employeeName,
-          supervisorName,
-          startTime: time,
-          workDetail,
-          gpsCoords: gps,
-          address: document.getElementById('address').value,
-          selfieBase64: selfie,
-          photoTimestamp: document.getElementById('selfiePreview').dataset.timestamp || ''
-        };
-
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner"></span>กำลังบันทึก...';
-
-        try {
-          const res = await apiCall('clockIn', data);
-          btn.disabled = false;
-          btn.innerHTML = '⏱️ เริ่มงาน OT';
-          if (res.success) {
-            const info =
-              '<div class="info-row"><span>ชื่อ</span><b>' + escapeHtml(employeeName) + '</b></div>' +
-              '<div class="info-row"><span>หัวหน้า</span><b>' + escapeHtml(supervisorName) + '</b></div>' +
-              '<div class="info-row"><span>เวลาเริ่ม</span><b style="color:var(--success); font-size:18px;">' + res.startTime + '</b></div>' +
-              '<div class="info-row"><span>รหัส</span><b style="font-family:monospace; font-size:11px;">' + res.requestId + '</b></div>';
-            showSuccessModal('clock_in', 'บันทึกเวลาเริ่มงานเรียบร้อย กลับมากดเลิกงานเมื่อเสร็จ', info);
-          } else {
-            status.innerHTML = '<div class="status-box status-error">' + escapeHtml(res.message) + '</div>';
-          }
-        } catch (err) {
-          btn.disabled = false;
-          btn.innerHTML = '⏱️ เริ่มงาน OT';
-          status.innerHTML = '<div class="status-box status-error">' + escapeHtml(err.message) + '</div>';
-        }
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = original;
+        showToast('ผิดพลาด: ' + err.message, 'error');
       }
     }
+
+    async function deleteRow(rowIndex, requestId) {
+      if (!confirm('ลบคำขอ ' + requestId + ' ?')) return;
+      try {
+        const res = await apiCall('deleteRequest', { rowIndex: rowIndex });
+        if (res.success) { showToast('ลบสำเร็จ', 'success'); loadData(); }
+        else { showToast('ผิดพลาด: ' + res.message, 'error'); }
+      } catch (err) {
+        showToast('ผิดพลาด: ' + err.message, 'error');
+      }
+    }
+
+    function showImage(url) {
+      document.getElementById('modalImg').src = url;
+      document.getElementById('imageModal').classList.add('show');
+    }
+    function closeImageModal() {
+      document.getElementById('imageModal').classList.remove('show');
+    }
+
+    function showToast(msg, type) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + (type || '');
+      setTimeout(() => t.className = 'toast ' + (type || ''), 2500);
+    }
+
+    function exportCSV() {
+      if (!allData.length) { showToast('ไม่มีข้อมูล', 'error'); return; }
+      const headers = ['รหัสคำขอ','ส่งเมื่อ','วันที่ OT','ชื่อ','หัวหน้า','แผนก','เวลาเริ่ม','เวลาเลิก','เวลารวม','งานที่ทำ','GPS เริ่ม','แผนที่เริ่ม','รูปเริ่ม','เวลาถ่ายรูปเริ่ม','GPS เลิก','แผนที่เลิก','รูปเลิก','เวลาถ่ายรูปเลิก','สถานะ','หมายเหตุ'];
+      const rows = allData.map(r => [
+        r.requestId, r.submittedAt, r.otDate, r.employeeName, r.supervisor || '', r.department,
+        r.startTime, r.endTime, r.hours, r.workDetail,
+        r.gpsIn, r.mapIn, r.selfieIn, r.photoTimeIn || '',
+        r.gpsOut, r.mapOut, r.selfieOut, r.photoTimeOut || '',
+        r.status, r.note
+      ]);
+      const csv = [headers, ...rows].map(row =>
+        row.map(cell => '"' + String(cell || '').replace(/"/g, '""') + '"').join(',')
+      ).join('\n');
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'OT_Records_' + new Date().toISOString().slice(0,10) + '.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function escapeHtml(s) {
+      if (s === null || s === undefined) return '';
+      return String(s).replace(/[&<>"']/g, c =>
+        ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+    }
+    function escapeJs(s) {
+      return String(s || '').replace(/['"\\]/g, '\\$&');
+    }
+
+    loadData();
   </script>
 </body>
 </html>
