@@ -546,6 +546,20 @@
             <datalist id="supervisorList"></datalist>
           </div>
 
+          <div class="field" id="companyField">
+            <label class="field-label" for="companySelect">บริษัท <span class="required">*</span></label>
+            <select id="companySelect" class="field-input">
+              <option value="">-- เลือกบริษัท --</option>
+              <option value="3E Empire">3E Empire</option>
+              <option value="3E Trading">3E Trading</option>
+              <option value="3E Innovation">3E Innovation</option>
+              <option value="AE&amp;T">AE&amp;T</option>
+              <option value="Eita &amp; Paul">Eita &amp; Paul</option>
+              <option value="Hikari Denki">Hikari Denki</option>
+              <option value="Chavest">Chavest</option>
+            </select>
+          </div>
+
           <div class="field">
             <label class="field-label" id="timeLabel">เวลาเริ่มงาน <span class="required">*</span></label>
             <input type="time" id="timeInput" class="field-input" required>
@@ -638,32 +652,20 @@
       };
     }
 
-    // ============================================================
-    // 🎯 LINE openExternalBrowser=1 TRICK
-    // ถ้าเปิดใน LINE และยังไม่มี ?openExternalBrowser=1
-    // → redirect ตัวเอง เพิ่ม parameter → LINE จะเปิดในเบราว์เซอร์ภายนอกอัตโนมัติ
-    // ============================================================
     (function() {
       const det = detectBrowser();
       const url = new URL(window.location.href);
       const alreadyTried = url.searchParams.get('openExternalBrowser') === '1';
       const userSkipped = sessionStorage.getItem('skipExternalBrowser') === '1';
 
-      // ถ้าอยู่ใน LINE และยังไม่ได้พยายามเปิดข้างนอก
       if (det.isLine && !alreadyTried && !userSkipped) {
-        // เพิ่ม ?openExternalBrowser=1 แล้ว reload
-        // LINE จะ detect parameter นี้ และเปิดใน Safari/Chrome อัตโนมัติ
         url.searchParams.set('openExternalBrowser', '1');
         window.location.replace(url.toString());
         return;
       }
 
-      // กรณีอื่น ๆ (FB, IG, Messenger) — แสดงหน้าเตือนแบบเดิม
-      // หรือถ้าเป็น LINE แต่ trick ไม่ work (รุ่นเก่า) — แสดงหน้าเตือนด้วย
       if (det.isInApp && !userSkipped) {
-        // ใส่ delay 500ms — ถ้าผ่านไปแล้วยังอยู่ในแอป = trick ไม่ work → แสดงหน้าเตือน
         setTimeout(function() {
-          // เช็คซ้ำว่ายังอยู่ใน in-app browser ไหม
           const stillInApp = detectBrowser().isInApp;
           if (stillInApp) {
             showLineBlockScreen(det);
@@ -676,20 +678,17 @@
       const screen = document.getElementById('lineBlock');
       screen.classList.add('show');
 
-      // แสดงคำแนะนำตาม device
       if (det.isIOS) {
         document.getElementById('iosSteps').style.display = 'flex';
       } else if (det.isAndroid) {
         document.getElementById('androidSteps').style.display = 'flex';
       } else {
-        // unknown — แสดงทั้งสอง
         document.getElementById('iosSteps').style.display = 'flex';
         document.getElementById('androidSteps').style.display = 'flex';
       }
     }
 
     function copyLink() {
-      // ใช้ลิงก์เดิม (ไม่มี ?openExternalBrowser) เพื่อความสะอาด
       const url = new URL(window.location.href);
       url.searchParams.delete('openExternalBrowser');
       const cleanUrl = url.toString();
@@ -756,6 +755,7 @@
 
       document.getElementById('otForm').reset();
       document.getElementById('otDate').valueAsDate = new Date();
+      document.getElementById('companySelect').value = '';
       retakePhoto();
       document.getElementById('formStatus').innerHTML = '';
       document.getElementById('warningBox').style.display = 'none';
@@ -802,6 +802,7 @@
       const nameInputField = document.getElementById('nameInputField');
       const nameSelectField = document.getElementById('nameSelectField');
       const supervisorField = document.getElementById('supervisorField');
+      const companyField = document.getElementById('companyField');
       const workDetailSection = document.getElementById('workDetailSection');
 
       if (mode === 'clock_out') {
@@ -817,6 +818,7 @@
         nameInputField.style.display = 'none';
         nameSelectField.style.display = 'block';
         supervisorField.style.display = 'none';
+        companyField.style.display = 'none';
         workDetailSection.style.display = 'none';
       } else {
         badge.textContent = '⏱️ เริ่มงาน';
@@ -831,6 +833,7 @@
         nameInputField.style.display = 'block';
         nameSelectField.style.display = 'none';
         supervisorField.style.display = 'block';
+        companyField.style.display = 'block';
         workDetailSection.style.display = 'block';
       }
     }
@@ -940,6 +943,7 @@
         requestId: picked.requestId,
         startTime: picked.startTime,
         supervisor: picked.supervisor,
+        company: picked.company,
         otDate: picked.otDate
       };
 
@@ -951,6 +955,7 @@
         '<div class="info-time">' + picked.startTime + '</div>' +
         '<div class="info-desc">' +
           (picked.supervisor ? '👤 หัวหน้า: <b>' + escapeHtml(picked.supervisor) + '</b><br>' : '') +
+          (picked.company ? '🏢 บริษัท: <b>' + escapeHtml(picked.company) + '</b><br>' : '') +
           '🆔 ' + escapeHtml(picked.requestId) +
         '</div>' +
         '</div>';
@@ -1459,6 +1464,7 @@
             const info =
               '<div class="info-row"><span>ชื่อ</span><b>' + escapeHtml(picked.employeeName) + '</b></div>' +
               (picked.supervisor ? '<div class="info-row"><span>หัวหน้า</span><b>' + escapeHtml(picked.supervisor) + '</b></div>' : '') +
+              (picked.company ? '<div class="info-row"><span>บริษัท</span><b>' + escapeHtml(picked.company) + '</b></div>' : '') +
               '<div class="info-row"><span>เวลาเริ่ม</span><b>' + res.startTime + '</b></div>' +
               '<div class="info-row"><span>เวลาเลิก</span><b>' + res.endTime + '</b></div>' +
               '<div class="info-row" style="border-top:1px solid rgba(0,0,0,0.1); margin-top:6px; padding-top:8px;"><span>รวม</span><b style="color:var(--success); font-size:18px;">' + res.hours + '</b></div>';
@@ -1475,6 +1481,7 @@
       } else {
         const employeeName = document.getElementById('employeeName').value.trim();
         const supervisorName = document.getElementById('supervisorName').value.trim();
+        const company = document.getElementById('companySelect').value;
 
         if (!employeeName) {
           status.innerHTML = '<div class="status-box status-error">กรุณากรอกชื่อพนักงาน</div>';
@@ -1484,10 +1491,16 @@
           status.innerHTML = '<div class="status-box status-error">กรุณากรอกชื่อหัวหน้า</div>';
           return;
         }
+        if (!company) {
+          status.innerHTML = '<div class="status-box status-error">กรุณาเลือกบริษัท</div>';
+          document.getElementById('companySelect').focus();
+          return;
+        }
 
         const data = {
           otDate, employeeName,
           supervisorName,
+          company,
           startTime: time,
           workDetail,
           gpsCoords: gps,
@@ -1507,6 +1520,7 @@
             const info =
               '<div class="info-row"><span>ชื่อ</span><b>' + escapeHtml(employeeName) + '</b></div>' +
               '<div class="info-row"><span>หัวหน้า</span><b>' + escapeHtml(supervisorName) + '</b></div>' +
+              '<div class="info-row"><span>บริษัท</span><b>' + escapeHtml(company) + '</b></div>' +
               '<div class="info-row"><span>เวลาเริ่ม</span><b style="color:var(--success); font-size:18px;">' + res.startTime + '</b></div>' +
               '<div class="info-row"><span>รหัส</span><b style="font-family:monospace; font-size:11px;">' + res.requestId + '</b></div>';
             showSuccessModal('clock_in', 'บันทึกเวลาเริ่มงานเรียบร้อย กลับมากดเลิกงานเมื่อเสร็จ', info);
