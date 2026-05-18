@@ -529,8 +529,7 @@
 
           <div class="field" id="nameInputField">
             <label class="field-label" for="employeeName">ชื่อ - นามสกุล <span class="required">*</span></label>
-            <input type="text" id="employeeName" class="field-input" placeholder="พิมพ์ชื่อหรือเลือกจากรายการ" list="employeeList" autocomplete="off" oninput="onNameInput()" onblur="checkClockStatusUI()">
-            <datalist id="employeeList"></datalist>
+            <input type="text" id="employeeName" class="field-input" placeholder="กรอกชื่อ - นามสกุล" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onblur="checkClockStatusUI()">
           </div>
 
           <div class="field" id="nameSelectField" style="display:none;">
@@ -542,8 +541,7 @@
 
           <div class="field" id="supervisorField">
             <label class="field-label" for="supervisorName">ชื่อหัวหน้า <span class="required">*</span></label>
-            <input type="text" id="supervisorName" class="field-input" placeholder="พิมพ์ชื่อหัวหน้าหรือเลือกจากรายการ" list="supervisorList" autocomplete="off">
-            <datalist id="supervisorList"></datalist>
+            <input type="text" id="supervisorName" class="field-input" placeholder="กรอกชื่อหัวหน้า" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
           </div>
 
           <div class="field" id="companyField">
@@ -772,10 +770,7 @@
       const mm = String(now.getMinutes()).padStart(2, '0');
       document.getElementById('timeInput').value = hh + ':' + mm;
 
-      if (mode === 'clock_in') {
-        loadEmployeeNames();
-        loadSupervisorNames();
-      } else {
+      if (mode === 'clock_out') {
         loadActiveClockIns();
       }
 
@@ -838,30 +833,6 @@
       }
     }
 
-    async function loadEmployeeNames() {
-      try {
-        const res = await apiCall('getEmployeeNames');
-        const names = res.data || [];
-        if (!names.length) return;
-        const dl = document.getElementById('employeeList');
-        dl.innerHTML = names.map(n =>
-          '<option value="' + String(n).replace(/"/g, '&quot;') + '">'
-        ).join('');
-      } catch (e) { /* ignore */ }
-    }
-
-    async function loadSupervisorNames() {
-      try {
-        const res = await apiCall('getSupervisorNames');
-        const names = res.data || [];
-        if (!names.length) return;
-        const dl = document.getElementById('supervisorList');
-        dl.innerHTML = names.map(n =>
-          '<option value="' + String(n).replace(/"/g, '&quot;') + '">'
-        ).join('');
-      } catch (e) { /* ignore */ }
-    }
-
     async function loadActiveClockIns() {
       const date = document.getElementById('otDate').value;
       const sel = document.getElementById('employeeSelect');
@@ -910,17 +881,6 @@
         document.getElementById('hoursSummary').style.display = 'none';
       } else {
         checkClockStatusUI();
-      }
-    }
-
-    function onNameInput() {
-      const value = document.getElementById('employeeName').value;
-      const options = document.querySelectorAll('#employeeList option');
-      for (const opt of options) {
-        if (opt.value === value) {
-          checkClockStatusUI();
-          return;
-        }
       }
     }
 
