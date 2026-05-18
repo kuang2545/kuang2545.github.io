@@ -42,90 +42,6 @@
       overscroll-behavior-y: contain;
     }
 
-    /* ============ LINE Browser Warning Screen ============ */
-    .line-warning-screen {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      z-index: 9999;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 32px 24px;
-      color: white;
-      text-align: center;
-      overflow-y: auto;
-    }
-    .line-warning-screen.show { display: flex; }
-    .line-warning-icon {
-      font-size: 72px;
-      margin-bottom: 16px;
-    }
-    .line-warning-title {
-      font-size: 26px;
-      font-weight: 800;
-      margin-bottom: 12px;
-      line-height: 1.3;
-    }
-    .line-warning-desc {
-      font-size: 15px;
-      line-height: 1.6;
-      margin-bottom: 24px;
-      opacity: 0.95;
-      max-width: 320px;
-    }
-    .open-browser-btn {
-      background: white;
-      color: #5a3a8c;
-      border: none;
-      padding: 18px 24px;
-      border-radius: 14px;
-      font-size: 17px;
-      font-weight: 700;
-      font-family: inherit;
-      cursor: pointer;
-      width: 100%;
-      max-width: 340px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      text-decoration: none;
-    }
-    .open-browser-btn:active { transform: scale(0.98); }
-    .open-browser-btn .icon {
-      font-size: 22px;
-    }
-    .open-browser-btn.secondary {
-      background: rgba(255,255,255,0.18);
-      color: white;
-      backdrop-filter: blur(10px);
-      box-shadow: none;
-      border: 1.5px solid rgba(255,255,255,0.3);
-    }
-    .browser-hint {
-      font-size: 13px;
-      opacity: 0.85;
-      margin-top: 16px;
-      max-width: 320px;
-      line-height: 1.5;
-    }
-    .browser-hint b { font-weight: 700; }
-    .line-bypass-btn {
-      background: transparent;
-      color: rgba(255,255,255,0.7);
-      border: none;
-      padding: 10px 20px;
-      font-size: 12px;
-      font-family: inherit;
-      cursor: pointer;
-      margin-top: 20px;
-      text-decoration: underline;
-    }
-
     .top-bar {
       position: sticky; top: 0; z-index: 50;
       background: rgba(242, 242, 247, 0.85);
@@ -415,36 +331,6 @@
 </head>
 <body>
 
-  <!-- ============ LINE Browser Warning Screen ============ -->
-  <div class="line-warning-screen" id="lineWarning">
-    <div class="line-warning-icon">🌐</div>
-    <div class="line-warning-title">เปิดในเบราว์เซอร์</div>
-    <div class="line-warning-desc">
-      เพื่อให้ระบบใช้ GPS ได้<br>
-      กดปุ่มด้านล่างเพื่อเปิดในเบราว์เซอร์
-    </div>
-
-    <!-- ปุ่มหลัก: เปิด Chrome (ทำงานทั้ง Android + iOS) -->
-    <a href="#" class="open-browser-btn" id="openChromeBtn" onclick="openInChrome(event)">
-      <span class="icon">🚀</span>
-      <span>เปิดใน Chrome</span>
-    </a>
-
-    <!-- ปุ่มสำรอง: เปิด Safari (เฉพาะ iOS) -->
-    <a href="#" class="open-browser-btn secondary" id="openSafariBtn" onclick="openInSafari(event)" style="display:none;">
-      <span class="icon">🧭</span>
-      <span>เปิดใน Safari</span>
-    </a>
-
-    <div class="browser-hint" id="browserHint">
-      <!-- จะถูกใส่ข้อความตาม device -->
-    </div>
-
-    <button class="line-bypass-btn" onclick="bypassLineWarning()">
-      ใช้ต่อใน LINE (GPS อาจไม่ทำงาน)
-    </button>
-  </div>
-
   <div class="top-bar">
     <div class="top-bar-inner">
       <button type="button" class="back-btn" id="backBtn" onclick="goToSelectView()">‹ ย้อนกลับ</button>
@@ -591,122 +477,9 @@
   <script>
     // ============================================================
     // ⚠️ ใส่ Web App URL ของคุณตรงนี้ (จาก Apps Script Deploy)
+    // ตัวอย่าง: https://script.google.com/macros/s/AKfycby.../exec
     // ============================================================
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzUnBvZvRtG_pK6UVWLbL8pD-_zTGDMz2mrm95kAzYjHu_04mZZZ9MiqwHMESTnaMwCww/exec';
-
-    // ============================================================
-    // 🔍 ตรวจจับ In-App Browser + Device
-    // ============================================================
-    function detectInAppBrowser() {
-      const ua = navigator.userAgent || '';
-      const isLine = /Line\//i.test(ua);
-      const isFb = /FBAN|FBAV|FB_IAB/i.test(ua);
-      const isIg = /Instagram/i.test(ua);
-      const isMessenger = /Messenger/i.test(ua);
-      const isIOS = /iPhone|iPad|iPod/i.test(ua);
-      const isAndroid = /Android/i.test(ua);
-      return {
-        isInApp: isLine || isFb || isIg || isMessenger,
-        isLine: isLine,
-        isIOS: isIOS,
-        isAndroid: isAndroid,
-        name: isLine ? 'LINE' : isFb ? 'Facebook' : isIg ? 'Instagram' : isMessenger ? 'Messenger' : ''
-      };
-    }
-
-    // ============================================================
-    // 🚀 เปิดในเบราว์เซอร์ปกติ
-    // ============================================================
-    function openInChrome(event) {
-      if (event) event.preventDefault();
-      const det = detectInAppBrowser();
-      const currentUrl = window.location.href;
-      // ตัด protocol ออก (https://example.com/page → example.com/page)
-      const urlNoProto = currentUrl.replace(/^https?:\/\//, '');
-
-      if (det.isAndroid) {
-        // Android: ใช้ intent:// scheme → จะเปิด Chrome หรือเบราว์เซอร์ default
-        const intentUrl = 'intent://' + urlNoProto +
-          '#Intent;scheme=https;package=com.android.chrome;' +
-          'S.browser_fallback_url=' + encodeURIComponent(currentUrl) + ';end';
-        window.location.href = intentUrl;
-      } else if (det.isIOS) {
-        // iOS: ลองเปิด Chrome ก่อน — ถ้าไม่มี Chrome user จะเห็นว่าไม่มีอะไรเกิดขึ้น
-        // เลยตั้ง timer ไว้ถ้า 1.5 วิแล้วยังอยู่หน้าเดิม → แสดงปุ่ม Safari แทน
-        const chromeUrl = 'googlechrome://' + urlNoProto;
-        const startTime = Date.now();
-
-        // ลอง deep link
-        window.location.href = chromeUrl;
-
-        // ถ้าไม่ได้เปิด Chrome ใน 1.5 วิ → แสดงปุ่ม Safari แทน
-        setTimeout(function() {
-          if (Date.now() - startTime < 2000 && document.visibilityState === 'visible') {
-            // user ยังอยู่ในหน้านี้ = Chrome ไม่ได้เปิด → แนะนำให้ใช้ Safari
-            document.getElementById('openChromeBtn').style.display = 'none';
-            document.getElementById('openSafariBtn').style.display = 'flex';
-            document.getElementById('browserHint').innerHTML =
-              '<b>📱 ไม่มี Chrome ในเครื่อง?</b><br>กดปุ่ม "เปิดใน Safari" ด้านบน<br>หรือกดเมนู ⋯ มุมขวาบน → "เปิดใน Safari"';
-          }
-        }, 1500);
-      } else {
-        // PC/อื่น ๆ — เปิดในแท็บใหม่
-        window.open(currentUrl, '_blank');
-      }
-    }
-
-    function openInSafari(event) {
-      if (event) event.preventDefault();
-      // iOS Safari ไม่มี deep link scheme ที่บังคับได้ — ต้องใช้วิธี x-safari-https:// (เก่า) หรือบอก user เปิดเอง
-      // วิธีที่ใช้ได้ผลดีที่สุด: copy URL + บอกให้วางใน Safari
-      const url = window.location.href;
-      try {
-        // ลอง deep link เก่า ๆ (อาจไม่ทำงานใน iOS รุ่นใหม่)
-        window.location.href = 'x-safari-' + url;
-        setTimeout(function() {
-          // ถ้าไม่ได้ผล → ให้คัดลอกลิงก์
-          copyLinkPrompt();
-        }, 800);
-      } catch (e) {
-        copyLinkPrompt();
-      }
-    }
-
-    function copyLinkPrompt() {
-      const url = window.location.href;
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(url).then(function() {
-          alert('✓ คัดลอกลิงก์แล้ว!\n\nเปิดแอป Safari แล้ววางในช่อง URL ด้านบน');
-        }).catch(function() {
-          prompt('คัดลอกลิงก์นี้แล้วเปิดใน Safari:', url);
-        });
-      } else {
-        prompt('คัดลอกลิงก์นี้แล้วเปิดใน Safari:', url);
-      }
-    }
-
-    function bypassLineWarning() {
-      sessionStorage.setItem('inAppBypass', '1');
-      document.getElementById('lineWarning').classList.remove('show');
-    }
-
-    // ตรวจตอนโหลด — ถ้าเป็น in-app browser ให้แสดงหน้าเตือน
-    (function() {
-      const det = detectInAppBrowser();
-      const bypassed = sessionStorage.getItem('inAppBypass') === '1';
-      if (det.isInApp && !bypassed) {
-        document.getElementById('lineWarning').classList.add('show');
-
-        const hint = document.getElementById('browserHint');
-        if (det.isIOS) {
-          hint.innerHTML = '<b>📱 iPhone:</b> กดปุ่มด้านบน → ระบบจะเปิดใน Chrome อัตโนมัติ<br>หรือกด ⋯ มุมขวาบน → "เปิดใน Safari"';
-        } else if (det.isAndroid) {
-          hint.innerHTML = '<b>📱 Android:</b> กดปุ่มด้านบน → ระบบจะเปิดใน Chrome อัตโนมัติ';
-        } else {
-          hint.innerHTML = 'กดปุ่มด้านบนเพื่อเปิดในเบราว์เซอร์ปกติ';
-        }
-      }
-    })();
 
     let currentMode = 'clock_in';
     let existingClockIn = null;
@@ -717,6 +490,11 @@
         ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
     }
 
+    // ====== API helpers ======
+    /**
+     * เรียก backend ผ่าน POST ด้วย text/plain
+     * (text/plain ทำให้ browser ไม่ส่ง preflight OPTIONS — Apps Script ไม่รองรับ OPTIONS)
+     */
     async function apiCall(action, payload) {
       if (!WEB_APP_URL || WEB_APP_URL.indexOf('PASTE_YOUR') === 0) {
         throw new Error('ยังไม่ได้ตั้ง WEB_APP_URL ในไฟล์ HTML');
@@ -737,6 +515,7 @@
       }
     }
 
+    // ====== View Switching ======
     function goToFormView(mode) {
       currentMode = mode;
       existingClockIn = null;
@@ -831,7 +610,7 @@
         dl.innerHTML = names.map(n =>
           '<option value="' + String(n).replace(/"/g, '&quot;') + '">'
         ).join('');
-      } catch (e) { /* ignore */ }
+      } catch (e) { /* ignore — datalist optional */ }
     }
 
     async function loadSupervisorNames() {
@@ -1110,7 +889,9 @@
                 resolve(formatReading(gpsBestReading));
               }
             },
-            function(err) { /* ignore */ },
+            function(err) {
+              // ignore — รอ timer ปิดท้าย
+            },
             { enableHighAccuracy: true, timeout: GPS_MAX_WAIT, maximumAge: 0 }
           );
         }
@@ -1184,6 +965,7 @@
       const file = event.target.files[0];
       if (!file) return;
 
+      // ถ้ายังไม่มี cameraOpenedAt (เช่น click ไม่ trigger) ใช้เวลาปัจจุบัน
       if (!cameraOpenedAt) cameraOpenedAt = Date.now();
 
       const MAX_AGE_BEFORE_CLICK = 60 * 1000;
@@ -1231,6 +1013,8 @@
       };
       reader.readAsDataURL(file);
 
+      // เริ่ม GPS เสมอ — ถ้าไม่มี promise หรือ promise เก่ายังไม่ resolve
+      // (กันเคส onCameraOpen ไม่ถูก trigger บนบาง browser)
       if (!gpsPromise) {
         startGpsLookup();
       }
@@ -1248,22 +1032,11 @@
       const code = (err && err.code !== undefined) ? err.code : -1;
       const errMsg = (err && err.message) ? err.message : '';
 
-      const det = detectInAppBrowser();
-      if (det.isInApp) {
-        msg = 'GPS ไม่ทำงานใน ' + (det.name || 'แอปนี้');
-        help = '<div style="margin-top:10px;">' +
-          '<button onclick="openInChrome(event)" style="background:var(--accent);color:white;border:none;padding:12px 20px;border-radius:10px;font-family:inherit;font-weight:700;cursor:pointer;font-size:15px;width:100%;">🌐 เปิดในเบราว์เซอร์ปกติ</button>' +
-          '</div>';
-        document.getElementById('captureStatus').innerHTML =
-          '<div class="step-status"><span class="step-icon step-done">✓</span><span>ถ่ายรูปสำเร็จ</span></div>' +
-          '<div class="status-box status-error">❌ ' + msg + help + '</div>';
-        return;
-      }
-
       if (code === 1) {
         msg = 'ไม่ได้รับอนุญาตให้ใช้ตำแหน่ง';
         help = '<div style="margin-top:8px; font-size:13px;"><b>วิธีแก้:</b><br>' +
           '• <b>iPhone Safari:</b> Settings → Safari → Location → Ask / Allow<br>' +
+          '&nbsp;&nbsp;หรือแตะ <b>"aA"</b> ที่ address bar → Website Settings → Location → Allow<br>' +
           '• <b>Android Chrome:</b> แตะ <b>🔒</b> ที่ address bar → Permissions → Location → Allow<br>' +
           '• โหลดหน้านี้ใหม่หลังเปิดสิทธิ์แล้ว</div>';
       } else if (code === 2) {
