@@ -225,7 +225,6 @@
     .action-card-title { font-size: 16px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
     .action-card-icon { width: 32px; height: 32px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; }
     .icon-cam { background: #ff9500; color: white; }
-    .icon-gps { background: #007aff; color: white; }
 
     .btn {
       padding: 16px 22px; border: none; border-radius: 12px;
@@ -244,8 +243,6 @@
     .btn-warning:active:not(:disabled) { background: #e08600; transform: scale(0.98); }
     .btn-orange { background: rgba(255, 149, 0, 0.15); color: #c66800; font-weight: 600; }
     .btn-orange:active:not(:disabled) { background: rgba(255, 149, 0, 0.25); }
-    .btn-blue { background: rgba(0, 122, 255, 0.15); color: var(--accent); font-weight: 600; }
-    .btn-blue:active:not(:disabled) { background: rgba(0, 122, 255, 0.25); }
     .btn-tinted { background: rgba(0, 122, 255, 0.12); color: var(--accent); }
     .btn-tinted:active:not(:disabled) { background: rgba(0, 122, 255, 0.22); }
     .btn-big { padding: 20px; font-size: 18px; }
@@ -259,7 +256,6 @@
     .status-box { padding: 14px 16px; border-radius: 12px; font-size: 15px; margin-top: 12px; line-height: 1.5; }
     .status-success { background: var(--success-bg); color: #1e7a2e; }
     .status-error { background: var(--error-bg); color: #c8201a; }
-    .status-warning { background: var(--warning-bg); color: #c66800; }
 
     #selfiePreview { width: 100%; border-radius: 12px; margin-top: 14px; display: block; max-height: 380px; object-fit: cover; background: #000; }
 
@@ -270,7 +266,6 @@
     .step-icon { width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; color: white; flex-shrink: 0; font-weight: 700; }
     .step-active { background: var(--accent); }
     .step-done { background: var(--success); }
-    .step-error { background: var(--error); }
 
     .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: -2px; margin-right: 6px; }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -437,22 +432,10 @@
 
         <div class="section-header" id="selfieHeader">ยืนยันตัวตน</div>
 
-        <!-- 🆕 GPS Card แยกออกมา + ปุ่มขอ permission สำหรับ iOS -->
-        <div class="action-card" id="gpsCard">
-          <div class="action-card-title">
-            <span class="action-card-icon icon-gps">📍</span>
-            ตำแหน่ง GPS
-          </div>
-          <button type="button" class="btn btn-blue" id="gpsRequestBtn" onclick="requestGpsPermission()">
-            📍 ขอสิทธิ์ตำแหน่ง (กดก่อนถ่ายรูป)
-          </button>
-          <div id="gpsStatusBox"></div>
-        </div>
-
         <div class="action-card" id="selfieCard">
           <div class="action-card-title">
             <span class="action-card-icon icon-cam">📸</span>
-            ถ่ายรูปยืนยันตัวตน
+            ถ่ายรูป + ระบุตำแหน่ง
           </div>
 
           <label class="file-label" id="cameraLabel">
@@ -494,12 +477,9 @@
   <script>
     // ============================================================
     // ⚠️ ใส่ Web App URL ของคุณตรงนี้ (จาก Apps Script Deploy)
+    // ตัวอย่าง: https://script.google.com/macros/s/AKfycby.../exec
     // ============================================================
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzUnBvZvRtG_pK6UVWLbL8pD-_zTGDMz2mrm95kAzYjHu_04mZZZ9MiqwHMESTnaMwCww/exec';
-
-    // ====== Device detection ======
-    const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const IS_SAFARI = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
     let currentMode = 'clock_in';
     let existingClockIn = null;
@@ -511,6 +491,10 @@
     }
 
     // ====== API helpers ======
+    /**
+     * เรียก backend ผ่าน POST ด้วย text/plain
+     * (text/plain ทำให้ browser ไม่ส่ง preflight OPTIONS — Apps Script ไม่รองรับ OPTIONS)
+     */
     async function apiCall(action, payload) {
       if (!WEB_APP_URL || WEB_APP_URL.indexOf('PASTE_YOUR') === 0) {
         throw new Error('ยังไม่ได้ตั้ง WEB_APP_URL ในไฟล์ HTML');
@@ -543,7 +527,6 @@
       document.getElementById('warningBox').style.display = 'none';
       document.getElementById('clockInBox').style.display = 'none';
       document.getElementById('hoursSummary').style.display = 'none';
-      document.getElementById('gpsStatusBox').innerHTML = '';
 
       const sel = document.getElementById('employeeSelect');
       sel.innerHTML = '<option value="">-- เลือกชื่อ --</option>';
@@ -561,9 +544,6 @@
       } else {
         loadActiveClockIns();
       }
-
-      // 🆕 ตรวจ permission GPS ตอนเข้าหน้าฟอร์ม
-      checkGpsPermissionState();
 
       document.getElementById('selectView').classList.remove('active');
       document.getElementById('formView').classList.add('active');
@@ -630,7 +610,7 @@
         dl.innerHTML = names.map(n =>
           '<option value="' + String(n).replace(/"/g, '&quot;') + '">'
         ).join('');
-      } catch (e) { }
+      } catch (e) { /* ignore — datalist optional */ }
     }
 
     async function loadSupervisorNames() {
@@ -642,7 +622,7 @@
         dl.innerHTML = names.map(n =>
           '<option value="' + String(n).replace(/"/g, '&quot;') + '">'
         ).join('');
-      } catch (e) { }
+      } catch (e) { /* ignore */ }
     }
 
     async function loadActiveClockIns() {
@@ -810,210 +790,140 @@
       return h + ' ชม. ' + m + ' นาที';
     }
 
-    // ====================================================================
-    // ====== GPS (แก้ใหม่ทั้งหมดสำหรับ iOS Safari) =======================
-    // ====================================================================
-    let gpsCoordsData = null;        // { lat, lng, acc }
+    // ====== GPS ======
+    let gpsPromise = null;
     let gpsWatchId = null;
-    let gpsRequestInProgress = false;
+    let gpsBestReading = null;
+    let cameraOpenedAt = 0;
 
-    const GPS_GOOD_ACCURACY = 30;     // ผ่อนเกณฑ์ — iOS ในร่มได้ ±20-50ม.
-    const GPS_ACCEPTABLE = 100;
-    const GPS_MAX_WAIT = 25000;       // 25 วินาที — iOS Safari ช้ามาก
+    const GPS_GOOD_ACCURACY = 10;
+    const GPS_ACCEPTABLE = 30;
+    const GPS_MAX_WAIT = 15000;
 
-    /**
-     * ตรวจ permission state (ถ้า browser รองรับ)
-     * iOS Safari 16+ รองรับ permissions.query สำหรับ geolocation แล้ว
-     */
-    async function checkGpsPermissionState() {
-      const box = document.getElementById('gpsStatusBox');
-      const btn = document.getElementById('gpsRequestBtn');
+    function onCameraOpen() {
+      cameraOpenedAt = Date.now();
+      startGpsLookup();
+    }
 
-      // ตรวจ HTTPS ก่อน
-      const isSecure = location.protocol === 'https:' 
-                    || location.hostname === 'localhost' 
-                    || location.hostname === '127.0.0.1';
-      if (!isSecure) {
-        btn.style.display = 'none';
-        box.innerHTML = '<div class="status-box status-error">' +
-          '🚫 หน้านี้ไม่ได้เปิดผ่าน HTTPS<br>' +
-          '<b>ตอนนี้คือ:</b> ' + location.protocol + '<br>' +
-          'GPS ทำงานได้เฉพาะบน HTTPS เท่านั้น' +
-          '</div>';
-        return;
-      }
-
-      // ตรวจ browser รองรับ geolocation
+    function startGpsLookup() {
       if (!navigator.geolocation) {
-        btn.style.display = 'none';
-        box.innerHTML = '<div class="status-box status-error">' +
-          '🚫 เบราว์เซอร์นี้ไม่รองรับ GPS</div>';
+        gpsPromise = Promise.reject({ code: 0, message: 'เบราว์เซอร์ไม่รองรับ GPS' });
         return;
       }
 
-      // ถ้ามีค่า GPS อยู่แล้ว — แสดงเลย
-      if (gpsCoordsData) {
-        renderGpsSuccess();
+      const isSecure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+      if (!isSecure) {
+        gpsPromise = Promise.reject({ code: 1, message: 'GPS ต้องใช้บน HTTPS เท่านั้น (ตอนนี้คือ ' + location.protocol + ')' });
         return;
       }
 
-      // ลองตรวจ permission state
-      try {
-        if (navigator.permissions && navigator.permissions.query) {
-          const perm = await navigator.permissions.query({ name: 'geolocation' });
-          if (perm.state === 'granted') {
-            box.innerHTML = '<div class="step-status">' +
-              '<span class="step-icon step-done">✓</span>' +
-              '<span>มีสิทธิ์ตำแหน่งแล้ว · กดถ่ายรูปเพื่อรับ GPS</span></div>';
-            btn.innerHTML = '📍 รีเฟรชตำแหน่ง';
-            return;
-          }
-          if (perm.state === 'denied') {
-            btn.style.display = 'none';
-            box.innerHTML = buildPermissionDeniedHelp();
-            return;
-          }
-          // state === 'prompt' — ยังไม่ตอบ
-        }
-      } catch (e) {
-        // iOS เก่าไม่รองรับ permissions.query — เงียบไป
-      }
+      gpsBestReading = null;
 
-      // Default: แสดงปุ่มให้กดขอ permission
-      box.innerHTML = '<div class="step-status" style="background:rgba(255, 149, 0, 0.1);">' +
-        '<span class="step-icon" style="background:#ff9500;">!</span>' +
-        '<span><b>กรุณากดปุ่มด้านบนเพื่อขอสิทธิ์ตำแหน่ง</b><br>' +
-        '<span style="font-size:12px; color:var(--text-tertiary);">' +
-        (IS_IOS ? 'iPhone จะถามคุณว่าให้ใช้ตำแหน่งหรือไม่' : 'เบราว์เซอร์จะถามคุณว่าให้ใช้ตำแหน่งหรือไม่') +
-        '</span></span></div>';
-    }
-
-    /**
-     * 🔑 ผู้ใช้กดปุ่ม "ขอสิทธิ์ตำแหน่ง" — เป็น user gesture trusted
-     *    iOS Safari จะแสดง permission prompt ที่นี่
-     */
-    function requestGpsPermission() {
-      if (gpsRequestInProgress) return;
-      gpsRequestInProgress = true;
-
-      const box = document.getElementById('gpsStatusBox');
-      const btn = document.getElementById('gpsRequestBtn');
-      btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span>กำลังขอสิทธิ์...';
-
-      box.innerHTML = '<div class="step-status">' +
-        '<span class="step-icon step-active"><span class="spinner" style="margin:0; width:10px; height:10px;"></span></span>' +
-        '<span>กำลังขอตำแหน่ง... <b>กรุณากด "Allow" บนหน้าจอ</b></span></div>';
-
-      // 🔑 เรียกตรงๆ ในฟังก์ชันที่ trigger จาก onclick = trusted gesture บน iOS
-      navigator.geolocation.getCurrentPosition(
-        function(pos) {
-          gpsRequestInProgress = false;
-          btn.disabled = false;
-          handleGpsSuccess(pos);
-
-          // ถ้าความแม่นยำยังไม่ดี — ลอง watch เพื่อหาค่าที่แม่นยำกว่า
-          if (pos.coords.accuracy > GPS_GOOD_ACCURACY) {
-            startGpsWatchForBetter();
-          }
-        },
-        function(err) {
-          gpsRequestInProgress = false;
-          btn.disabled = false;
-          btn.innerHTML = '📍 ลองขอสิทธิ์ตำแหน่งอีกครั้ง';
-          handleGpsError(err);
-        },
-        { 
-          enableHighAccuracy: true, 
-          timeout: GPS_MAX_WAIT,
-          maximumAge: 0 
-        }
-      );
-    }
-
-    function handleGpsSuccess(pos) {
-      gpsCoordsData = {
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude,
-        acc: pos.coords.accuracy
-      };
-
-      // เซ็ตค่าใน hidden input ทันที
-      const latStr = gpsCoordsData.lat.toFixed(6);
-      const lngStr = gpsCoordsData.lng.toFixed(6);
-      document.getElementById('gpsCoords').value = latStr + ', ' + lngStr;
-      document.getElementById('address').value = 'https://maps.google.com/?q=' + latStr + ',' + lngStr;
-
-      renderGpsSuccess();
-    }
-
-    function renderGpsSuccess() {
-      if (!gpsCoordsData) return;
-      const lat = gpsCoordsData.lat.toFixed(6);
-      const lng = gpsCoordsData.lng.toFixed(6);
-      const acc = Math.round(gpsCoordsData.acc);
-      const mapsUrl = 'https://maps.google.com/?q=' + lat + ',' + lng;
-
-      let accColor, accLabel;
-      if (acc <= GPS_GOOD_ACCURACY) {
-        accColor = 'var(--success)';
-        accLabel = '✓ แม่นยำ';
-      } else if (acc <= GPS_ACCEPTABLE) {
-        accColor = '#c66800';
-        accLabel = '⚠️ พอใช้ได้';
-      } else {
-        accColor = 'var(--error)';
-        accLabel = '⚠️ ไม่แม่นยำ';
-      }
-
-      document.getElementById('gpsStatusBox').innerHTML =
-        '<div class="step-status" style="background:rgba(52, 199, 89, 0.1);">' +
-        '<span class="step-icon step-done">✓</span>' +
-        '<span>📍 <b>' + lat + ', ' + lng + '</b><br>' +
-        '<b style="color:' + accColor + ';">ความแม่นยำ ±' + acc + ' ม.</b> ' +
-        '<span style="color:' + accColor + ';font-size:12px;">(' + accLabel + ')</span> · ' +
-        '<a href="' + mapsUrl + '" target="_blank">ดูแผนที่</a></span></div>';
-
-      document.getElementById('gpsRequestBtn').innerHTML = '📍 รีเฟรชตำแหน่ง';
-      document.getElementById('gpsRequestBtn').disabled = false;
-    }
-
-    /**
-     * watch position หลังได้ค่าครั้งแรก — หาความแม่นยำที่ดีกว่า
-     * ทำเงียบๆ ไม่ block UI
-     */
-    function startGpsWatchForBetter() {
       if (gpsWatchId !== null) {
         try { navigator.geolocation.clearWatch(gpsWatchId); } catch (e) {}
+        gpsWatchId = null;
       }
 
-      const watchStartTime = Date.now();
-      const WATCH_DURATION = 15000;
+      gpsPromise = new Promise(function(resolve, reject) {
+        let resolved = false;
+        let firstFixReceived = false;
 
-      gpsWatchId = navigator.geolocation.watchPosition(
-        function(pos) {
-          // ถ้าค่าใหม่แม่นยำกว่า — update
-          if (!gpsCoordsData || pos.coords.accuracy < gpsCoordsData.acc) {
-            handleGpsSuccess(pos);
+        navigator.geolocation.getCurrentPosition(
+          function(pos) {
+            firstFixReceived = true;
+            const reading = {
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+              acc: pos.coords.accuracy
+            };
+            gpsBestReading = reading;
+            updateGpsProgress(reading.acc);
+
+            if (!resolved && reading.acc <= GPS_GOOD_ACCURACY) {
+              resolved = true;
+              resolve(formatReading(reading));
+              return;
+            }
+
+            if (!resolved) {
+              startWatch();
+            }
+          },
+          function(err) {
+            if (!resolved) {
+              startWatch();
+              setTimeout(function() {
+                if (resolved) return;
+                if (gpsBestReading) {
+                  resolved = true;
+                  stopGpsWatch();
+                  resolve(formatReading(gpsBestReading));
+                } else {
+                  resolved = true;
+                  stopGpsWatch();
+                  reject(err);
+                }
+              }, GPS_MAX_WAIT);
+            }
+          },
+          { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+        );
+
+        function startWatch() {
+          gpsWatchId = navigator.geolocation.watchPosition(
+            function(pos) {
+              const reading = {
+                lat: pos.coords.latitude,
+                lng: pos.coords.longitude,
+                acc: pos.coords.accuracy
+              };
+
+              if (!gpsBestReading || reading.acc < gpsBestReading.acc) {
+                gpsBestReading = reading;
+                updateGpsProgress(reading.acc);
+              }
+
+              if (!resolved && reading.acc <= GPS_GOOD_ACCURACY) {
+                resolved = true;
+                stopGpsWatch();
+                resolve(formatReading(gpsBestReading));
+              }
+            },
+            function(err) {
+              // ignore — รอ timer ปิดท้าย
+            },
+            { enableHighAccuracy: true, timeout: GPS_MAX_WAIT, maximumAge: 0 }
+          );
+        }
+
+        setTimeout(function() {
+          if (resolved) return;
+          stopGpsWatch();
+
+          if (gpsBestReading) {
+            resolved = true;
+            resolve(formatReading(gpsBestReading));
+          } else if (!firstFixReceived) {
+            navigator.geolocation.getCurrentPosition(
+              function(pos) {
+                if (resolved) return;
+                resolved = true;
+                resolve({
+                  lat: pos.coords.latitude.toFixed(6),
+                  lng: pos.coords.longitude.toFixed(6),
+                  acc: Math.round(pos.coords.accuracy)
+                });
+              },
+              function(err) {
+                if (resolved) return;
+                resolved = true;
+                reject(err);
+              },
+              { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+            );
           }
-
-          // ถ้าแม่นยำดีพอแล้ว — หยุด watch
-          if (pos.coords.accuracy <= GPS_GOOD_ACCURACY) {
-            stopGpsWatch();
-          }
-
-          // หมดเวลา watch
-          if (Date.now() - watchStartTime > WATCH_DURATION) {
-            stopGpsWatch();
-          }
-        },
-        function(err) {
-          // ignore — มีค่าเดิมอยู่แล้ว
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
-
-      setTimeout(stopGpsWatch, WATCH_DURATION);
+        }, GPS_MAX_WAIT);
+      });
     }
 
     function stopGpsWatch() {
@@ -1023,68 +933,39 @@
       }
     }
 
-    function handleGpsError(err) {
-      const code = (err && err.code !== undefined) ? err.code : -1;
-      const box = document.getElementById('gpsStatusBox');
+    function formatReading(r) {
+      return {
+        lat: r.lat.toFixed(6),
+        lng: r.lng.toFixed(6),
+        acc: Math.round(r.acc)
+      };
+    }
 
-      if (code === 1) {
-        // Permission denied
-        box.innerHTML = buildPermissionDeniedHelp();
-      } else if (code === 2) {
-        box.innerHTML = '<div class="status-box status-error">' +
-          '❌ <b>ไม่พบสัญญาณ GPS</b><br>' +
-          '<div style="margin-top:6px; font-size:13px;">' +
-          '• ลองออกที่กลางแจ้ง / ใกล้หน้าต่าง<br>' +
-          '• ตรวจว่าเปิด <b>Location Services</b> ใน Settings แล้ว<br>' +
-          (IS_IOS ? '• <b>iPhone:</b> Settings → Privacy → Location Services → ON' : '') +
-          '</div></div>';
-      } else if (code === 3) {
-        box.innerHTML = '<div class="status-box status-warning">' +
-          '⏱️ <b>หมดเวลารอ GPS</b><br>' +
-          '<div style="margin-top:6px; font-size:13px;">' +
-          'ลองออกที่โล่ง แล้วกดปุ่มขอสิทธิ์อีกครั้ง</div></div>';
+    function updateGpsProgress(currentAcc) {
+      const gpsRow = document.getElementById('gpsRow');
+      if (!gpsRow) return;
+      const accInt = Math.round(currentAcc);
+
+      let icon, msg;
+      if (accInt <= GPS_GOOD_ACCURACY) {
+        icon = '<span class="step-icon step-done">✓</span>';
+        msg = '<span>📍 ความแม่นยำ <b>±' + accInt + ' ม.</b> · กำลังบันทึก...</span>';
+      } else if (accInt <= GPS_ACCEPTABLE) {
+        icon = '<span class="step-icon step-active"><span class="spinner" style="margin:0; width:10px; height:10px;"></span></span>';
+        msg = '<span>📍 ปัจจุบัน ±' + accInt + ' ม. · กำลังหาความแม่นยำที่ดีกว่า...</span>';
       } else {
-        box.innerHTML = '<div class="status-box status-error">' +
-          '❌ ' + (err.message || 'เกิดข้อผิดพลาด GPS') +
-          ' <span style="font-size:11px;">(code: ' + code + ')</span></div>';
+        icon = '<span class="step-icon step-active"><span class="spinner" style="margin:0; width:10px; height:10px;"></span></span>';
+        msg = '<span>📍 ปัจจุบัน ±' + accInt + ' ม. · ' +
+              '<span style="color:#c66800;">ออกที่โล่ง / เปิดที่กลางแจ้งช่วยได้</span></span>';
       }
-    }
-
-    function buildPermissionDeniedHelp() {
-      if (IS_IOS) {
-        return '<div class="status-box status-error">' +
-          '🚫 <b>ไม่ได้รับอนุญาตให้ใช้ตำแหน่ง</b><br>' +
-          '<div style="margin-top:10px; font-size:13px; line-height:1.7;">' +
-          '<b>วิธีแก้บน iPhone:</b><br><br>' +
-          '<b>ขั้น 1:</b> เปิดสิทธิ์ Location Services ทั่วทั้งเครื่อง<br>' +
-          '<span style="color:var(--text-secondary);">Settings → Privacy & Security → Location Services → <b>ON</b> (สีเขียว)</span><br><br>' +
-          '<b>ขั้น 2:</b> อนุญาตให้ Safari ใช้ตำแหน่ง<br>' +
-          '<span style="color:var(--text-secondary);">Settings → Privacy & Security → Location Services → <b>Safari Websites</b> → เลือก <b>"While Using the App"</b></span><br><br>' +
-          '<b>ขั้น 3:</b> เปลี่ยน setting ของ Safari<br>' +
-          '<span style="color:var(--text-secondary);">Settings → Safari → Location → เลือก <b>"Ask"</b> หรือ <b>"Allow"</b></span><br><br>' +
-          '<b>ขั้น 4:</b> <u>ปิด Safari ทิ้ง</u> (swipe ขึ้น) แล้วเปิดใหม่ → โหลดหน้านี้ใหม่' +
-          '</div></div>';
-      }
-      return '<div class="status-box status-error">' +
-        '🚫 <b>ไม่ได้รับอนุญาตให้ใช้ตำแหน่ง</b><br>' +
-        '<div style="margin-top:8px; font-size:13px;">' +
-        '<b>Android Chrome:</b> แตะ <b>🔒</b> ที่ address bar → Site settings → Location → Allow<br>' +
-        'แล้วโหลดหน้านี้ใหม่</div></div>';
-    }
-
-    // ===========================================================
-    // ====== กล้อง + ตรวจรูปสด ===================================
-    // ===========================================================
-    let cameraOpenedAt = 0;
-
-    function onCameraOpen() {
-      cameraOpenedAt = Date.now();
+      gpsRow.innerHTML = icon + msg;
     }
 
     function handleCapture(event) {
       const file = event.target.files[0];
       if (!file) return;
 
+      // ถ้ายังไม่มี cameraOpenedAt (เช่น click ไม่ trigger) ใช้เวลาปัจจุบัน
       if (!cameraOpenedAt) cameraOpenedAt = Date.now();
 
       const MAX_AGE_BEFORE_CLICK = 60 * 1000;
@@ -1119,8 +1000,10 @@
         String(now.getMinutes()).padStart(2, '0') + ':' +
         String(now.getSeconds()).padStart(2, '0');
 
-      document.getElementById('captureStatus').innerHTML =
-        '<div class="step-status"><span class="step-icon step-done">✓</span><span>ถ่ายรูปสำเร็จ</span></div>';
+      const statusDiv = document.getElementById('captureStatus');
+      statusDiv.innerHTML =
+        '<div class="step-status"><span class="step-icon step-done">✓</span><span>ถ่ายรูปสำเร็จ</span></div>' +
+        '<div class="step-status" id="gpsRow"><span class="step-icon step-active"><span class="spinner" style="margin:0; width:10px; height:10px;"></span></span><span>กำลังหาตำแหน่ง GPS (รอ ~10-15 วิ)...</span></div>';
 
       const reader = new FileReader();
       reader.onload = function(e) {
@@ -1130,20 +1013,46 @@
       };
       reader.readAsDataURL(file);
 
-      // ⚠️ ถ้ายังไม่มีพิกัด GPS — เตือนผู้ใช้ให้กดปุ่ม GPS
-      if (!gpsCoordsData) {
-        document.getElementById('captureStatus').innerHTML +=
-          '<div class="status-box status-warning" style="margin-top:8px;">' +
-          '⚠️ <b>ยังไม่มีพิกัด GPS</b><br>' +
-          '<div style="font-size:13px; margin-top:4px;">' +
-          'กรุณาเลื่อนขึ้นไปกดปุ่ม <b>"📍 ขอสิทธิ์ตำแหน่ง"</b> ก่อนส่งฟอร์ม' +
-          '</div></div>';
-
-        // เลื่อนหน้าจอไปที่ GPS card อัตโนมัติ
-        setTimeout(() => {
-          document.getElementById('gpsCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 800);
+      // เริ่ม GPS เสมอ — ถ้าไม่มี promise หรือ promise เก่ายังไม่ resolve
+      // (กันเคส onCameraOpen ไม่ถูก trigger บนบาง browser)
+      if (!gpsPromise) {
+        startGpsLookup();
       }
+
+      gpsPromise.then(function(g) {
+        setGpsValue(g.lat, g.lng, g.acc);
+      }).catch(function(err) {
+        console.error('GPS error:', err);
+        showGpsError(err);
+      });
+    }
+
+    function showGpsError(err) {
+      let msg = '', help = '';
+      const code = (err && err.code !== undefined) ? err.code : -1;
+      const errMsg = (err && err.message) ? err.message : '';
+
+      if (code === 1) {
+        msg = 'ไม่ได้รับอนุญาตให้ใช้ตำแหน่ง';
+        help = '<div style="margin-top:8px; font-size:13px;"><b>วิธีแก้:</b><br>' +
+          '• <b>iPhone Safari:</b> Settings → Safari → Location → Ask / Allow<br>' +
+          '&nbsp;&nbsp;หรือแตะ <b>"aA"</b> ที่ address bar → Website Settings → Location → Allow<br>' +
+          '• <b>Android Chrome:</b> แตะ <b>🔒</b> ที่ address bar → Permissions → Location → Allow<br>' +
+          '• โหลดหน้านี้ใหม่หลังเปิดสิทธิ์แล้ว</div>';
+      } else if (code === 2) {
+        msg = 'ไม่พบสัญญาณ GPS — ลองออกกลางแจ้ง';
+        help = '<div style="margin-top:6px; font-size:13px;">' + escapeHtml(errMsg) + '</div>';
+      } else if (code === 3) {
+        msg = 'หมดเวลารอ GPS — ลองอีกครั้ง';
+        help = '<div style="margin-top:6px; font-size:13px;">กดปุ่ม "ถ่ายใหม่" แล้วลองอีกครั้ง</div>';
+      } else {
+        msg = errMsg || 'เกิดข้อผิดพลาด GPS';
+        help = '<div style="margin-top:6px; font-size:13px;">รหัสข้อผิดพลาด: ' + code + '</div>';
+      }
+
+      document.getElementById('captureStatus').innerHTML =
+        '<div class="step-status"><span class="step-icon step-done">✓</span><span>ถ่ายรูปสำเร็จ</span></div>' +
+        '<div class="status-box status-error">❌ ' + msg + help + '</div>';
     }
 
     function compressImage(dataUrl, callback) {
@@ -1174,6 +1083,34 @@
       document.getElementById('retakeBtn').style.display = 'flex';
     }
 
+    function setGpsValue(lat, lng, acc) {
+      document.getElementById('gpsCoords').value = lat + ', ' + lng;
+      const mapsUrl = 'https://maps.google.com/?q=' + lat + ',' + lng;
+      document.getElementById('address').value = mapsUrl;
+
+      const gpsRow = document.getElementById('gpsRow');
+      if (!gpsRow) return;
+
+      let accColor, accLabel;
+      if (acc <= GPS_GOOD_ACCURACY) {
+        accColor = 'var(--success)';
+        accLabel = '✓ แม่นยำสูง';
+      } else if (acc <= GPS_ACCEPTABLE) {
+        accColor = '#c66800';
+        accLabel = '⚠️ พอใช้ได้';
+      } else {
+        accColor = 'var(--error)';
+        accLabel = '⚠️ ไม่แม่นยำ';
+      }
+
+      gpsRow.innerHTML =
+        '<span class="step-icon step-done">✓</span>' +
+        '<span>📍 ' + lat + ', ' + lng + ' · ' +
+        '<b style="color:' + accColor + ';">±' + acc + ' ม.</b> ' +
+        '<span style="color:' + accColor + ';font-size:12px;">(' + accLabel + ')</span> · ' +
+        '<a href="' + mapsUrl + '" target="_blank">ดูแผนที่</a></span>';
+    }
+
     function retakePhoto() {
       const preview = document.getElementById('selfiePreview');
       preview.style.display = 'none';
@@ -1183,12 +1120,13 @@
       document.getElementById('cameraLabel').style.display = 'block';
       document.getElementById('captureStatus').innerHTML = '';
       document.getElementById('cameraInput').value = '';
-      // ❌ อย่าเคลียร์ GPS — เพราะถ่ายใหม่ไม่ได้แปลว่าเปลี่ยนตำแหน่ง
+      document.getElementById('gpsCoords').value = '';
+      document.getElementById('address').value = '';
+      gpsPromise = null;
+      gpsBestReading = null;
+      stopGpsWatch();
     }
 
-    // ===========================================================
-    // ====== Submit =============================================
-    // ===========================================================
     function showSuccessModal(type, message, info) {
       const icon = document.getElementById('modalIcon');
       const title = document.getElementById('modalTitle');
@@ -1221,8 +1159,6 @@
       if (e && e.target.id && e.target.id !== 'successModal') return;
       document.getElementById('successModal').classList.remove('show');
       document.body.style.overflow = '';
-      // reset GPS เมื่อปิด modal เพื่อให้รอบหน้าขอใหม่
-      gpsCoordsData = null;
       goToSelectView();
     }
 
@@ -1249,10 +1185,7 @@
         return;
       }
       if (!gps) {
-        status.innerHTML = '<div class="status-box status-error">' +
-          '❌ ยังไม่มีพิกัด GPS — กรุณาเลื่อนขึ้นไปกดปุ่ม <b>"📍 ขอสิทธิ์ตำแหน่ง"</b></div>';
-        // เลื่อนไปที่ GPS card
-        document.getElementById('gpsCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        status.innerHTML = '<div class="status-box status-error">ยังไม่มีพิกัด GPS</div>';
         return;
       }
 
