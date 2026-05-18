@@ -42,6 +42,111 @@
       overscroll-behavior-y: contain;
     }
 
+    /* ============ LINE Block Screen ============ */
+    .line-block-screen {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(135deg, #00b900 0%, #00a000 100%);
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 24px;
+      color: white;
+      text-align: center;
+      overflow-y: auto;
+    }
+    .line-block-screen.show { display: flex; }
+    .line-block-icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+    }
+    .line-block-title {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 14px;
+      line-height: 1.3;
+    }
+    .line-block-desc {
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 28px;
+      opacity: 0.95;
+      max-width: 320px;
+    }
+    .line-action-btn {
+      background: white;
+      color: #00a000;
+      border: none;
+      padding: 18px 28px;
+      border-radius: 14px;
+      font-size: 17px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      width: 100%;
+      max-width: 340px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .line-action-btn:active { transform: scale(0.98); }
+    .line-action-btn .icon { font-size: 22px; }
+
+    .line-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      max-width: 340px;
+      margin: 8px 0 14px;
+      color: rgba(255,255,255,0.7);
+      font-size: 13px;
+    }
+    .line-divider::before, .line-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.3);
+    }
+
+    .line-manual-card {
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 18px 20px;
+      max-width: 340px;
+      width: 100%;
+      text-align: left;
+      font-size: 14px;
+      line-height: 1.7;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .line-manual-card b { font-weight: 700; }
+    .line-manual-step {
+      display: flex;
+      gap: 10px;
+      padding: 5px 0;
+    }
+    .line-manual-step-num {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: white;
+      color: #00a000;
+      font-weight: 700;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+    }
+
     .top-bar {
       position: sticky; top: 0; z-index: 50;
       background: rgba(242, 242, 247, 0.85);
@@ -331,6 +436,40 @@
 </head>
 <body>
 
+  <!-- ============ LINE Block Screen ============ -->
+  <div class="line-block-screen" id="lineBlock">
+    <div class="line-block-icon">📍</div>
+    <div class="line-block-title">เปิดในเบราว์เซอร์ก่อน</div>
+    <div class="line-block-desc">
+      ระบบต้องใช้ GPS ซึ่งใช้ใน LINE ไม่ได้<br>
+      <b>คัดลอกลิงก์</b> แล้วเปิดใน Safari / Chrome
+    </div>
+
+    <button class="line-action-btn" onclick="copyLink()">
+      <span class="icon">📋</span>
+      <span>คัดลอกลิงก์</span>
+    </button>
+
+    <div class="line-divider">หรือเปิดด้วยตัวเอง</div>
+
+    <div class="line-manual-card">
+      <div class="line-manual-step" id="iosSteps" style="display:none;">
+        <div class="line-manual-step-num">i</div>
+        <div>
+          <b>iPhone:</b> กดปุ่ม <b>⋯</b> มุมขวาบน<br>
+          → เลือก <b>"เปิดในเบราว์เซอร์อื่น"</b>
+        </div>
+      </div>
+      <div class="line-manual-step" id="androidSteps" style="display:none;">
+        <div class="line-manual-step-num">A</div>
+        <div>
+          <b>Android:</b> กดปุ่ม <b>⋮</b> มุมขวาบน<br>
+          → เลือก <b>"เปิดในเบราว์เซอร์อื่น"</b>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="top-bar">
     <div class="top-bar-inner">
       <button type="button" class="back-btn" id="backBtn" onclick="goToSelectView()">‹ ย้อนกลับ</button>
@@ -476,10 +615,111 @@
 
   <script>
     // ============================================================
-    // ⚠️ ใส่ Web App URL ของคุณตรงนี้ (จาก Apps Script Deploy)
-    // ตัวอย่าง: https://script.google.com/macros/s/AKfycby.../exec
+    // ⚠️ ใส่ Web App URL ของคุณตรงนี้
     // ============================================================
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzUnBvZvRtG_pK6UVWLbL8pD-_zTGDMz2mrm95kAzYjHu_04mZZZ9MiqwHMESTnaMwCww/exec';
+
+    // ============================================================
+    // 🔍 ตรวจจับ LINE / Device
+    // ============================================================
+    function detectBrowser() {
+      const ua = navigator.userAgent || '';
+      const isLine = /Line\//i.test(ua);
+      const isFb = /FBAN|FBAV|FB_IAB/i.test(ua);
+      const isIg = /Instagram/i.test(ua);
+      const isMessenger = /Messenger/i.test(ua);
+      const isIOS = /iPhone|iPad|iPod/i.test(ua);
+      const isAndroid = /Android/i.test(ua);
+      return {
+        isInApp: isLine || isFb || isIg || isMessenger,
+        isLine: isLine,
+        isIOS: isIOS,
+        isAndroid: isAndroid
+      };
+    }
+
+    // ============================================================
+    // 🎯 LINE openExternalBrowser=1 TRICK
+    // ถ้าเปิดใน LINE และยังไม่มี ?openExternalBrowser=1
+    // → redirect ตัวเอง เพิ่ม parameter → LINE จะเปิดในเบราว์เซอร์ภายนอกอัตโนมัติ
+    // ============================================================
+    (function() {
+      const det = detectBrowser();
+      const url = new URL(window.location.href);
+      const alreadyTried = url.searchParams.get('openExternalBrowser') === '1';
+      const userSkipped = sessionStorage.getItem('skipExternalBrowser') === '1';
+
+      // ถ้าอยู่ใน LINE และยังไม่ได้พยายามเปิดข้างนอก
+      if (det.isLine && !alreadyTried && !userSkipped) {
+        // เพิ่ม ?openExternalBrowser=1 แล้ว reload
+        // LINE จะ detect parameter นี้ และเปิดใน Safari/Chrome อัตโนมัติ
+        url.searchParams.set('openExternalBrowser', '1');
+        window.location.replace(url.toString());
+        return;
+      }
+
+      // กรณีอื่น ๆ (FB, IG, Messenger) — แสดงหน้าเตือนแบบเดิม
+      // หรือถ้าเป็น LINE แต่ trick ไม่ work (รุ่นเก่า) — แสดงหน้าเตือนด้วย
+      if (det.isInApp && !userSkipped) {
+        // ใส่ delay 500ms — ถ้าผ่านไปแล้วยังอยู่ในแอป = trick ไม่ work → แสดงหน้าเตือน
+        setTimeout(function() {
+          // เช็คซ้ำว่ายังอยู่ใน in-app browser ไหม
+          const stillInApp = detectBrowser().isInApp;
+          if (stillInApp) {
+            showLineBlockScreen(det);
+          }
+        }, det.isLine && alreadyTried ? 800 : 0);
+      }
+    })();
+
+    function showLineBlockScreen(det) {
+      const screen = document.getElementById('lineBlock');
+      screen.classList.add('show');
+
+      // แสดงคำแนะนำตาม device
+      if (det.isIOS) {
+        document.getElementById('iosSteps').style.display = 'flex';
+      } else if (det.isAndroid) {
+        document.getElementById('androidSteps').style.display = 'flex';
+      } else {
+        // unknown — แสดงทั้งสอง
+        document.getElementById('iosSteps').style.display = 'flex';
+        document.getElementById('androidSteps').style.display = 'flex';
+      }
+    }
+
+    function copyLink() {
+      // ใช้ลิงก์เดิม (ไม่มี ?openExternalBrowser) เพื่อความสะอาด
+      const url = new URL(window.location.href);
+      url.searchParams.delete('openExternalBrowser');
+      const cleanUrl = url.toString();
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(cleanUrl).then(function() {
+          alert('✓ คัดลอกลิงก์แล้ว!\n\n1. ปิดหน้านี้\n2. เปิดแอป Safari (iPhone) หรือ Chrome (Android)\n3. วางลิงก์ที่ช่อง URL ด้านบน');
+        }).catch(function() {
+          fallbackCopy(cleanUrl);
+        });
+      } else {
+        fallbackCopy(cleanUrl);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        alert('✓ คัดลอกลิงก์แล้ว!\n\nเปิด Safari / Chrome แล้ววางลิงก์');
+      } catch (e) {
+        prompt('คัดลอกลิงก์นี้:', text);
+      }
+      document.body.removeChild(ta);
+    }
 
     let currentMode = 'clock_in';
     let existingClockIn = null;
@@ -490,11 +730,6 @@
         ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
     }
 
-    // ====== API helpers ======
-    /**
-     * เรียก backend ผ่าน POST ด้วย text/plain
-     * (text/plain ทำให้ browser ไม่ส่ง preflight OPTIONS — Apps Script ไม่รองรับ OPTIONS)
-     */
     async function apiCall(action, payload) {
       if (!WEB_APP_URL || WEB_APP_URL.indexOf('PASTE_YOUR') === 0) {
         throw new Error('ยังไม่ได้ตั้ง WEB_APP_URL ในไฟล์ HTML');
@@ -515,7 +750,6 @@
       }
     }
 
-    // ====== View Switching ======
     function goToFormView(mode) {
       currentMode = mode;
       existingClockIn = null;
@@ -610,7 +844,7 @@
         dl.innerHTML = names.map(n =>
           '<option value="' + String(n).replace(/"/g, '&quot;') + '">'
         ).join('');
-      } catch (e) { /* ignore — datalist optional */ }
+      } catch (e) { /* ignore */ }
     }
 
     async function loadSupervisorNames() {
@@ -889,9 +1123,7 @@
                 resolve(formatReading(gpsBestReading));
               }
             },
-            function(err) {
-              // ignore — รอ timer ปิดท้าย
-            },
+            function(err) { /* ignore */ },
             { enableHighAccuracy: true, timeout: GPS_MAX_WAIT, maximumAge: 0 }
           );
         }
@@ -965,7 +1197,6 @@
       const file = event.target.files[0];
       if (!file) return;
 
-      // ถ้ายังไม่มี cameraOpenedAt (เช่น click ไม่ trigger) ใช้เวลาปัจจุบัน
       if (!cameraOpenedAt) cameraOpenedAt = Date.now();
 
       const MAX_AGE_BEFORE_CLICK = 60 * 1000;
@@ -1013,8 +1244,6 @@
       };
       reader.readAsDataURL(file);
 
-      // เริ่ม GPS เสมอ — ถ้าไม่มี promise หรือ promise เก่ายังไม่ resolve
-      // (กันเคส onCameraOpen ไม่ถูก trigger บนบาง browser)
       if (!gpsPromise) {
         startGpsLookup();
       }
@@ -1032,11 +1261,22 @@
       const code = (err && err.code !== undefined) ? err.code : -1;
       const errMsg = (err && err.message) ? err.message : '';
 
+      const det = detectBrowser();
+      if (det.isInApp) {
+        msg = 'GPS ไม่ทำงานใน LINE';
+        help = '<div style="margin-top:10px;">' +
+          '<button onclick="copyLink()" style="background:#00b900;color:white;border:none;padding:12px 20px;border-radius:10px;font-family:inherit;font-weight:700;cursor:pointer;font-size:15px;width:100%;">📋 คัดลอกลิงก์ไปเปิดในเบราว์เซอร์</button>' +
+          '</div>';
+        document.getElementById('captureStatus').innerHTML =
+          '<div class="step-status"><span class="step-icon step-done">✓</span><span>ถ่ายรูปสำเร็จ</span></div>' +
+          '<div class="status-box status-error">❌ ' + msg + help + '</div>';
+        return;
+      }
+
       if (code === 1) {
         msg = 'ไม่ได้รับอนุญาตให้ใช้ตำแหน่ง';
         help = '<div style="margin-top:8px; font-size:13px;"><b>วิธีแก้:</b><br>' +
           '• <b>iPhone Safari:</b> Settings → Safari → Location → Ask / Allow<br>' +
-          '&nbsp;&nbsp;หรือแตะ <b>"aA"</b> ที่ address bar → Website Settings → Location → Allow<br>' +
           '• <b>Android Chrome:</b> แตะ <b>🔒</b> ที่ address bar → Permissions → Location → Allow<br>' +
           '• โหลดหน้านี้ใหม่หลังเปิดสิทธิ์แล้ว</div>';
       } else if (code === 2) {
