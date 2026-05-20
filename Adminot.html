@@ -477,14 +477,63 @@
       overflow: auto;
       box-shadow: 0 12px 40px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06);
     }
-    .modal-image {
-      background: white;
-      border-radius: 10px;
-      max-width: 90vw;
-      max-height: 90vh;
-      overflow: hidden;
+    /* Image Lightbox (full-screen) */
+    .image-lightbox {
+      position: fixed; inset: 0;
+      background: rgba(0, 0, 0, 0.92);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 0;
+      cursor: zoom-out;
     }
-    .modal-image img { display: block; max-width: 100%; max-height: 90vh; }
+    .image-lightbox.show { display: flex; }
+    .image-lightbox img {
+      max-width: 96vw;
+      max-height: 96vh;
+      display: block;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+      user-select: none;
+      -webkit-user-drag: none;
+      transition: transform 200ms ease;
+      cursor: zoom-in;
+    }
+    .image-lightbox img.zoomed {
+      cursor: zoom-out;
+      transform: scale(1.8);
+    }
+    .lightbox-close {
+      position: fixed;
+      top: 16px; right: 16px;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(8px);
+      color: white;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      z-index: 201;
+      transition: background 120ms;
+    }
+    .lightbox-close:hover { background: rgba(255, 255, 255, 0.22); }
+    .lightbox-close svg { width: 18px; height: 18px; }
+    .lightbox-hint {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 12.5px;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 6px 12px;
+      border-radius: 980px;
+      backdrop-filter: blur(8px);
+      pointer-events: none;
+      z-index: 201;
+    }
     .modal-header {
       padding: 14px 18px;
       border-bottom: 1px solid var(--line);
@@ -874,11 +923,13 @@
     </div>
   </div>
 
-  <!-- Image Modal -->
-  <div class="modal-overlay" id="imageModal" onclick="if(event.target===this) closeImageModal()">
-    <div class="modal-image">
-      <img id="modalImg" src="" alt="">
-    </div>
+  <!-- Image Lightbox (full-screen) -->
+  <div class="image-lightbox" id="imageModal" onclick="closeImageModal()">
+    <button class="lightbox-close" onclick="event.stopPropagation(); closeImageModal()" title="ปิด (Esc)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <img id="modalImg" src="" alt="" onclick="event.stopPropagation(); toggleZoom(this);">
+    <div class="lightbox-hint">กดที่รูปเพื่อขยาย · กดข้างนอกหรือ Esc เพื่อปิด</div>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -1211,12 +1262,32 @@
     }
 
     function showImage(url) {
-      document.getElementById('modalImg').src = url;
-      document.getElementById('imageModal').classList.add('show');
+      const modal = document.getElementById('imageModal');
+      const img = document.getElementById('modalImg');
+      img.classList.remove('zoomed');
+      img.src = url;
+      modal.classList.add('show');
+      document.body.style.overflow = 'hidden';
     }
     function closeImageModal() {
-      document.getElementById('imageModal').classList.remove('show');
+      const modal = document.getElementById('imageModal');
+      const img = document.getElementById('modalImg');
+      modal.classList.remove('show');
+      img.classList.remove('zoomed');
+      document.body.style.overflow = '';
     }
+    function toggleZoom(img) {
+      img.classList.toggle('zoomed');
+    }
+    // ปิด lightbox ด้วย Esc
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const lightbox = document.getElementById('imageModal');
+        if (lightbox && lightbox.classList.contains('show')) {
+          closeImageModal();
+        }
+      }
+    });
 
     function openPhotoModal(record) {
       const grid = document.getElementById('photoGrid');
@@ -1224,9 +1295,19 @@
         ' · ' + (record.employeeName || '') + ' · ' + (record.otDate || '');
 
       function buildBlock(kind, label, selfieEmbed, selfieFull, mapUrl, gps, photoTime) {
+        // สร้าง URL รูปขนาดใหญ่สำหรับ lightbox
+        // ถ้า embed url เป็น thumbnail?id=X&sz=w800 → แปลงเป็น sz=w2400 เพื่อความคม
+        let largeUrl = selfieFull || selfieEmbed || '';
+        if (selfieEmbed && /sz=w\d+/.test(selfieEmbed)) {
+          largeUrl = selfieEmbed.replace(/sz=w\d+/, 'sz=w2400');
+        } else if (selfieEmbed) {
+          // ถ้าไม่มี sz parameter ก็ใช้ embed url ตรงๆ
+          largeUrl = selfieEmbed;
+        }
+
         const photoHtml = selfieEmbed
           ? `<img class="photo-block-img" src="${escapeHtml(selfieEmbed)}"
-                  onclick="showImage('${escapeJs(selfieFull || selfieEmbed)}')"
+                  onclick="showImage('${escapeJs(largeUrl)}')"
                   onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" alt="${escapeHtml(label)}">
              <div class="photo-block-empty" style="display:none;">
                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><polyline points="21 15 16 10 5 21"/></svg>
