@@ -4,546 +4,778 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>OT Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f3f4f6;
-      --bg-elev: #ffffff;
-      --text: #111827;
-      --text-secondary: #4b5563;
-      --text-tertiary: #6b7280;
-      --border: #e5e7eb;
-      --border-strong: #d1d5db;
-      --accent: #2563eb;
-      --accent-hover: #1d4ed8;
-      --success: #16a34a;
-      --success-bg: #dcfce7;
-      --success-text: #15803d;
-      --warning: #d97706;
-      --warning-bg: #fef3c7;
-      --warning-text: #b45309;
-      --error: #dc2626;
-      --error-bg: #fee2e2;
-      --error-text: #b91c1c;
-      --info: #0ea5e9;
-      --info-bg: #e0f2fe;
-      --info-text: #0369a1;
+      --bg: #fafafa;
+      --panel: #ffffff;
+      --ink: #0a0a0a;
+      --ink-2: #525252;
+      --ink-3: #737373;
+      --ink-4: #a3a3a3;
+      --line: #e5e5e5;
+      --line-2: #d4d4d4;
+      --hover: #f5f5f5;
+      --link: #0066cc;
+      --green: #15803d;
+      --green-bg: #f0fdf4;
+      --amber: #b45309;
+      --amber-bg: #fffbeb;
+      --red: #b91c1c;
+      --red-bg: #fef2f2;
+      --radius: 6px;
+      --radius-sm: 4px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Sarabun', sans-serif;
-      background: var(--bg); color: var(--text);
-      font-size: 14px; line-height: 1.5;
+      font-family: 'Inter', 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      /* responsive base font: 12px (mobile) → 13.5px (desktop) */
+      font-size: clamp(12px, 0.7vw + 10px, 13.5px);
+      line-height: 1.5;
       -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
+    /* Header */
     .header {
-      background: var(--bg-elev);
-      border-bottom: 1px solid var(--border);
-      padding: 16px 24px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+      padding: 0 clamp(12px, 2vw, 24px);
       position: sticky; top: 0; z-index: 50;
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 12px;
     }
-    .header-left h1 { font-size: 22px; font-weight: 700; }
-    .header-left p { font-size: 13px; color: var(--text-tertiary); margin-top: 2px; }
-    .header-right { display: flex; gap: 8px; align-items: center; }
-
-    .btn {
-      padding: 8px 16px;
-      border: 1px solid var(--border-strong);
-      border-radius: 8px; background: white; color: var(--text);
-      font-size: 14px; font-weight: 500;
-      cursor: pointer; font-family: inherit;
-      display: inline-flex; align-items: center; gap: 6px;
-      transition: all 0.15s;
+    .header-inner {
+      max-width: 1800px;
+      margin: 0 auto;
+      height: clamp(48px, 5vw, 56px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
     }
-    .btn:hover { background: #f9fafb; border-color: var(--text-tertiary); }
-    .btn:active { transform: scale(0.98); }
-    .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
-    .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
-    .btn-success { background: var(--success); color: white; border-color: var(--success); }
-    .btn-success:hover { background: #15803d; border-color: #15803d; }
-    .btn-danger { background: var(--error); color: white; border-color: var(--error); }
-    .btn-danger:hover { background: #b91c1c; border-color: #b91c1c; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .container { padding: 24px; max-width: 1800px; margin: 0 auto; }
-
-    .summary {
+    .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .brand-logo {
+      width: 26px; height: 26px;
+      background: var(--ink);
+      color: white;
+      border-radius: 5px;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      gap: 12px;
-      margin-bottom: 24px;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      flex-shrink: 0;
     }
-    .summary-card {
-      background: var(--bg-elev); border-radius: 12px;
-      padding: 16px 18px; border: 1px solid var(--border);
-    }
-    .summary-label {
-      font-size: 12px; color: var(--text-tertiary);
-      text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;
-    }
-    .summary-value {
-      font-size: 28px; font-weight: 700; margin-top: 4px;
-      display: flex; align-items: baseline; gap: 6px;
-    }
-    .summary-value small { font-size: 13px; color: var(--text-tertiary); font-weight: 500; }
-    .summary-card.warning { border-left: 4px solid var(--warning); }
-    .summary-card.success { border-left: 4px solid var(--success); }
-    .summary-card.info    { border-left: 4px solid var(--accent); }
-    .summary-card.working { border-left: 4px solid var(--info); }
-
-    .filter-bar {
-      background: var(--bg-elev);
-      border-radius: 12px 12px 0 0;
-      border: 1px solid var(--border);
-      border-bottom: none;
-      padding: 14px 18px;
-      display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
-    }
-    .filter-bar input, .filter-bar select {
-      padding: 8px 12px;
-      border: 1px solid var(--border-strong);
-      border-radius: 8px;
-      font-size: 14px; font-family: inherit;
-      background: white; color: var(--text);
-      min-width: 160px;
-    }
-    .filter-bar input:focus, .filter-bar select:focus {
-      outline: none; border-color: var(--accent);
-    }
-    .filter-bar input[type="search"] { flex: 1; min-width: 200px; }
-    .filter-bar .count { margin-left: auto; font-size: 13px; color: var(--text-tertiary); }
-
-    /* highlight filter ตอนใช้ค่า default ที่ซ่อนของอนุมัติ/ไม่อนุมัติ */
-    .filter-bar select#statusFilter.has-default-filter {
-      background: #eff6ff;
-      border-color: var(--accent);
-      color: var(--accent);
+    .brand h1 {
+      font-size: clamp(13px, 1vw + 8px, 14px);
       font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .brand-sep { width: 1px; height: 14px; background: var(--line-2); margin: 0 4px; flex-shrink: 0; }
+    .brand-sub {
+      font-size: clamp(11px, 0.8vw + 6px, 13px);
+      color: var(--ink-3);
+      font-weight: 400;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .header-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+    /* mobile: ซ่อนข้อความใต้ subtitle, แสดงแค่ logo + h1 */
+    @media (max-width: 540px) {
+      .brand-sep, .brand-sub { display: none; }
+      .btn-text-hide { display: none; }
     }
 
-    .table-wrapper {
-      background: var(--bg-elev);
-      border-radius: 0 0 12px 12px;
-      border: 1px solid var(--border);
-      overflow: auto;
-      max-height: calc(100vh - 280px);
-    }
-    table { width: 100%; border-collapse: separate; border-spacing: 0; }
-    thead { position: sticky; top: 0; z-index: 5; background: #f9fafb; }
-    th, td {
-      padding: 12px 14px;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-      vertical-align: top;
-    }
-    th {
-      font-size: 12px; font-weight: 600;
-      color: var(--text-secondary);
-      text-transform: uppercase; letter-spacing: 0.04em;
-      white-space: nowrap;
-    }
-    tbody tr:hover { background: #f9fafb; }
-    tbody tr:last-child td { border-bottom: none; }
-
-    td.cell-name { font-weight: 600; }
-    td.cell-supervisor { color: var(--text-secondary); white-space: nowrap; font-size: 12px; }
-    td.cell-reqid {
-      font-family: monospace;
-      font-size: 11px;
-      color: var(--text-tertiary);
-      white-space: nowrap;
-    }
-    td.cell-submitted {
-      font-size: 11px;
-      color: var(--text-tertiary);
-      white-space: nowrap;
-    }
-    td.cell-company {
-      white-space: nowrap;
-    }
-    td.cell-company .company-badge {
-      display: inline-block;
-      padding: 3px 8px;
-      border-radius: 6px;
-      background: #eef2ff;
-      color: #4338ca;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    td.cell-hours {
-      text-align: center; font-weight: 700; font-size: 14px;
-      font-variant-numeric: tabular-nums;
-      white-space: nowrap;
-    }
-    td.cell-time {
-      font-variant-numeric: tabular-nums;
-      font-size: 13px; white-space: nowrap;
-    }
-    td.cell-time .time-range {
-      display: inline-flex; align-items: center; gap: 4px;
-    }
-    td.cell-time .arrow { color: var(--text-tertiary); }
-    td.cell-detail { max-width: 240px; }
-    td.cell-detail .truncate {
-      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-      overflow: hidden; line-height: 1.4; white-space: pre-line;
-    }
-
-    .badge {
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 4px 10px; border-radius: 980px;
-      font-size: 12px; font-weight: 600;
-      white-space: nowrap;
-    }
-    .badge-working  { background: var(--info-bg);    color: var(--info-text); }
-    .badge-pending  { background: var(--warning-bg); color: var(--warning-text); }
-    .badge-approved { background: var(--success-bg); color: var(--success-text); }
-    .badge-rejected { background: var(--error-bg);   color: var(--error-text); }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.6; }
-    }
-    .badge-working { animation: pulse 2s ease-in-out infinite; }
-
-    .thumb {
-      width: 60px; height: 60px;
-      object-fit: cover; border-radius: 8px;
-      cursor: pointer; border: 1px solid var(--border);
-      background: #f3f4f6; transition: transform 0.15s;
-    }
-    .thumb:hover { transform: scale(1.05); }
-    .no-thumb {
-      width: 60px; height: 60px; border-radius: 8px;
-      background: #f3f4f6;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px; color: var(--text-tertiary);
-    }
-    .photo-cell {
-      display: flex; flex-direction: column; gap: 4px;
-      align-items: flex-start;
-    }
-    .photo-time {
-      font-size: 11px;
-      color: var(--text-tertiary);
-      font-variant-numeric: tabular-nums;
-      white-space: nowrap;
-      line-height: 1.3;
-    }
-
-    /* ===== ปุ่มดูรูปในตาราง ===== */
-    .btn-view-photo {
+    /* Buttons */
+    .btn {
+      height: clamp(28px, 3vw, 30px);
+      padding: 0 clamp(8px, 1vw, 12px);
+      border: 1px solid var(--line-2);
+      border-radius: var(--radius);
+      background: white;
+      color: var(--ink);
+      font-size: clamp(12px, 0.5vw + 9px, 13px);
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 7px 12px;
-      border-radius: 8px;
-      border: 1px solid var(--accent);
-      background: #eff6ff;
-      color: var(--accent);
-      font-size: 13px;
-      font-weight: 600;
-      font-family: inherit;
-      cursor: pointer;
-      transition: all 0.15s;
+      transition: background 120ms, border-color 120ms;
       white-space: nowrap;
     }
-    .btn-view-photo:hover { background: var(--accent); color: white; }
-    .btn-view-photo:active { transform: scale(0.97); }
-    .view-dots {
-      display: inline-flex; gap: 3px;
-      margin-left: 2px;
+    .btn:hover { background: var(--hover); }
+    .btn:active { background: #ebebeb; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+    .btn-primary { background: var(--ink); color: white; border-color: var(--ink); }
+    .btn-primary:hover { background: #262626; border-color: #262626; }
+    .btn-danger { background: var(--red); color: white; border-color: var(--red); }
+    .btn-danger:hover { background: #991b1b; border-color: #991b1b; }
+
+    /* Container */
+    .container {
+      max-width: 1800px;
+      margin: 0 auto;
+      padding: clamp(12px, 2vw, 20px) clamp(12px, 2vw, 24px) clamp(20px, 4vw, 32px);
     }
-    .dot {
-      width: 7px; height: 7px; border-radius: 50%;
+
+    /* Stats */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: clamp(12px, 2vw, 20px);
+    }
+    .stat { background: var(--panel); padding: clamp(10px, 1.2vw, 14px) clamp(12px, 1.4vw, 16px); }
+    .stat-label {
+      font-size: clamp(10px, 0.6vw + 7px, 11px);
+      color: var(--ink-3);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .stat-value {
+      font-size: clamp(17px, 1.5vw + 8px, 22px);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.1;
+    }
+    .stat-sub { font-size: clamp(11px, 0.6vw + 7px, 12px); color: var(--ink-3); font-weight: 400; margin-left: 4px; }
+    .stat-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    .stat-dot.amber { background: #d97706; }
+    .stat-dot.green { background: #16a34a; }
+    .stat-dot.blue  { background: #0ea5e9; }
+
+    /* Filter Bar */
+    .filter-bar {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-bottom: none;
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: clamp(8px, 1vw, 10px) clamp(8px, 1vw, 12px);
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .input, .select {
+      height: 30px;
+      padding: 0 10px;
+      border: 1px solid var(--line-2);
+      border-radius: var(--radius);
+      font-size: clamp(12px, 0.6vw + 8px, 13px);
+      font-family: inherit;
+      background: white;
+      color: var(--ink);
+      min-width: 120px;
+    }
+    @media (max-width: 600px) {
+      .select, .input { flex: 1; min-width: 0; }
+      .input.search { width: 100%; flex-basis: 100%; }
+    }
+    .input:focus, .select:focus {
+      outline: none;
+      border-color: var(--ink);
+      box-shadow: 0 0 0 3px rgba(0,0,0,0.04);
+    }
+    .input.search {
+      flex: 1;
+      min-width: 220px;
+      padding-left: 30px;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a3a3a3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'/><path d='m21 21-4.3-4.3'/></svg>");
+      background-repeat: no-repeat;
+      background-position: 10px center;
+    }
+    .select {
+      padding-right: 26px;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+    }
+    .select.active-filter {
+      border-color: var(--ink);
+      background-color: #fafafa;
+      font-weight: 500;
+    }
+    .filter-spacer { flex: 1; min-width: 4px; }
+    .filter-count {
+      font-size: 12px;
+      color: var(--ink-3);
+      font-variant-numeric: tabular-nums;
+      padding-left: 4px;
+    }
+    .icon-clear {
+      width: 30px; height: 30px;
+      border: 1px solid var(--line-2);
+      border-radius: var(--radius);
+      background: white;
+      color: var(--ink-3);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-family: inherit;
+    }
+    .icon-clear:hover { background: var(--hover); color: var(--ink); }
+
+    /* Table */
+    .table-wrap {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 0 0 var(--radius) var(--radius);
+      overflow: auto;
+      max-height: calc(100vh - 240px);
+      -webkit-overflow-scrolling: touch;
+    }
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: clamp(12px, 0.5vw + 9px, 13px);
+    }
+    thead { position: sticky; top: 0; z-index: 2; background: #fafafa; }
+    thead th {
+      padding: clamp(6px, 0.8vw, 8px) clamp(8px, 1vw, 12px);
+      text-align: left;
+      font-size: clamp(10px, 0.5vw + 7px, 11px);
+      font-weight: 500;
+      color: var(--ink-3);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+    }
+    tbody td {
+      padding: clamp(8px, 0.9vw, 10px) clamp(8px, 1vw, 12px);
+      border-bottom: 1px solid var(--line);
+      vertical-align: middle;
+      color: var(--ink);
+    }
+    tbody tr:hover td { background: #fafafa; }
+    tbody tr:last-child td { border-bottom: none; }
+
+    td.mono {
+      font-family: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+      font-size: clamp(10.5px, 0.4vw + 8.5px, 11.5px);
+      color: var(--ink-3);
+      white-space: nowrap;
+    }
+    td.col-name { font-weight: 500; }
+    td.col-sup {
+      color: var(--ink-2);
+      white-space: nowrap;
+      font-size: clamp(11px, 0.4vw + 9px, 12px);
+    }
+    td.col-time {
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      font-size: clamp(11px, 0.5vw + 9px, 12.5px);
+    }
+    td.col-time .arr { color: var(--ink-4); margin: 0 4px; }
+    td.col-hours {
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      font-size: clamp(11px, 0.5vw + 9px, 12.5px);
+    }
+    td.col-detail { max-width: 260px; min-width: 140px; }
+    td.col-detail .clip {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      line-height: 1.4;
+      white-space: pre-line;
+      color: var(--ink-2);
+      font-size: clamp(11px, 0.5vw + 9px, 12.5px);
+    }
+    .company-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      background: #f4f4f5;
+      color: var(--ink-2);
+      font-size: clamp(10.5px, 0.4vw + 8.5px, 11.5px);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    /* responsive hide columns:
+       - hide-md: ซ่อนเมื่อจอ <= 900px (tablet)
+       - hide-sm: ซ่อนเมื่อจอ <= 640px (มือถือ)
+    */
+    @media (max-width: 900px) {
+      .hide-md { display: none !important; }
+    }
+    @media (max-width: 640px) {
+      .hide-sm { display: none !important; }
+      .table-wrap { max-height: calc(100vh - 280px); }
+    }
+
+    /* Badge */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 8px;
+      border-radius: 980px;
+      font-size: clamp(10.5px, 0.4vw + 8.5px, 11.5px);
+      font-weight: 500;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+    .badge::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
       display: inline-block;
     }
-    .dot-in { background: var(--success); }
-    .dot-out { background: var(--warning); }
-    .btn-view-photo:hover .dot-in { background: white; box-shadow: 0 0 0 1px var(--success); }
-    .btn-view-photo:hover .dot-out { background: white; box-shadow: 0 0 0 1px var(--warning); }
+    .badge.b-working { color: #0369a1; background: #f0f9ff; border-color: #bae6fd; }
+    .badge.b-working::before { background: #0ea5e9; }
+    .badge.b-pending { color: var(--amber); background: var(--amber-bg); border-color: #fde68a; }
+    .badge.b-pending::before { background: #d97706; }
+    .badge.b-approved { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+    .badge.b-approved::before { background: #16a34a; }
+    .badge.b-rejected { color: var(--red); background: var(--red-bg); border-color: #fecaca; }
+    .badge.b-rejected::before { background: #dc2626; }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .badge.b-working::before { animation: pulse-dot 1.6s ease-in-out infinite; }
 
-    /* ===== Modal ดูรูป + ตำแหน่ง ===== */
+    /* View Photo Button */
+    .btn-view {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: clamp(24px, 2.5vw, 26px);
+      padding: 0 clamp(8px, 1vw, 10px);
+      border: 1px solid var(--line-2);
+      border-radius: var(--radius);
+      background: white;
+      color: var(--ink-2);
+      font-size: clamp(11px, 0.4vw + 9px, 12px);
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 120ms, border-color 120ms;
+      white-space: nowrap;
+    }
+    .btn-view:hover { background: var(--hover); border-color: var(--ink-3); color: var(--ink); }
+    .btn-view svg { width: 12px; height: 12px; }
+    .view-dots { display: inline-flex; gap: 3px; margin-left: 2px; }
+    .dot { width: 5px; height: 5px; border-radius: 50%; }
+    .dot-in  { background: #16a34a; }
+    .dot-out { background: #d97706; }
+
+    /* Row Actions */
+    .row-actions { display: flex; gap: 4px; justify-content: flex-end; }
+    .icon-btn {
+      width: 26px; height: 26px;
+      border: 1px solid var(--line-2);
+      border-radius: var(--radius);
+      background: white;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-3);
+      font-family: inherit;
+      transition: background 120ms, color 120ms, border-color 120ms;
+    }
+    .icon-btn:hover { background: var(--hover); color: var(--ink); }
+    .icon-btn svg { width: 13px; height: 13px; }
+    .icon-btn.approve { color: var(--green); }
+    .icon-btn.approve:hover { background: var(--green-bg); border-color: #bbf7d0; }
+    .icon-btn.reject { color: var(--red); }
+    .icon-btn.reject:hover { background: var(--red-bg); border-color: #fecaca; }
+    .icon-btn.delete:hover { background: var(--red-bg); color: var(--red); border-color: #fecaca; }
+
+    .dim { color: var(--ink-4); }
+
+    /* Empty & Loading */
+    .empty {
+      padding: 64px 20px;
+      text-align: center;
+      color: var(--ink-3);
+    }
+    .empty-icon {
+      width: 36px; height: 36px;
+      margin: 0 auto 12px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink-4);
+    }
+    .empty-icon svg { width: 18px; height: 18px; }
+    .empty-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+    .empty-desc { font-size: 13px; margin-bottom: 12px; }
+    .empty a { color: var(--link); text-decoration: none; font-weight: 500; }
+    .empty a:hover { text-decoration: underline; }
+
+    .spinner {
+      display: inline-block;
+      width: 18px; height: 18px;
+      border: 2px solid var(--line);
+      border-top-color: var(--ink-3);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-bottom: 10px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(10, 10, 10, 0.4);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 20px;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 10px;
+      max-width: 460px;
+      width: 100%;
+      max-height: 90vh;
+      overflow: auto;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06);
+    }
+    .modal-image {
+      background: white;
+      border-radius: 10px;
+      max-width: 90vw;
+      max-height: 90vh;
+      overflow: hidden;
+    }
+    .modal-image img { display: block; max-width: 100%; max-height: 90vh; }
+    .modal-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-header h3 {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .modal-header .sub {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--ink-3);
+      margin-left: 6px;
+    }
+    .modal-close {
+      width: 26px; height: 26px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      color: var(--ink-3);
+      border-radius: var(--radius);
+      display: grid;
+      place-items: center;
+    }
+    .modal-close:hover { background: var(--hover); color: var(--ink); }
+    .modal-close svg { width: 14px; height: 14px; }
+    .modal-body { padding: 18px; }
+    .modal-body label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: var(--ink-2);
+    }
+    .modal-body textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--line-2);
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: 13px;
+      min-height: 76px;
+      resize: vertical;
+      line-height: 1.5;
+      color: var(--ink);
+    }
+    .modal-body textarea:focus {
+      outline: none;
+      border-color: var(--ink);
+      box-shadow: 0 0 0 3px rgba(0,0,0,0.04);
+    }
+    .modal-footer {
+      padding: 12px 18px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+    .info-row {
+      display: flex;
+      gap: 10px;
+      font-size: 13px;
+      padding: 4px 0;
+    }
+    .info-row .k {
+      color: var(--ink-3);
+      min-width: 70px;
+      font-weight: 400;
+    }
+    .info-row .v { color: var(--ink); font-weight: 500; }
+
+    /* Photo Modal */
     .photo-modal {
       background: white;
-      border-radius: 14px;
+      border-radius: 10px;
       max-width: 880px;
       width: 100%;
       max-height: 92vh;
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06);
     }
-    .photo-modal-body {
-      padding: 20px;
-      overflow-y: auto;
-    }
+    .photo-modal-body { padding: 18px; overflow-y: auto; }
     .photo-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      gap: 14px;
     }
-    @media (max-width: 700px) {
+    @media (max-width: 680px) {
       .photo-grid { grid-template-columns: 1fr; }
     }
     .photo-block {
-      border: 1px solid var(--border);
-      border-radius: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
       overflow: hidden;
-      background: #f9fafb;
+      background: white;
       display: flex;
       flex-direction: column;
     }
     .photo-block-header {
-      padding: 10px 14px;
-      font-size: 13px;
-      font-weight: 700;
-      border-bottom: 1px solid var(--border);
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      border-bottom: 1px solid var(--line);
       display: flex;
       align-items: center;
       gap: 8px;
+      background: #fafafa;
     }
-    .photo-block.in .photo-block-header  { background: #ecfdf5; color: var(--success-text); }
-    .photo-block.out .photo-block-header { background: #fef3c7; color: var(--warning-text); }
+    .photo-block-header .marker {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+    }
+    .photo-block.in .marker { background: #16a34a; }
+    .photo-block.out .marker { background: #d97706; }
     .photo-block-img {
       width: 100%;
       aspect-ratio: 1;
       object-fit: cover;
-      background: #f3f4f6;
+      background: #f5f5f5;
       display: block;
       cursor: zoom-in;
-      transition: opacity 0.15s;
     }
-    .photo-block-img:hover { opacity: 0.92; }
+    .photo-block-img:hover { opacity: 0.95; }
     .photo-block-empty {
       width: 100%;
       aspect-ratio: 1;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--text-tertiary);
-      font-size: 14px;
+      color: var(--ink-4);
+      font-size: 13px;
       flex-direction: column;
       gap: 8px;
-      background: #f9fafb;
+      background: #fafafa;
     }
-    .photo-block-empty .icon { font-size: 32px; opacity: 0.4; }
+    .photo-block-empty svg { width: 22px; height: 22px; opacity: 0.6; }
     .photo-block-footer {
-      padding: 10px 14px;
+      padding: 10px 12px;
       font-size: 12px;
       background: white;
-      border-top: 1px solid var(--border);
+      border-top: 1px solid var(--line);
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
     }
     .photo-block-footer .row {
-      display: flex; align-items: center; gap: 6px;
-      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--ink-2);
     }
-    .photo-block-footer .row a { color: var(--accent); text-decoration: none; font-weight: 600; }
+    .photo-block-footer .row svg { width: 12px; height: 12px; flex-shrink: 0; }
+    .photo-block-footer .row a {
+      color: var(--link);
+      text-decoration: none;
+      font-weight: 500;
+    }
     .photo-block-footer .row a:hover { text-decoration: underline; }
-    .photo-block-footer .time {
-      font-variant-numeric: tabular-nums;
-      color: var(--text-tertiary);
+    .photo-block-footer .gps {
+      color: var(--ink-4);
+      font-size: 11px;
+      font-family: 'IBM Plex Mono', monospace;
     }
 
-    .actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
-    .icon-btn {
-      width: 32px; height: 32px;
-      border-radius: 8px;
-      border: 1px solid var(--border-strong);
-      background: white; cursor: pointer;
-      display: inline-flex; align-items: center; justify-content: center;
-      font-size: 14px; transition: all 0.15s;
-    }
-    .icon-btn:hover { background: #f3f4f6; }
-    .icon-btn.approve { color: var(--success); border-color: #86efac; }
-    .icon-btn.approve:hover { background: var(--success-bg); }
-    .icon-btn.reject { color: var(--error); border-color: #fca5a5; }
-    .icon-btn.reject:hover { background: var(--error-bg); }
-    .icon-btn.delete { color: var(--text-tertiary); }
-    .icon-btn.delete:hover { background: var(--error-bg); color: var(--error); }
-
-    a.link { color: var(--accent); text-decoration: none; font-size: 12px; }
-    a.link:hover { text-decoration: underline; }
-
-    .empty-state { padding: 60px 20px; text-align: center; color: var(--text-tertiary); }
-    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
-
-    .loading { padding: 60px; text-align: center; color: var(--text-tertiary); }
-    .spinner {
-      display: inline-block;
-      width: 28px; height: 28px;
-      border: 3px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin-bottom: 12px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.5);
-      display: none;
-      align-items: center; justify-content: center;
-      z-index: 100; padding: 20px;
-    }
-    .modal-overlay.show { display: flex; }
-    .modal {
-      background: white; border-radius: 14px;
-      max-width: 500px; width: 100%;
-      max-height: 90vh; overflow: auto;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-    }
-    .modal-image {
-      background: white; border-radius: 14px;
-      max-width: 90vw; max-height: 90vh;
-      padding: 0; overflow: hidden;
-    }
-    .modal-image img { display: block; max-width: 100%; max-height: 90vh; }
-    .modal-header {
-      padding: 18px 22px;
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .modal-header h3 { font-size: 17px; font-weight: 700; }
-    .modal-close {
-      width: 32px; height: 32px;
-      border: none; background: transparent;
-      font-size: 22px; cursor: pointer; color: var(--text-tertiary);
-      border-radius: 8px;
-    }
-    .modal-close:hover { background: #f3f4f6; color: var(--text); }
-    .modal-body { padding: 22px; }
-    .modal-body label {
-      display: block; font-size: 13px; font-weight: 600;
-      margin-bottom: 6px; color: var(--text-secondary);
-    }
-    .modal-body textarea {
-      width: 100%; padding: 10px 12px;
-      border: 1px solid var(--border-strong);
-      border-radius: 8px;
-      font-family: inherit; font-size: 14px;
-      min-height: 80px; resize: vertical; line-height: 1.5;
-    }
-    .modal-body textarea:focus { outline: none; border-color: var(--accent); }
-    .modal-footer {
-      padding: 14px 22px;
-      border-top: 1px solid var(--border);
-      display: flex; gap: 8px; justify-content: flex-end;
-    }
-    .info-line { font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; }
-    .info-line b { color: var(--text); }
-
+    /* Toast */
     .toast {
       position: fixed;
-      top: 20px; right: 20px;
-      background: var(--text); color: white;
-      padding: 12px 18px;
-      border-radius: 10px;
-      font-size: 14px;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--ink);
+      color: white;
+      padding: 10px 16px;
+      border-radius: var(--radius);
+      font-size: 13px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.2);
       z-index: 200;
-      opacity: 0; transform: translateY(-10px);
-      transition: opacity 0.2s, transform 0.2s;
+      opacity: 0;
+      transition: opacity 200ms, transform 200ms;
       pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .toast.show { opacity: 1; transform: translateY(0); }
-    .toast.success { background: var(--success); }
-    .toast.error { background: var(--error); }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .toast.success { background: var(--green); }
+    .toast.error { background: var(--red); }
   </style>
 </head>
 <body>
 
   <div class="header">
-    <div class="header-left">
-      <h1>🛠️ OT Admin</h1>
-      <p>จัดการคำขอ OT ทั้งหมด</p>
-    </div>
-    <div class="header-right">
-      <button class="btn" onclick="loadData()">🔄 รีเฟรช</button>
-      <button class="btn" onclick="exportCSV()">⬇️ ดาวน์โหลด CSV</button>
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-logo">OT</div>
+        <h1>Admin</h1>
+        <div class="brand-sep"></div>
+        <span class="brand-sub">บริหารคำขอ OT</span>
+      </div>
+      <div class="header-actions">
+        <button class="btn" onclick="loadData()" title="รีเฟรชข้อมูล">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+          <span class="btn-text-hide">รีเฟรช</span>
+        </button>
+        <button class="btn" onclick="exportCSV()" title="ดาวน์โหลด CSV">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span class="btn-text-hide">ดาวน์โหลด</span>
+        </button>
+      </div>
     </div>
   </div>
 
   <div class="container">
 
-    <div class="summary" id="summary">
-      <div class="summary-card info">
-        <div class="summary-label">คำขอทั้งหมด</div>
-        <div class="summary-value" id="sumTotal">- <small>คำขอ</small></div>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-label">ทั้งหมด</div>
+        <div class="stat-value" id="sumTotal">— <span class="stat-sub">คำขอ</span></div>
       </div>
-      <div class="summary-card working">
-        <div class="summary-label">🔵 กำลังทำงาน</div>
-        <div class="summary-value" id="sumWorking">- <small>คน</small></div>
+      <div class="stat">
+        <div class="stat-label"><span class="stat-dot blue"></span>กำลังทำงาน</div>
+        <div class="stat-value" id="sumWorking">— <span class="stat-sub">คน</span></div>
       </div>
-      <div class="summary-card warning">
-        <div class="summary-label">รออนุมัติ</div>
-        <div class="summary-value" id="sumPending">- <small>คำขอ</small></div>
+      <div class="stat">
+        <div class="stat-label"><span class="stat-dot amber"></span>รออนุมัติ</div>
+        <div class="stat-value" id="sumPending">— <span class="stat-sub">คำขอ</span></div>
       </div>
-      <div class="summary-card success">
-        <div class="summary-label">อนุมัติแล้ว</div>
-        <div class="summary-value" id="sumApproved">- <small>คำขอ</small></div>
+      <div class="stat">
+        <div class="stat-label"><span class="stat-dot green"></span>อนุมัติแล้ว</div>
+        <div class="stat-value" id="sumApproved">— <span class="stat-sub">คำขอ</span></div>
       </div>
-      <div class="summary-card">
-        <div class="summary-label">เวลารวมที่อนุมัติ</div>
-        <div class="summary-value" id="sumHours" style="font-size: 22px;">-</div>
+      <div class="stat">
+        <div class="stat-label">เวลารวมที่อนุมัติ</div>
+        <div class="stat-value" id="sumHours" style="font-size: 18px;">—</div>
       </div>
     </div>
 
     <div class="filter-bar">
-      <input type="search" id="searchInput" placeholder="🔍 ค้นหาชื่อ, หัวหน้า, บริษัท, รหัส, หรืองาน..." oninput="renderTable()">
-      <!-- ✨ NEW: เพิ่มตัวเลือก "ยังไม่ปิดเคส" และตั้งเป็น default -->
-      <select id="statusFilter" onchange="onStatusFilterChange()">
-        <option value="__open__">⏳ ยังไม่ปิดเคส (รออนุมัติ + กำลังทำงาน)</option>
+      <input type="search" id="searchInput" class="input search" placeholder="ค้นหาชื่อ บริษัท รหัส หรืองาน…" oninput="renderTable()">
+      <select id="statusFilter" class="select" onchange="onStatusFilterChange()">
+        <option value="__open__">ยังไม่ปิดเคส</option>
         <option value="">ทุกสถานะ</option>
         <option value="กำลังทำงาน">กำลังทำงาน</option>
         <option value="รออนุมัติ">รออนุมัติ</option>
         <option value="อนุมัติ">อนุมัติ</option>
         <option value="ไม่อนุมัติ">ไม่อนุมัติ</option>
       </select>
-      <select id="companyFilter" onchange="renderTable()">
+      <select id="companyFilter" class="select" onchange="renderTable()">
         <option value="">ทุกบริษัท</option>
       </select>
-      <select id="supervisorFilter" onchange="renderTable()">
+      <select id="supervisorFilter" class="select" onchange="renderTable()">
         <option value="">ทุกหัวหน้า</option>
       </select>
-      <input type="date" id="dateFilter" onchange="renderTable()" title="กรองตามวันที่ OT">
-      <button class="btn" type="button" onclick="clearDateFilter()" id="clearDateBtn" style="display:none;padding:8px 12px;" title="ล้างวันที่">✕</button>
-      <span class="count" id="recordCount">0 รายการ</span>
+      <input type="date" id="dateFilter" class="input" onchange="renderTable()" style="min-width:auto;" title="กรองตามวันที่">
+      <button class="icon-clear" type="button" onclick="clearDateFilter()" id="clearDateBtn" style="display:none;" title="ล้างวันที่">✕</button>
+      <div class="filter-spacer"></div>
+      <span class="filter-count" id="recordCount">0 รายการ</span>
     </div>
 
-    <div class="table-wrapper">
+    <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th>ส่งเมื่อ</th>
+            <th class="hide-md">ส่งเมื่อ</th>
             <th>วัน OT</th>
             <th>ชื่อ</th>
-            <th>หัวหน้า</th>
+            <th class="hide-sm">หัวหน้า</th>
             <th>บริษัท</th>
-            <th>เวลาเริ่ม–เลิก</th>
-            <th>เวลารวม</th>
-            <th>งานที่ทำ</th>
-            <th style="text-align:center;">รูป</th>
+            <th>เวลา</th>
+            <th>รวม</th>
+            <th class="hide-sm">งานที่ทำ</th>
+            <th>หลักฐาน</th>
             <th>สถานะ</th>
-            <th>หมายเหตุ</th>
-            <th style="text-align:center;">การจัดการ</th>
+            <th class="hide-md">หมายเหตุ</th>
+            <th style="text-align:right;">การจัดการ</th>
           </tr>
         </thead>
         <tbody id="tableBody">
-          <tr><td colspan="13">
-            <div class="loading">
+          <tr><td colspan="12">
+            <div class="empty">
               <div class="spinner"></div>
-              <div>กำลังโหลดข้อมูล...</div>
+              <div class="empty-desc">กำลังโหลดข้อมูล…</div>
             </div>
           </td></tr>
         </tbody>
@@ -551,22 +783,25 @@
     </div>
   </div>
 
+  <!-- Action Modal -->
   <div class="modal-overlay" id="actionModal" onclick="if(event.target===this) closeModal()">
     <div class="modal">
       <div class="modal-header">
         <h3 id="actionTitle">อนุมัติคำขอ</h3>
-        <button class="modal-close" onclick="closeModal()">×</button>
+        <button class="modal-close" onclick="closeModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
       <div class="modal-body">
-        <div class="info-line"><b>รหัส:</b> <span id="actionReqId"></span></div>
-        <div class="info-line"><b>ชื่อ:</b> <span id="actionName"></span></div>
-        <div class="info-line"><b>หัวหน้า:</b> <span id="actionSupervisor"></span></div>
-        <div class="info-line"><b>บริษัท:</b> <span id="actionCompany"></span></div>
-        <div class="info-line"><b>เวลา:</b> <span id="actionTime"></span></div>
-        <div class="info-line"><b>เวลารวม:</b> <span id="actionHours"></span></div>
-        <div class="info-line" style="margin-bottom: 14px;"><b>วันที่:</b> <span id="actionDate"></span></div>
-        <label for="noteInput">หมายเหตุ (ถ้ามี)</label>
-        <textarea id="noteInput" placeholder="เพิ่มหมายเหตุ..."></textarea>
+        <div class="info-row"><span class="k">รหัส</span><span class="v" id="actionReqId" style="font-family:'IBM Plex Mono',monospace;font-size:12px;"></span></div>
+        <div class="info-row"><span class="k">ชื่อ</span><span class="v" id="actionName"></span></div>
+        <div class="info-row"><span class="k">หัวหน้า</span><span class="v" id="actionSupervisor"></span></div>
+        <div class="info-row"><span class="k">บริษัท</span><span class="v" id="actionCompany"></span></div>
+        <div class="info-row"><span class="k">เวลา</span><span class="v" id="actionTime"></span></div>
+        <div class="info-row"><span class="k">รวม</span><span class="v" id="actionHours"></span></div>
+        <div class="info-row" style="margin-bottom: 12px;"><span class="k">วันที่</span><span class="v" id="actionDate"></span></div>
+        <label for="noteInput">หมายเหตุ <span style="color:var(--ink-4);font-weight:400;">(ถ้ามี)</span></label>
+        <textarea id="noteInput" placeholder="เพิ่มหมายเหตุ…"></textarea>
       </div>
       <div class="modal-footer">
         <button class="btn" onclick="closeModal()">ยกเลิก</button>
@@ -575,11 +810,14 @@
     </div>
   </div>
 
+  <!-- Photo Modal -->
   <div class="modal-overlay" id="photoInfoModal" onclick="if(event.target===this) closePhotoModal()">
     <div class="photo-modal">
       <div class="modal-header">
-        <h3 id="photoModalTitle">🖼️ รูปและตำแหน่ง</h3>
-        <button class="modal-close" onclick="closePhotoModal()">×</button>
+        <h3>หลักฐาน<span class="sub" id="photoModalSub"></span></h3>
+        <button class="modal-close" onclick="closePhotoModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
       <div class="photo-modal-body">
         <div class="photo-grid" id="photoGrid"></div>
@@ -587,112 +825,100 @@
     </div>
   </div>
 
+  <!-- Image Modal -->
   <div class="modal-overlay" id="imageModal" onclick="if(event.target===this) closeImageModal()">
     <div class="modal-image">
-      <img id="modalImg" src="" alt="selfie">
+      <img id="modalImg" src="" alt="">
     </div>
   </div>
 
   <div class="toast" id="toast"></div>
 
   <script>
-    // ============================================================
-    // ⚠️ ใส่ Web App URL ของคุณตรงนี้ (ตัวเดียวกับ index.html)
-    // ============================================================
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzUnBvZvRtG_pK6UVWLbL8pD-_zTGDMz2mrm95kAzYjHu_04mZZZ9MiqwHMESTnaMwCww/exec';
 
     let allData = [];
     let currentAction = null;
 
-    // ค่า filter พิเศษ "__open__" = แสดงเฉพาะรายการที่ยังไม่ปิด (รออนุมัติ + กำลังทำงาน)
-    // ตั้ง class ให้ดูเด่นว่ากำลังกรองอยู่ ไม่ใช่ "ทุกสถานะ"
     function onStatusFilterChange() {
       updateStatusFilterStyle();
       renderTable();
     }
     function updateStatusFilterStyle() {
       const sel = document.getElementById('statusFilter');
-      if (sel.value === '__open__') {
-        sel.classList.add('has-default-filter');
-      } else {
-        sel.classList.remove('has-default-filter');
-      }
+      sel.classList.toggle('active-filter', sel.value === '__open__');
+    }
+    function clearDateFilter() {
+      document.getElementById('dateFilter').value = '';
+      renderTable();
     }
 
     async function apiCall(action, payload) {
-      const body = JSON.stringify(Object.assign({ action: action }, payload || {}));
+      const body = JSON.stringify(Object.assign({ action }, payload || {}));
       const res = await fetch(WEB_APP_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: body,
+        body,
         redirect: 'follow'
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const text = await res.text();
-      try {
-        return JSON.parse(text);
-      } catch (e) {
-        throw new Error('ตอบกลับไม่ใช่ JSON: ' + text.slice(0, 200));
-      }
+      try { return JSON.parse(text); }
+      catch (e) { throw new Error('ตอบกลับไม่ใช่ JSON: ' + text.slice(0, 200)); }
     }
 
     async function loadData() {
       const body = document.getElementById('tableBody');
-      body.innerHTML =
-        '<tr><td colspan="13"><div class="loading"><div class="spinner"></div><div>กำลังโหลดข้อมูล...</div></div></td></tr>';
+      body.innerHTML = `<tr><td colspan="12"><div class="empty"><div class="spinner"></div><div class="empty-desc">กำลังโหลดข้อมูล…</div></div></td></tr>`;
 
       let timedOut = false;
-      const timeout = setTimeout(function() {
+      const t = setTimeout(() => {
         timedOut = true;
-        body.innerHTML =
-          '<tr><td colspan="13"><div class="empty-state">' +
-          '<div class="icon">⏱️</div>' +
-          '<div><b>หมดเวลารอ (60 วินาที)</b></div>' +
-          '<div style="margin-top:8px;font-size:13px;">เซิร์ฟเวอร์ไม่ตอบกลับ — ลอง:</div>' +
-          '<div style="margin-top:8px;font-size:13px;">1. รีเฟรชหน้า<br>2. รัน <b>debugSheet</b> ใน Apps Script editor เพื่อดู log<br>3. รัน <b>forceMigrate</b> ถ้าคอลัมน์ไม่ครบ</div>' +
-          '<button class="btn btn-primary" style="margin-top:14px;" onclick="loadData()">🔄 ลองใหม่</button>' +
-          '</div></td></tr>';
+        body.innerHTML = `<tr><td colspan="12"><div class="empty">
+          <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div class="empty-title">หมดเวลารอ</div>
+          <div class="empty-desc">เซิร์ฟเวอร์ไม่ตอบกลับภายใน 60 วินาที</div>
+          <button class="btn" onclick="loadData()">ลองใหม่</button>
+        </div></td></tr>`;
       }, 60000);
 
       try {
         const res = await apiCall('getAllRequests');
         if (timedOut) return;
-        clearTimeout(timeout);
+        clearTimeout(t);
         if (res.success) {
           allData = res.data;
           populateSupervisorFilter();
           populateCompanyFilter();
           renderTable();
         } else {
-          body.innerHTML =
-            '<tr><td colspan="13"><div class="empty-state">' +
-            '<div class="icon">⚠️</div>' +
-            '<div><b>เซิร์ฟเวอร์แจ้ง error:</b></div>' +
-            '<div style="margin-top:8px;color:var(--error);">' + escapeHtml(res.message || 'ไม่ทราบสาเหตุ') + '</div>' +
-            '<button class="btn btn-primary" style="margin-top:14px;" onclick="loadData()">🔄 ลองใหม่</button>' +
-            '</div></td></tr>';
+          body.innerHTML = `<tr><td colspan="12"><div class="empty">
+            <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+            <div class="empty-title">เซิร์ฟเวอร์แจ้ง error</div>
+            <div class="empty-desc">${escapeHtml(res.message || 'ไม่ทราบสาเหตุ')}</div>
+            <button class="btn" onclick="loadData()">ลองใหม่</button>
+          </div></td></tr>`;
         }
       } catch (err) {
         if (timedOut) return;
-        clearTimeout(timeout);
-        body.innerHTML =
-          '<tr><td colspan="13"><div class="empty-state">' +
-          '<div class="icon">❌</div>' +
-          '<div><b>โหลดไม่สำเร็จ</b></div>' +
-          '<div style="margin-top:8px;color:var(--error);font-size:13px;">' + escapeHtml(err.message || err) + '</div>' +
-          '<button class="btn btn-primary" style="margin-top:14px;" onclick="loadData()">🔄 ลองใหม่</button>' +
-          '</div></td></tr>';
+        clearTimeout(t);
+        body.innerHTML = `<tr><td colspan="12"><div class="empty">
+          <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+          <div class="empty-title">โหลดไม่สำเร็จ</div>
+          <div class="empty-desc">${escapeHtml(err.message || err)}</div>
+          <button class="btn" onclick="loadData()">ลองใหม่</button>
+        </div></td></tr>`;
       }
 
       try {
         const s = await apiCall('getAdminSummary');
         if (!s.success) return;
-        document.getElementById('sumTotal').innerHTML = s.total + ' <small>คำขอ</small>';
-        document.getElementById('sumWorking').innerHTML = (s.working || 0) + ' <small>คน</small>';
-        document.getElementById('sumPending').innerHTML = s.pending + ' <small>คำขอ · ' + (s.pendingHoursText || '0') + '</small>';
-        document.getElementById('sumApproved').innerHTML = s.approved + ' <small>คำขอ</small>';
+        document.getElementById('sumTotal').innerHTML = s.total + ' <span class="stat-sub">คำขอ</span>';
+        document.getElementById('sumWorking').innerHTML = (s.working || 0) + ' <span class="stat-sub">คน</span>';
+        document.getElementById('sumPending').innerHTML = s.pending + ' <span class="stat-sub">· ' + (s.pendingHoursText || '0') + '</span>';
+        document.getElementById('sumApproved').innerHTML = s.approved + ' <span class="stat-sub">คำขอ</span>';
         document.getElementById('sumHours').innerHTML = (s.approvedHoursText || '0');
-      } catch (e) { /* ignore */ }
+      } catch (e) {}
     }
 
     function populateSupervisorFilter() {
@@ -701,29 +927,23 @@
       const names = Array.from(new Set(
         allData.map(r => (r.supervisor || '').trim()).filter(n => n.length > 0)
       )).sort((a, b) => a.localeCompare(b, 'th'));
-
       sel.innerHTML = '<option value="">ทุกหัวหน้า</option>' +
-        names.map(n => '<option value="' + escapeHtml(n) + '">' + escapeHtml(n) + '</option>').join('');
-
+        names.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
       if (current && names.indexOf(current) !== -1) sel.value = current;
     }
 
     function populateCompanyFilter() {
       const sel = document.getElementById('companyFilter');
       const current = sel.value;
-      // ลำดับมาตรฐาน + บริษัทอื่นที่อาจมีในข้อมูลเก่า
       const standardOrder = ['3E Empire', '3E Trading', '3E Innovation', 'AE&T', 'Eita & Paul', 'Hikari Denki', 'Chavest'];
       const fromData = Array.from(new Set(
         allData.map(r => (r.company || '').trim()).filter(n => n.length > 0)
       ));
-      // เรียง: standardOrder ก่อน → ที่เหลือ
       const ordered = [];
       standardOrder.forEach(c => { if (fromData.indexOf(c) !== -1) ordered.push(c); });
       fromData.forEach(c => { if (ordered.indexOf(c) === -1) ordered.push(c); });
-
       sel.innerHTML = '<option value="">ทุกบริษัท</option>' +
-        ordered.map(n => '<option value="' + escapeHtml(n) + '">' + escapeHtml(n) + '</option>').join('');
-
+        ordered.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
       if (current && ordered.indexOf(current) !== -1) sel.value = current;
     }
 
@@ -740,7 +960,6 @@
           const hay = (r.requestId + ' ' + r.employeeName + ' ' + (r.supervisor || '') + ' ' + (r.company || '') + ' ' + r.workDetail + ' ' + r.department).toLowerCase();
           if (!hay.includes(search)) return false;
         }
-        // ✨ NEW: "__open__" = แสดงเฉพาะ "รออนุมัติ" + "กำลังทำงาน"
         if (statusF === '__open__') {
           if (r.status !== 'รออนุมัติ' && r.status !== 'กำลังทำงาน') return false;
         } else if (statusF && r.status !== statusF) {
@@ -751,73 +970,53 @@
         if (dateF) {
           const otDate = parseDDMMYYYY(r.otDate);
           const target = new Date(dateF);
-          const targetStart = new Date(target.getFullYear(), target.getMonth(), target.getDate()).getTime();
-          const targetEnd = targetStart + 24 * 60 * 60 * 1000 - 1;
-          if (otDate < targetStart || otDate > targetEnd) return false;
+          const ts = new Date(target.getFullYear(), target.getMonth(), target.getDate()).getTime();
+          const te = ts + 86400000 - 1;
+          if (otDate < ts || otDate > te) return false;
         }
         return true;
       });
 
       document.getElementById('recordCount').textContent = filtered.length + ' รายการ';
-
       const body = document.getElementById('tableBody');
 
       if (filtered.length === 0) {
-        // ถ้ากำลังใช้ filter ปริยาย แล้วไม่มีงานค้าง → แสดง empty state แบบบวก
         if (statusF === '__open__') {
-          body.innerHTML =
-            '<tr><td colspan="13"><div class="empty-state">' +
-            '<div class="icon">🎉</div>' +
-            '<div><b>ไม่มีงานค้างอยู่</b></div>' +
-            '<div style="margin-top:8px;font-size:13px;">ทุกคำขอได้รับการดำเนินการแล้ว</div>' +
-            '<div style="margin-top:12px;font-size:13px;">' +
-            '<a href="#" onclick="document.getElementById(\'statusFilter\').value=\'\'; onStatusFilterChange(); return false;" class="link">' +
-            'ดูทั้งหมด →</a></div>' +
-            '</div></td></tr>';
+          body.innerHTML = `<tr><td colspan="12"><div class="empty">
+            <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="empty-title">ไม่มีงานค้างอยู่</div>
+            <div class="empty-desc">ทุกคำขอได้รับการดำเนินการแล้ว</div>
+            <a href="#" onclick="document.getElementById('statusFilter').value=''; onStatusFilterChange(); return false;">ดูทั้งหมด →</a>
+          </div></td></tr>`;
         } else {
-          body.innerHTML =
-            '<tr><td colspan="13"><div class="empty-state">' +
-            '<div class="icon">📭</div><div>ไม่พบข้อมูล</div></div></td></tr>';
+          body.innerHTML = `<tr><td colspan="12"><div class="empty">
+            <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div>
+            <div class="empty-title">ไม่พบข้อมูล</div>
+            <div class="empty-desc">ลองปรับตัวกรอง หรือล้างคำค้นหา</div>
+          </div></td></tr>`;
         }
         return;
       }
 
       body.innerHTML = filtered.map(r => {
-        const badgeClass = r.status === 'อนุมัติ' ? 'badge-approved'
-                        : r.status === 'ไม่อนุมัติ' ? 'badge-rejected'
-                        : r.status === 'กำลังทำงาน' ? 'badge-working'
-                        : 'badge-pending';
-
-        function buildThumb(embedUrl, photoTime) {
-          let thumbHtml;
-          if (!embedUrl) {
-            thumbHtml = `<div class="no-thumb">—</div>`;
-          } else {
-            thumbHtml = `<img class="thumb" src="${escapeHtml(embedUrl)}" onclick="showImage('${escapeJs(embedUrl)}')" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" alt="selfie"><div class="no-thumb" style="display:none;">📷</div>`;
-          }
-          const timeHtml = photoTime
-            ? `<div class="photo-time">📅 ${escapeHtml(photoTime)}</div>`
-            : '';
-          return `<div class="photo-cell">${thumbHtml}${timeHtml}</div>`;
-        }
-        function buildMap(mapUrl) {
-          if (!mapUrl) return '<span style="color:var(--text-tertiary);font-size:12px;">—</span>';
-          return `<a class="link" href="${escapeHtml(mapUrl)}" target="_blank">📍 ดูแผนที่</a>`;
-        }
+        const badgeClass = r.status === 'อนุมัติ' ? 'b-approved'
+                        : r.status === 'ไม่อนุมัติ' ? 'b-rejected'
+                        : r.status === 'กำลังทำงาน' ? 'b-working'
+                        : 'b-pending';
 
         const recordJson = JSON.stringify(r).replace(/'/g, "\\'");
 
         const hasIn = !!(r.selfieInEmbed || r.mapIn);
         const hasOut = !!(r.selfieOutEmbed || r.mapOut);
-        let viewBtnCell;
+        let viewBtn;
         if (!hasIn && !hasOut) {
-          viewBtnCell = '<span style="color:var(--text-tertiary);font-size:12px;">—</span>';
+          viewBtn = '<span class="dim">—</span>';
         } else {
-          const dots =
-            (hasIn ? '<span class="dot dot-in" title="มีรูป/ตำแหน่งเริ่ม"></span>' : '') +
-            (hasOut ? '<span class="dot dot-out" title="มีรูป/ตำแหน่งเลิก"></span>' : '');
-          viewBtnCell = `<button class="btn-view-photo" onclick='openPhotoModal(${recordJson})'>
-            <span>🖼️</span><span>ดูรูป</span>
+          const dots = (hasIn ? '<span class="dot dot-in"></span>' : '') +
+                       (hasOut ? '<span class="dot dot-out"></span>' : '');
+          viewBtn = `<button class="btn-view" onclick='openPhotoModal(${recordJson})'>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span>ดูรูป</span>
             <span class="view-dots">${dots}</span>
           </button>`;
         }
@@ -827,50 +1026,47 @@
 
         let timeRange;
         if (isWorking) {
-          timeRange = `<span class="time-range"><b>${escapeHtml(r.startTime)}</b><span class="arrow">→</span><span style="color:var(--info-text);font-weight:600;">⏳</span></span>`;
+          timeRange = `<b>${escapeHtml(r.startTime)}</b><span class="arr">→</span><span style="color:#0369a1;">●</span>`;
         } else if (r.startTime && r.endTime) {
-          timeRange = `<span class="time-range"><b>${escapeHtml(r.startTime)}</b><span class="arrow">→</span><b>${escapeHtml(r.endTime)}</b></span>`;
+          timeRange = `<b>${escapeHtml(r.startTime)}</b><span class="arr">→</span><b>${escapeHtml(r.endTime)}</b>`;
         } else {
-          timeRange = '<span style="color:var(--text-tertiary);">—</span>';
+          timeRange = '<span class="dim">—</span>';
         }
 
-        let actionButtons = '';
+        let actions = '';
         if (isPending) {
-          actionButtons = `
-            <button class="icon-btn approve" title="อนุมัติ" onclick='openAction(${r.rowIndex}, "อนุมัติ", ${recordJson})'>✓</button>
-            <button class="icon-btn reject" title="ไม่อนุมัติ" onclick='openAction(${r.rowIndex}, "ไม่อนุมัติ", ${recordJson})'>✕</button>
-          `;
+          actions = `
+            <button class="icon-btn approve" title="อนุมัติ" onclick='openAction(${r.rowIndex}, "อนุมัติ", ${recordJson})'>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
+            <button class="icon-btn reject" title="ไม่อนุมัติ" onclick='openAction(${r.rowIndex}, "ไม่อนุมัติ", ${recordJson})'>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>`;
         } else if (!isWorking) {
-          actionButtons = `<button class="icon-btn" title="เปลี่ยนสถานะ" onclick='openAction(${r.rowIndex}, "เปลี่ยน", ${recordJson})'>✎</button>`;
+          actions = `<button class="icon-btn" title="เปลี่ยนสถานะ" onclick='openAction(${r.rowIndex}, "เปลี่ยน", ${recordJson})'>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>`;
         }
+        actions += `<button class="icon-btn delete" title="ลบ" onclick="deleteRow(${r.rowIndex}, '${escapeJs(r.requestId)}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+        </button>`;
 
-        const supervisorCell = r.supervisor
-          ? `<span>${escapeHtml(r.supervisor)}</span>`
-          : `<span style="color:var(--text-tertiary);">—</span>`;
+        const supCell = r.supervisor ? escapeHtml(r.supervisor) : '<span class="dim">—</span>';
+        const compCell = r.company ? `<span class="company-tag">${escapeHtml(r.company)}</span>` : '<span class="dim">—</span>';
 
-        const companyCell = r.company
-          ? `<span class="company-badge">${escapeHtml(r.company)}</span>`
-          : `<span style="color:var(--text-tertiary);">—</span>`;
-
-        return `
-        <tr>
-          <td class="cell-submitted">${escapeHtml(r.submittedAt)}</td>
-          <td style="font-weight:500;">${escapeHtml(r.otDate)}</td>
-          <td class="cell-name">${escapeHtml(r.employeeName || '—')}</td>
-          <td class="cell-supervisor">${supervisorCell}</td>
-          <td class="cell-company">${companyCell}</td>
-          <td class="cell-time">${timeRange}</td>
-          <td class="cell-hours">${escapeHtml(r.hours || (isWorking ? '⏳' : ''))}</td>
-          <td class="cell-detail"><div class="truncate" title="${escapeHtml(r.workDetail || '')}">${escapeHtml(r.workDetail || '—')}</div></td>
-          <td style="text-align:center;">${viewBtnCell}</td>
+        return `<tr>
+          <td class="mono hide-md">${escapeHtml(r.submittedAt)}</td>
+          <td>${escapeHtml(r.otDate)}</td>
+          <td class="col-name">${escapeHtml(r.employeeName || '—')}</td>
+          <td class="col-sup hide-sm">${supCell}</td>
+          <td>${compCell}</td>
+          <td class="col-time">${timeRange}</td>
+          <td class="col-hours">${escapeHtml(r.hours || (isWorking ? '—' : '—'))}</td>
+          <td class="col-detail hide-sm"><div class="clip" title="${escapeHtml(r.workDetail || '')}">${escapeHtml(r.workDetail || '—')}</div></td>
+          <td>${viewBtn}</td>
           <td><span class="badge ${badgeClass}">${escapeHtml(r.status)}</span></td>
-          <td style="font-size:13px;color:var(--text-secondary);max-width:160px;">${escapeHtml(r.note || '—')}</td>
-          <td>
-            <div class="actions">
-              ${actionButtons}
-              <button class="icon-btn delete" title="ลบ" onclick="deleteRow(${r.rowIndex}, '${escapeJs(r.requestId)}')">🗑</button>
-            </div>
-          </td>
+          <td class="hide-md" style="color:var(--ink-2);font-size:clamp(11px,0.5vw + 9px,12.5px);max-width:160px;">${escapeHtml(r.note || '—')}</td>
+          <td><div class="row-actions">${actions}</div></td>
         </tr>`;
       }).join('');
     }
@@ -882,27 +1078,21 @@
       return new Date(+parts[2], +parts[1]-1, +parts[0]).getTime();
     }
 
-    function clearDateFilter() {
-      document.getElementById('dateFilter').value = '';
-      renderTable();
-    }
-
     function openAction(rowIndex, status, record) {
       currentAction = { rowIndex, status, record };
-
       const titleEl = document.getElementById('actionTitle');
       const confirmBtn = document.getElementById('confirmBtn');
 
       if (status === 'อนุมัติ') {
-        titleEl.textContent = '✓ อนุมัติคำขอ';
+        titleEl.textContent = 'อนุมัติคำขอ';
         confirmBtn.textContent = 'อนุมัติ';
-        confirmBtn.className = 'btn btn-success';
+        confirmBtn.className = 'btn btn-primary';
       } else if (status === 'ไม่อนุมัติ') {
-        titleEl.textContent = '✕ ไม่อนุมัติคำขอ';
+        titleEl.textContent = 'ไม่อนุมัติคำขอ';
         confirmBtn.textContent = 'ไม่อนุมัติ';
         confirmBtn.className = 'btn btn-danger';
       } else {
-        titleEl.textContent = '✎ เปลี่ยนสถานะ';
+        titleEl.textContent = 'เปลี่ยนสถานะ';
         confirmBtn.textContent = 'บันทึก';
         confirmBtn.className = 'btn btn-primary';
         const choice = prompt('เปลี่ยนสถานะเป็น:\n1 = รออนุมัติ\n2 = อนุมัติ\n3 = ไม่อนุมัติ', '1');
@@ -937,13 +1127,12 @@
       const btn = document.getElementById('confirmBtn');
       const original = btn.textContent;
       btn.disabled = true;
-      btn.textContent = 'กำลังบันทึก...';
-
+      btn.textContent = 'กำลังบันทึก…';
       try {
         const res = await apiCall('updateRequestStatus', {
           rowIndex: currentAction.rowIndex,
           status: currentAction.status,
-          note: note
+          note
         });
         btn.disabled = false;
         btn.textContent = original;
@@ -952,23 +1141,23 @@
           showToast('บันทึกสำเร็จ', 'success');
           loadData();
         } else {
-          showToast('ผิดพลาด: ' + res.message, 'error');
+          showToast(res.message, 'error');
         }
       } catch (err) {
         btn.disabled = false;
         btn.textContent = original;
-        showToast('ผิดพลาด: ' + err.message, 'error');
+        showToast(err.message, 'error');
       }
     }
 
     async function deleteRow(rowIndex, requestId) {
       if (!confirm('ลบคำขอ ' + requestId + ' ?')) return;
       try {
-        const res = await apiCall('deleteRequest', { rowIndex: rowIndex });
+        const res = await apiCall('deleteRequest', { rowIndex });
         if (res.success) { showToast('ลบสำเร็จ', 'success'); loadData(); }
-        else { showToast('ผิดพลาด: ' + res.message, 'error'); }
+        else { showToast(res.message, 'error'); }
       } catch (err) {
-        showToast('ผิดพลาด: ' + err.message, 'error');
+        showToast(err.message, 'error');
       }
     }
 
@@ -982,49 +1171,44 @@
 
     function openPhotoModal(record) {
       const grid = document.getElementById('photoGrid');
-      const title = document.getElementById('photoModalTitle');
-      title.innerHTML = '🖼️ รูปและตำแหน่ง · <span style="color:var(--text-tertiary);font-weight:500;font-size:14px;">' +
-                        escapeHtml(record.employeeName || '') + ' · ' + escapeHtml(record.otDate || '') + '</span>';
+      document.getElementById('photoModalSub').textContent =
+        ' · ' + (record.employeeName || '') + ' · ' + (record.otDate || '');
 
-      function buildBlock(kind, label, emoji, selfieEmbed, selfieFull, mapUrl, gps, photoTime) {
-        const hasPhoto = !!selfieEmbed;
-        const hasMap = !!mapUrl;
-
-        const photoHtml = hasPhoto
+      function buildBlock(kind, label, selfieEmbed, selfieFull, mapUrl, gps, photoTime) {
+        const photoHtml = selfieEmbed
           ? `<img class="photo-block-img" src="${escapeHtml(selfieEmbed)}"
                   onclick="showImage('${escapeJs(selfieFull || selfieEmbed)}')"
-                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
-                  alt="${escapeHtml(label)}">
+                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" alt="${escapeHtml(label)}">
              <div class="photo-block-empty" style="display:none;">
-               <div class="icon">📷</div>
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><polyline points="21 15 16 10 5 21"/></svg>
                <div>โหลดรูปไม่ได้</div>
              </div>`
           : `<div class="photo-block-empty">
-               <div class="icon">📷</div>
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><polyline points="21 15 16 10 5 21"/></svg>
                <div>ยังไม่มีรูป</div>
              </div>`;
 
         const timeRow = photoTime
-          ? `<div class="row time">📅 ${escapeHtml(photoTime)}</div>` : '';
+          ? `<div class="row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>${escapeHtml(photoTime)}</span></div>` : '';
 
-        const mapRow = hasMap
-          ? `<div class="row">📍 <a href="${escapeHtml(mapUrl)}" target="_blank">เปิดในแผนที่</a>
-               ${gps ? `<span style="color:var(--text-tertiary);font-size:11px;">· ${escapeHtml(gps)}</span>` : ''}
+        const mapRow = mapUrl
+          ? `<div class="row">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+               <a href="${escapeHtml(mapUrl)}" target="_blank">เปิดในแผนที่</a>
+               ${gps ? `<span class="gps">${escapeHtml(gps)}</span>` : ''}
              </div>`
-          : `<div class="row" style="color:var(--text-tertiary);">📍 ไม่มีตำแหน่ง</div>`;
+          : `<div class="row dim"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>ไม่มีตำแหน่ง</span></div>`;
 
         return `<div class="photo-block ${kind}">
-          <div class="photo-block-header">${emoji} ${label}</div>
+          <div class="photo-block-header"><span class="marker"></span>${label}</div>
           ${photoHtml}
           <div class="photo-block-footer">${timeRow}${mapRow}</div>
         </div>`;
       }
 
       grid.innerHTML =
-        buildBlock('in', 'รูปเริ่มงาน', '⏱️', record.selfieInEmbed, record.selfieIn,
-                   record.mapIn, record.gpsIn, record.photoTimeIn) +
-        buildBlock('out', 'รูปเลิกงาน', '🏁', record.selfieOutEmbed, record.selfieOut,
-                   record.mapOut, record.gpsOut, record.photoTimeOut);
+        buildBlock('in', 'เริ่มงาน', record.selfieInEmbed, record.selfieIn, record.mapIn, record.gpsIn, record.photoTimeIn) +
+        buildBlock('out', 'เลิกงาน', record.selfieOutEmbed, record.selfieOut, record.mapOut, record.gpsOut, record.photoTimeOut);
 
       document.getElementById('photoInfoModal').classList.add('show');
     }
@@ -1057,7 +1241,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'OT_Records_' + new Date().toISOString().slice(0,10) + '.csv';
+      a.download = 'ot_records_' + new Date().toISOString().slice(0,10) + '.csv';
       a.click();
       URL.revokeObjectURL(url);
     }
@@ -1071,7 +1255,6 @@
       return String(s || '').replace(/['"\\]/g, '\\$&');
     }
 
-    // init
     updateStatusFilterStyle();
     loadData();
   </script>
