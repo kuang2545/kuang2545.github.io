@@ -407,7 +407,6 @@
       <table>
         <thead>
           <tr>
-            <th>รหัส</th>
             <th>ส่งเมื่อ</th>
             <th>วัน OT</th>
             <th>ชื่อ</th>
@@ -426,7 +425,7 @@
           </tr>
         </thead>
         <tbody id="tableBody">
-          <tr><td colspan="16">
+          <tr><td colspan="15">
             <div class="loading">
               <div class="spinner"></div>
               <div>กำลังโหลดข้อมูล...</div>
@@ -513,13 +512,13 @@
     async function loadData() {
       const body = document.getElementById('tableBody');
       body.innerHTML =
-        '<tr><td colspan="16"><div class="loading"><div class="spinner"></div><div>กำลังโหลดข้อมูล...</div></div></td></tr>';
+        '<tr><td colspan="15"><div class="loading"><div class="spinner"></div><div>กำลังโหลดข้อมูล...</div></div></td></tr>';
 
       let timedOut = false;
       const timeout = setTimeout(function() {
         timedOut = true;
         body.innerHTML =
-          '<tr><td colspan="16"><div class="empty-state">' +
+          '<tr><td colspan="15"><div class="empty-state">' +
           '<div class="icon">⏱️</div>' +
           '<div><b>หมดเวลารอ (60 วินาที)</b></div>' +
           '<div style="margin-top:8px;font-size:13px;">เซิร์ฟเวอร์ไม่ตอบกลับ — ลอง:</div>' +
@@ -539,7 +538,7 @@
           renderTable();
         } else {
           body.innerHTML =
-            '<tr><td colspan="16"><div class="empty-state">' +
+            '<tr><td colspan="15"><div class="empty-state">' +
             '<div class="icon">⚠️</div>' +
             '<div><b>เซิร์ฟเวอร์แจ้ง error:</b></div>' +
             '<div style="margin-top:8px;color:var(--error);">' + escapeHtml(res.message || 'ไม่ทราบสาเหตุ') + '</div>' +
@@ -550,7 +549,7 @@
         if (timedOut) return;
         clearTimeout(timeout);
         body.innerHTML =
-          '<tr><td colspan="16"><div class="empty-state">' +
+          '<tr><td colspan="15"><div class="empty-state">' +
           '<div class="icon">❌</div>' +
           '<div><b>โหลดไม่สำเร็จ</b></div>' +
           '<div style="margin-top:8px;color:var(--error);font-size:13px;">' + escapeHtml(err.message || err) + '</div>' +
@@ -640,7 +639,7 @@
         // ถ้ากำลังใช้ filter ปริยาย แล้วไม่มีงานค้าง → แสดง empty state แบบบวก
         if (statusF === '__open__') {
           body.innerHTML =
-            '<tr><td colspan="16"><div class="empty-state">' +
+            '<tr><td colspan="15"><div class="empty-state">' +
             '<div class="icon">🎉</div>' +
             '<div><b>ไม่มีงานค้างอยู่</b></div>' +
             '<div style="margin-top:8px;font-size:13px;">ทุกคำขอได้รับการดำเนินการแล้ว</div>' +
@@ -650,7 +649,7 @@
             '</div></td></tr>';
         } else {
           body.innerHTML =
-            '<tr><td colspan="16"><div class="empty-state">' +
+            '<tr><td colspan="15"><div class="empty-state">' +
             '<div class="icon">📭</div><div>ไม่พบข้อมูล</div></div></td></tr>';
         }
         return;
@@ -718,7 +717,6 @@
 
         return `
         <tr>
-          <td class="cell-reqid">${escapeHtml(r.requestId)}</td>
           <td class="cell-submitted">${escapeHtml(r.submittedAt)}</td>
           <td style="font-weight:500;">${escapeHtml(r.otDate)}</td>
           <td class="cell-name">${escapeHtml(r.employeeName || '—')}</td>
