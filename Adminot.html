@@ -627,6 +627,55 @@
       background: #fafafa;
     }
     .photo-block-empty svg { width: 22px; height: 22px; opacity: 0.6; }
+
+    /* Map embed */
+    .map-embed {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      background: #f5f5f5;
+      border-top: 1px solid var(--line);
+      overflow: hidden;
+    }
+    .map-embed iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+    .map-embed-empty {
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-4);
+      font-size: 12.5px;
+      flex-direction: column;
+      gap: 8px;
+      background: #fafafa;
+      border-top: 1px solid var(--line);
+    }
+    .map-embed-empty svg { width: 18px; height: 18px; opacity: 0.6; }
+    .map-open-btn {
+      position: absolute;
+      top: 8px; right: 8px;
+      background: white;
+      border: 1px solid var(--line-2);
+      border-radius: var(--radius);
+      padding: 4px 8px;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--ink);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      transition: background 120ms;
+    }
+    .map-open-btn:hover { background: var(--hover); }
+    .map-open-btn svg { width: 11px; height: 11px; }
     .photo-block-footer {
       padding: 10px 12px;
       font-size: 12px;
@@ -1188,21 +1237,52 @@
                <div>ยังไม่มีรูป</div>
              </div>`;
 
+        // ===== Map embed: ฝังแผนที่ในหน้าเลย =====
+        // ต้องการพิกัด lat,lng จากฟิลด์ gps (เช่น "13.756331, 100.501765")
+        // หรือ extract จาก mapUrl ถ้าเป็น Google Maps link
+        let coords = '';
+        if (gps && /^-?\d+\.?\d*\s*,\s*-?\d+\.?\d*$/.test(gps.trim())) {
+          coords = gps.trim().replace(/\s/g, '');
+        } else if (mapUrl) {
+          const m = mapUrl.match(/[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+          if (m) coords = m[1] + ',' + m[2];
+        }
+
+        let mapHtml;
+        if (coords) {
+          // ใช้ Google Maps embed แบบไม่ต้องใช้ API key (q= parameter)
+          const embedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(coords)}&z=17&output=embed`;
+          const openUrl = mapUrl || `https://maps.google.com/?q=${encodeURIComponent(coords)}`;
+          mapHtml = `<div class="map-embed">
+            <iframe
+              src="${embedSrc}"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              allowfullscreen></iframe>
+            <a class="map-open-btn" href="${escapeHtml(openUrl)}" target="_blank" rel="noopener" title="เปิดใน Google Maps">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              <span>เปิดแผนที่</span>
+            </a>
+          </div>`;
+        } else {
+          mapHtml = `<div class="map-embed-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div>ไม่มีตำแหน่ง</div>
+          </div>`;
+        }
+
         const timeRow = photoTime
           ? `<div class="row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>${escapeHtml(photoTime)}</span></div>` : '';
 
-        const mapRow = mapUrl
-          ? `<div class="row">
-               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-               <a href="${escapeHtml(mapUrl)}" target="_blank">เปิดในแผนที่</a>
-               ${gps ? `<span class="gps">${escapeHtml(gps)}</span>` : ''}
-             </div>`
-          : `<div class="row dim"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>ไม่มีตำแหน่ง</span></div>`;
+        const gpsRow = coords
+          ? `<div class="row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span class="gps">${escapeHtml(coords)}</span></div>`
+          : '';
 
         return `<div class="photo-block ${kind}">
           <div class="photo-block-header"><span class="marker"></span>${label}</div>
           ${photoHtml}
-          <div class="photo-block-footer">${timeRow}${mapRow}</div>
+          ${mapHtml}
+          <div class="photo-block-footer">${timeRow}${gpsRow}</div>
         </div>`;
       }
 
