@@ -236,6 +236,124 @@
       line-height: 1.3;
     }
 
+    /* ===== ปุ่มดูรูปในตาราง ===== */
+    .btn-view-photo {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--accent);
+      background: #eff6ff;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .btn-view-photo:hover { background: var(--accent); color: white; }
+    .btn-view-photo:active { transform: scale(0.97); }
+    .view-dots {
+      display: inline-flex; gap: 3px;
+      margin-left: 2px;
+    }
+    .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-in { background: var(--success); }
+    .dot-out { background: var(--warning); }
+    .btn-view-photo:hover .dot-in { background: white; box-shadow: 0 0 0 1px var(--success); }
+    .btn-view-photo:hover .dot-out { background: white; box-shadow: 0 0 0 1px var(--warning); }
+
+    /* ===== Modal ดูรูป + ตำแหน่ง ===== */
+    .photo-modal {
+      background: white;
+      border-radius: 14px;
+      max-width: 880px;
+      width: 100%;
+      max-height: 92vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    }
+    .photo-modal-body {
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .photo-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 700px) {
+      .photo-grid { grid-template-columns: 1fr; }
+    }
+    .photo-block {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #f9fafb;
+      display: flex;
+      flex-direction: column;
+    }
+    .photo-block-header {
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .photo-block.in .photo-block-header  { background: #ecfdf5; color: var(--success-text); }
+    .photo-block.out .photo-block-header { background: #fef3c7; color: var(--warning-text); }
+    .photo-block-img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      background: #f3f4f6;
+      display: block;
+      cursor: zoom-in;
+      transition: opacity 0.15s;
+    }
+    .photo-block-img:hover { opacity: 0.92; }
+    .photo-block-empty {
+      width: 100%;
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-tertiary);
+      font-size: 14px;
+      flex-direction: column;
+      gap: 8px;
+      background: #f9fafb;
+    }
+    .photo-block-empty .icon { font-size: 32px; opacity: 0.4; }
+    .photo-block-footer {
+      padding: 10px 14px;
+      font-size: 12px;
+      background: white;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .photo-block-footer .row {
+      display: flex; align-items: center; gap: 6px;
+      color: var(--text-secondary);
+    }
+    .photo-block-footer .row a { color: var(--accent); text-decoration: none; font-weight: 600; }
+    .photo-block-footer .row a:hover { text-decoration: underline; }
+    .photo-block-footer .time {
+      font-variant-numeric: tabular-nums;
+      color: var(--text-tertiary);
+    }
+
     .actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
     .icon-btn {
       width: 32px; height: 32px;
@@ -415,17 +533,14 @@
             <th>เวลาเริ่ม–เลิก</th>
             <th>เวลารวม</th>
             <th>งานที่ทำ</th>
-            <th>รูปเริ่ม</th>
-            <th>ตำแหน่งเริ่ม</th>
-            <th>รูปเลิก</th>
-            <th>ตำแหน่งเลิก</th>
+            <th style="text-align:center;">รูป</th>
             <th>สถานะ</th>
             <th>หมายเหตุ</th>
             <th style="text-align:center;">การจัดการ</th>
           </tr>
         </thead>
         <tbody id="tableBody">
-          <tr><td colspan="15">
+          <tr><td colspan="13">
             <div class="loading">
               <div class="spinner"></div>
               <div>กำลังโหลดข้อมูล...</div>
@@ -456,6 +571,18 @@
       <div class="modal-footer">
         <button class="btn" onclick="closeModal()">ยกเลิก</button>
         <button class="btn" id="confirmBtn" onclick="confirmAction()">ยืนยัน</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="photoInfoModal" onclick="if(event.target===this) closePhotoModal()">
+    <div class="photo-modal">
+      <div class="modal-header">
+        <h3 id="photoModalTitle">🖼️ รูปและตำแหน่ง</h3>
+        <button class="modal-close" onclick="closePhotoModal()">×</button>
+      </div>
+      <div class="photo-modal-body">
+        <div class="photo-grid" id="photoGrid"></div>
       </div>
     </div>
   </div>
@@ -512,13 +639,13 @@
     async function loadData() {
       const body = document.getElementById('tableBody');
       body.innerHTML =
-        '<tr><td colspan="15"><div class="loading"><div class="spinner"></div><div>กำลังโหลดข้อมูล...</div></div></td></tr>';
+        '<tr><td colspan="13"><div class="loading"><div class="spinner"></div><div>กำลังโหลดข้อมูล...</div></div></td></tr>';
 
       let timedOut = false;
       const timeout = setTimeout(function() {
         timedOut = true;
         body.innerHTML =
-          '<tr><td colspan="15"><div class="empty-state">' +
+          '<tr><td colspan="13"><div class="empty-state">' +
           '<div class="icon">⏱️</div>' +
           '<div><b>หมดเวลารอ (60 วินาที)</b></div>' +
           '<div style="margin-top:8px;font-size:13px;">เซิร์ฟเวอร์ไม่ตอบกลับ — ลอง:</div>' +
@@ -538,7 +665,7 @@
           renderTable();
         } else {
           body.innerHTML =
-            '<tr><td colspan="15"><div class="empty-state">' +
+            '<tr><td colspan="13"><div class="empty-state">' +
             '<div class="icon">⚠️</div>' +
             '<div><b>เซิร์ฟเวอร์แจ้ง error:</b></div>' +
             '<div style="margin-top:8px;color:var(--error);">' + escapeHtml(res.message || 'ไม่ทราบสาเหตุ') + '</div>' +
@@ -549,7 +676,7 @@
         if (timedOut) return;
         clearTimeout(timeout);
         body.innerHTML =
-          '<tr><td colspan="15"><div class="empty-state">' +
+          '<tr><td colspan="13"><div class="empty-state">' +
           '<div class="icon">❌</div>' +
           '<div><b>โหลดไม่สำเร็จ</b></div>' +
           '<div style="margin-top:8px;color:var(--error);font-size:13px;">' + escapeHtml(err.message || err) + '</div>' +
@@ -639,7 +766,7 @@
         // ถ้ากำลังใช้ filter ปริยาย แล้วไม่มีงานค้าง → แสดง empty state แบบบวก
         if (statusF === '__open__') {
           body.innerHTML =
-            '<tr><td colspan="15"><div class="empty-state">' +
+            '<tr><td colspan="13"><div class="empty-state">' +
             '<div class="icon">🎉</div>' +
             '<div><b>ไม่มีงานค้างอยู่</b></div>' +
             '<div style="margin-top:8px;font-size:13px;">ทุกคำขอได้รับการดำเนินการแล้ว</div>' +
@@ -649,7 +776,7 @@
             '</div></td></tr>';
         } else {
           body.innerHTML =
-            '<tr><td colspan="15"><div class="empty-state">' +
+            '<tr><td colspan="13"><div class="empty-state">' +
             '<div class="icon">📭</div><div>ไม่พบข้อมูล</div></div></td></tr>';
         }
         return;
@@ -678,10 +805,22 @@
           return `<a class="link" href="${escapeHtml(mapUrl)}" target="_blank">📍 ดูแผนที่</a>`;
         }
 
-        const thumbIn  = buildThumb(r.selfieInEmbed, r.photoTimeIn);
-        const thumbOut = buildThumb(r.selfieOutEmbed, r.photoTimeOut);
-        const mapInLink  = buildMap(r.mapIn);
-        const mapOutLink = buildMap(r.mapOut);
+        const recordJson = JSON.stringify(r).replace(/'/g, "\\'");
+
+        const hasIn = !!(r.selfieInEmbed || r.mapIn);
+        const hasOut = !!(r.selfieOutEmbed || r.mapOut);
+        let viewBtnCell;
+        if (!hasIn && !hasOut) {
+          viewBtnCell = '<span style="color:var(--text-tertiary);font-size:12px;">—</span>';
+        } else {
+          const dots =
+            (hasIn ? '<span class="dot dot-in" title="มีรูป/ตำแหน่งเริ่ม"></span>' : '') +
+            (hasOut ? '<span class="dot dot-out" title="มีรูป/ตำแหน่งเลิก"></span>' : '');
+          viewBtnCell = `<button class="btn-view-photo" onclick='openPhotoModal(${recordJson})'>
+            <span>🖼️</span><span>ดูรูป</span>
+            <span class="view-dots">${dots}</span>
+          </button>`;
+        }
 
         const isPending = r.status === 'รออนุมัติ';
         const isWorking = r.status === 'กำลังทำงาน';
@@ -694,8 +833,6 @@
         } else {
           timeRange = '<span style="color:var(--text-tertiary);">—</span>';
         }
-
-        const recordJson = JSON.stringify(r).replace(/'/g, "\\'");
 
         let actionButtons = '';
         if (isPending) {
@@ -725,10 +862,7 @@
           <td class="cell-time">${timeRange}</td>
           <td class="cell-hours">${escapeHtml(r.hours || (isWorking ? '⏳' : ''))}</td>
           <td class="cell-detail"><div class="truncate" title="${escapeHtml(r.workDetail || '')}">${escapeHtml(r.workDetail || '—')}</div></td>
-          <td>${thumbIn}</td>
-          <td>${mapInLink}</td>
-          <td>${thumbOut}</td>
-          <td>${mapOutLink}</td>
+          <td style="text-align:center;">${viewBtnCell}</td>
           <td><span class="badge ${badgeClass}">${escapeHtml(r.status)}</span></td>
           <td style="font-size:13px;color:var(--text-secondary);max-width:160px;">${escapeHtml(r.note || '—')}</td>
           <td>
@@ -844,6 +978,59 @@
     }
     function closeImageModal() {
       document.getElementById('imageModal').classList.remove('show');
+    }
+
+    function openPhotoModal(record) {
+      const grid = document.getElementById('photoGrid');
+      const title = document.getElementById('photoModalTitle');
+      title.innerHTML = '🖼️ รูปและตำแหน่ง · <span style="color:var(--text-tertiary);font-weight:500;font-size:14px;">' +
+                        escapeHtml(record.employeeName || '') + ' · ' + escapeHtml(record.otDate || '') + '</span>';
+
+      function buildBlock(kind, label, emoji, selfieEmbed, selfieFull, mapUrl, gps, photoTime) {
+        const hasPhoto = !!selfieEmbed;
+        const hasMap = !!mapUrl;
+
+        const photoHtml = hasPhoto
+          ? `<img class="photo-block-img" src="${escapeHtml(selfieEmbed)}"
+                  onclick="showImage('${escapeJs(selfieFull || selfieEmbed)}')"
+                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+                  alt="${escapeHtml(label)}">
+             <div class="photo-block-empty" style="display:none;">
+               <div class="icon">📷</div>
+               <div>โหลดรูปไม่ได้</div>
+             </div>`
+          : `<div class="photo-block-empty">
+               <div class="icon">📷</div>
+               <div>ยังไม่มีรูป</div>
+             </div>`;
+
+        const timeRow = photoTime
+          ? `<div class="row time">📅 ${escapeHtml(photoTime)}</div>` : '';
+
+        const mapRow = hasMap
+          ? `<div class="row">📍 <a href="${escapeHtml(mapUrl)}" target="_blank">เปิดในแผนที่</a>
+               ${gps ? `<span style="color:var(--text-tertiary);font-size:11px;">· ${escapeHtml(gps)}</span>` : ''}
+             </div>`
+          : `<div class="row" style="color:var(--text-tertiary);">📍 ไม่มีตำแหน่ง</div>`;
+
+        return `<div class="photo-block ${kind}">
+          <div class="photo-block-header">${emoji} ${label}</div>
+          ${photoHtml}
+          <div class="photo-block-footer">${timeRow}${mapRow}</div>
+        </div>`;
+      }
+
+      grid.innerHTML =
+        buildBlock('in', 'รูปเริ่มงาน', '⏱️', record.selfieInEmbed, record.selfieIn,
+                   record.mapIn, record.gpsIn, record.photoTimeIn) +
+        buildBlock('out', 'รูปเลิกงาน', '🏁', record.selfieOutEmbed, record.selfieOut,
+                   record.mapOut, record.gpsOut, record.photoTimeOut);
+
+      document.getElementById('photoInfoModal').classList.add('show');
+    }
+
+    function closePhotoModal() {
+      document.getElementById('photoInfoModal').classList.remove('show');
     }
 
     function showToast(msg, type) {
