@@ -118,6 +118,14 @@
     .filter-bar input[type="search"] { flex: 1; min-width: 200px; }
     .filter-bar .count { margin-left: auto; font-size: 13px; color: var(--text-tertiary); }
 
+    /* highlight filter ตอนใช้ค่า default ที่ซ่อนของอนุมัติ/ไม่อนุมัติ */
+    .filter-bar select#statusFilter.has-default-filter {
+      background: #eff6ff;
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
     .table-wrapper {
       background: var(--bg-elev);
       border-radius: 0 0 12px 12px;
@@ -364,7 +372,9 @@
 
     <div class="filter-bar">
       <input type="search" id="searchInput" placeholder="🔍 ค้นหาชื่อ, หัวหน้า, บริษัท, รหัส, หรืองาน..." oninput="renderTable()">
-      <select id="statusFilter" onchange="renderTable()">
+      <!-- ✨ NEW: เพิ่มตัวเลือก "ยังไม่ปิดเคส" และตั้งเป็น default -->
+      <select id="statusFilter" onchange="onStatusFilterChange()">
+        <option value="__open__">⏳ ยังไม่ปิดเคส (รออนุมัติ + กำลังทำงาน)</option>
         <option value="">ทุกสถานะ</option>
         <option value="กำลังทำงาน">กำลังทำงาน</option>
         <option value="รออนุมัติ">รออนุมัติ</option>
@@ -457,6 +467,21 @@
 
     let allData = [];
     let currentAction = null;
+
+    // ค่า filter พิเศษ "__open__" = แสดงเฉพาะรายการที่ยังไม่ปิด (รออนุมัติ + กำลังทำงาน)
+    // ตั้ง class ให้ดูเด่นว่ากำลังกรองอยู่ ไม่ใช่ "ทุกสถานะ"
+    function onStatusFilterChange() {
+      updateStatusFilterStyle();
+      renderTable();
+    }
+    function updateStatusFilterStyle() {
+      const sel = document.getElementById('statusFilter');
+      if (sel.value === '__open__') {
+        sel.classList.add('has-default-filter');
+      } else {
+        sel.classList.remove('has-default-filter');
+      }
+    }
 
     async function apiCall(action, payload) {
       const body = JSON.stringify(Object.assign({ action: action }, payload || {}));
@@ -579,7 +604,12 @@
           const hay = (r.requestId + ' ' + r.employeeName + ' ' + (r.supervisor || '') + ' ' + (r.company || '') + ' ' + r.workDetail + ' ' + r.department).toLowerCase();
           if (!hay.includes(search)) return false;
         }
-        if (statusF && r.status !== statusF) return false;
+        // ✨ NEW: "__open__" = แสดงเฉพาะ "รออนุมัติ" + "กำลังทำงาน"
+        if (statusF === '__open__') {
+          if (r.status !== 'รออนุมัติ' && r.status !== 'กำลังทำงาน') return false;
+        } else if (statusF && r.status !== statusF) {
+          return false;
+        }
         if (supervisorF && (r.supervisor || '').trim() !== supervisorF) return false;
         if (companyF && (r.company || '').trim() !== companyF) return false;
         if (dateFrom || dateTo) {
@@ -598,9 +628,22 @@
       const body = document.getElementById('tableBody');
 
       if (filtered.length === 0) {
-        body.innerHTML =
-          '<tr><td colspan="16"><div class="empty-state">' +
-          '<div class="icon">📭</div><div>ไม่พบข้อมูล</div></div></td></tr>';
+        // ถ้ากำลังใช้ filter ปริยาย แล้วไม่มีงานค้าง → แสดง empty state แบบบวก
+        if (statusF === '__open__') {
+          body.innerHTML =
+            '<tr><td colspan="16"><div class="empty-state">' +
+            '<div class="icon">🎉</div>' +
+            '<div><b>ไม่มีงานค้างอยู่</b></div>' +
+            '<div style="margin-top:8px;font-size:13px;">ทุกคำขอได้รับการดำเนินการแล้ว</div>' +
+            '<div style="margin-top:12px;font-size:13px;">' +
+            '<a href="#" onclick="document.getElementById(\'statusFilter\').value=\'\'; onStatusFilterChange(); return false;" class="link">' +
+            'ดูทั้งหมด →</a></div>' +
+            '</div></td></tr>';
+        } else {
+          body.innerHTML =
+            '<tr><td colspan="16"><div class="empty-state">' +
+            '<div class="icon">📭</div><div>ไม่พบข้อมูล</div></div></td></tr>';
+        }
         return;
       }
 
@@ -829,6 +872,8 @@
       return String(s || '').replace(/['"\\]/g, '\\$&');
     }
 
+    // init
+    updateStatusFilterStyle();
     loadData();
   </script>
 </body>
