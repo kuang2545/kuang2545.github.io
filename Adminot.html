@@ -151,7 +151,18 @@
     tbody tr:last-child td { border-bottom: none; }
 
     td.cell-name { font-weight: 600; }
-    td.cell-supervisor { color: var(--text-secondary); white-space: nowrap; }
+    td.cell-supervisor { color: var(--text-secondary); white-space: nowrap; font-size: 12px; }
+    td.cell-reqid {
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--text-tertiary);
+      white-space: nowrap;
+    }
+    td.cell-submitted {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      white-space: nowrap;
+    }
     td.cell-company {
       white-space: nowrap;
     }
@@ -387,9 +398,8 @@
       <select id="supervisorFilter" onchange="renderTable()">
         <option value="">ทุกหัวหน้า</option>
       </select>
-      <input type="date" id="dateFrom" onchange="renderTable()" title="วันที่เริ่ม">
-      <span style="color: var(--text-tertiary);">ถึง</span>
-      <input type="date" id="dateTo" onchange="renderTable()" title="วันที่สิ้นสุด">
+      <input type="date" id="dateFilter" onchange="renderTable()" title="กรองตามวันที่ OT">
+      <button class="btn" type="button" onclick="clearDateFilter()" id="clearDateBtn" style="display:none;padding:8px 12px;" title="ล้างวันที่">✕</button>
       <span class="count" id="recordCount">0 รายการ</span>
     </div>
 
@@ -596,8 +606,8 @@
       const statusF = document.getElementById('statusFilter').value;
       const supervisorF = document.getElementById('supervisorFilter').value;
       const companyF = document.getElementById('companyFilter').value;
-      const dateFrom = document.getElementById('dateFrom').value;
-      const dateTo = document.getElementById('dateTo').value;
+      const dateF = document.getElementById('dateFilter').value;
+      document.getElementById('clearDateBtn').style.display = dateF ? 'inline-flex' : 'none';
 
       let filtered = allData.filter(r => {
         if (search) {
@@ -612,13 +622,12 @@
         }
         if (supervisorF && (r.supervisor || '').trim() !== supervisorF) return false;
         if (companyF && (r.company || '').trim() !== companyF) return false;
-        if (dateFrom || dateTo) {
+        if (dateF) {
           const otDate = parseDDMMYYYY(r.otDate);
-          if (dateFrom && otDate < new Date(dateFrom).getTime()) return false;
-          if (dateTo) {
-            const to = new Date(dateTo); to.setHours(23,59,59,999);
-            if (otDate > to.getTime()) return false;
-          }
+          const target = new Date(dateF);
+          const targetStart = new Date(target.getFullYear(), target.getMonth(), target.getDate()).getTime();
+          const targetEnd = targetStart + 24 * 60 * 60 * 1000 - 1;
+          if (otDate < targetStart || otDate > targetEnd) return false;
         }
         return true;
       });
@@ -709,8 +718,8 @@
 
         return `
         <tr>
-          <td style="font-family:monospace;font-size:12px;color:var(--text-secondary);">${escapeHtml(r.requestId)}</td>
-          <td style="font-size:12px;color:var(--text-tertiary);">${escapeHtml(r.submittedAt)}</td>
+          <td class="cell-reqid">${escapeHtml(r.requestId)}</td>
+          <td class="cell-submitted">${escapeHtml(r.submittedAt)}</td>
           <td style="font-weight:500;">${escapeHtml(r.otDate)}</td>
           <td class="cell-name">${escapeHtml(r.employeeName || '—')}</td>
           <td class="cell-supervisor">${supervisorCell}</td>
@@ -739,6 +748,11 @@
       const parts = s.split('/');
       if (parts.length !== 3) return 0;
       return new Date(+parts[2], +parts[1]-1, +parts[0]).getTime();
+    }
+
+    function clearDateFilter() {
+      document.getElementById('dateFilter').value = '';
+      renderTable();
     }
 
     function openAction(rowIndex, status, record) {
