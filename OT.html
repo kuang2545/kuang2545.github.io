@@ -672,13 +672,10 @@
               <label class="photo-source-btn gallery">
                 <div class="ps-icon">🖼️</div>
                 <div class="ps-title">เลือกจากคลัง</div>
-                <div class="ps-desc">เลือกรูปที่บันทึกไว้</div>
+                <div class="ps-desc">ถ่ายไว้ไม่เกิน 10 นาที</div>
                 <input type="file" accept="image/*"
                        onchange="handleCapture(event, 'gallery')">
               </label>
-            </div>
-            <div class="photo-source-hint">
-              💡 แนะนำให้ <b>ถ่ายรูปสด</b> เพื่อความถูกต้องของ GPS
             </div>
           </div>
 
@@ -1249,6 +1246,8 @@
 
     // ============================================================
     // ✅ NEW: handleCapture รองรับทั้ง camera / gallery
+    //   - camera: รูปต้องถ่ายในนาทีนี้ (≤ 1 นาทีจากตอนกดปุ่ม)
+    //   - gallery: รูปต้องถ่ายไม่เกิน 10 นาทีที่แล้ว
     // ============================================================
     function handleCapture(event, sourceType) {
       const file = event.target.files[0];
@@ -1256,30 +1255,30 @@
 
       sourceType = sourceType || 'camera';
 
-      // ตรวจอายุไฟล์ "เฉพาะโหมดถ่ายรูป" เท่านั้น
-      // โหมดเลือกจากคลังจะข้ามการเช็คนี้ไป (เพราะตั้งใจให้เลือกได้)
+      // ===== ตรวจอายุไฟล์ทั้ง 2 โหมด =====
+      const fileTime = file.lastModified || 0;
+      const nowMs = Date.now();
+
       if (sourceType === 'camera') {
-        if (!cameraOpenedAt) cameraOpenedAt = Date.now();
-        const MAX_AGE_BEFORE_CLICK = 60 * 1000;
-        const fileTime = file.lastModified || 0;
+        // โหมดถ่ายรูป: ห้ามเก่ากว่า 1 นาทีจากตอนกดปุ่ม
+        if (!cameraOpenedAt) cameraOpenedAt = nowMs;
+        const MAX_AGE_BEFORE_CLICK = 60 * 1000;  // 1 นาที
         const ageBeforeClick = cameraOpenedAt - fileTime;
 
         if (fileTime > 0 && ageBeforeClick > MAX_AGE_BEFORE_CLICK) {
-          const ageMin = Math.round(ageBeforeClick / 60000);
-          const ageText = ageMin < 60
-            ? ageMin + ' นาทีก่อน'
-            : ageMin < 1440
-              ? Math.round(ageMin / 60) + ' ชั่วโมงก่อน'
-              : Math.round(ageMin / 1440) + ' วันก่อน';
-
-          document.getElementById('captureStatus').innerHTML =
-            '<div class="status-box status-error" style="line-height:1.6;">' +
-            '🚫 <b>รูปนี้ไม่ใช่รูปสด</b><br>' +
-            'ระบบตรวจพบว่ารูปนี้ถ่ายไว้ตั้งแต่ ' + ageText + '<br>' +
-            '<b>กรุณากด "ถ่ายรูป" เพื่อถ่ายสด</b> หรือใช้ปุ่ม "เลือกจากคลัง" แทน' +
-            '</div>';
+          showAgeError(ageBeforeClick, 'camera');
           event.target.value = '';
           cameraOpenedAt = 0;
+          return;
+        }
+      } else {
+        // โหมดเลือกจากคลัง: ห้ามเก่ากว่า 10 นาที
+        const MAX_AGE_GALLERY = 10 * 60 * 1000;  // 10 นาที
+        const age = nowMs - fileTime;
+
+        if (fileTime > 0 && age > MAX_AGE_GALLERY) {
+          showAgeError(age, 'gallery');
+          event.target.value = '';
           return;
         }
       }
@@ -1330,6 +1329,32 @@
         console.error('GPS error:', err);
         showGpsError(err);
       });
+    }
+
+    // แสดงข้อความเตือนรูปเก่าเกินไป
+    function showAgeError(ageMs, sourceType) {
+      const ageMin = Math.round(ageMs / 60000);
+      const ageText = ageMin < 60
+        ? ageMin + ' นาทีก่อน'
+        : ageMin < 1440
+          ? Math.round(ageMin / 60) + ' ชั่วโมงก่อน'
+          : Math.round(ageMin / 1440) + ' วันก่อน';
+
+      let title, hint;
+      if (sourceType === 'camera') {
+        title = 'รูปนี้ไม่ใช่รูปสด';
+        hint = '<b>กรุณากด "ถ่ายรูป" เพื่อถ่ายสด</b> หรือใช้ปุ่ม "เลือกจากคลัง" แทน';
+      } else {
+        title = 'รูปนี้เก่าเกินไป';
+        hint = 'รูปจากคลังต้องถ่ายไว้<b>ไม่เกิน 10 นาทีที่แล้ว</b><br>กรุณาเลือกรูปที่ถ่ายใหม่กว่านี้';
+      }
+
+      document.getElementById('captureStatus').innerHTML =
+        '<div class="status-box status-error" style="line-height:1.6;">' +
+        '🚫 <b>' + title + '</b><br>' +
+        'ระบบตรวจพบว่ารูปนี้ถ่ายไว้ตั้งแต่ ' + ageText + '<br>' +
+        hint +
+        '</div>';
     }
 
     function showGpsError(err) {
