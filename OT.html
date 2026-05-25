@@ -326,6 +326,46 @@
     .hours-summary.error { background: var(--error-bg); border-color: rgba(255, 59, 48, 0.3); }
     .hours-summary.error .hours-summary-value { color: var(--error); font-size: 14px; }
 
+    /* ===== ปุ่มขอเบี้ยเลี้ยง (เฉพาะ 3E Innovation) ===== */
+    .allowance-box {
+      margin-top: 12px;
+      border-radius: 14px;
+      border: 1.5px solid rgba(255, 149, 0, 0.35);
+      background: linear-gradient(135deg, rgba(255, 149, 0, 0.10), rgba(255, 149, 0, 0.03));
+      overflow: hidden;
+      animation: fadeIn 0.25s ease;
+    }
+    .allowance-toggle {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px;
+      cursor: pointer; user-select: none; -webkit-user-select: none;
+    }
+    .allowance-toggle:active { background: rgba(255, 149, 0, 0.08); }
+    .allowance-emoji { font-size: 26px; flex-shrink: 0; }
+    .allowance-text { flex: 1; }
+    .allowance-title { font-size: 15px; font-weight: 700; color: #c66800; }
+    .allowance-desc { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; line-height: 1.4; }
+    .allowance-switch {
+      flex-shrink: 0;
+      width: 52px; height: 31px; border-radius: 980px;
+      background: rgba(120,120,128,0.32);
+      position: relative; transition: background 0.2s;
+    }
+    .allowance-switch::after {
+      content: ''; position: absolute; top: 2px; left: 2px;
+      width: 27px; height: 27px; border-radius: 50%;
+      background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+      transition: transform 0.2s cubic-bezier(0.34,1.3,0.64,1);
+    }
+    .allowance-box.on .allowance-switch { background: var(--success); }
+    .allowance-box.on .allowance-switch::after { transform: translateX(21px); }
+    .allowance-confirmed {
+      display: none;
+      padding: 0 16px 14px;
+      font-size: 13px; color: #1e7a2e; font-weight: 600;
+    }
+    .allowance-box.on .allowance-confirmed { display: block; }
+
     .action-card { background: var(--bg-elev); border-radius: 14px; padding: 18px; margin-bottom: 8px; }
     .action-card-title { font-size: 16px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
     .action-card-icon { width: 32px; height: 32px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; }
@@ -628,7 +668,7 @@
 
           <div class="field" id="companyField">
             <label class="field-label" for="companySelect">บริษัท <span class="required">*</span></label>
-            <select id="companySelect" class="field-input">
+            <select id="companySelect" class="field-input" onchange="onCompanyChange()">
               <option value="">-- เลือกบริษัท --</option>
               <option value="3E Empire">3E Empire</option>
               <option value="3E Trading">3E Trading</option>
@@ -647,6 +687,20 @@
               <span class="hours-summary-label">เวลารวม</span>
               <span class="hours-summary-value" id="hoursValue">0</span>
             </div>
+
+            <!-- ปุ่มขอเบี้ยเลี้ยง: แสดงเฉพาะ 3E Innovation (โหมดเริ่มงาน) -->
+            <div class="allowance-box" id="allowanceBox" style="display:none;">
+              <div class="allowance-toggle" onclick="toggleAllowance()">
+                <span class="allowance-emoji">🍱</span>
+                <div class="allowance-text">
+                  <div class="allowance-title">ขอรับเบี้ยเลี้ยง</div>
+                  <div class="allowance-desc">สำหรับพนักงาน 3E Innovation</div>
+                </div>
+                <div class="allowance-switch"></div>
+              </div>
+              <div class="allowance-confirmed">✓ ติ๊กขอรับเบี้ยเลี้ยงแล้ว</div>
+            </div>
+            <input type="hidden" id="allowanceFlag" value="">
           </div>
         </div>
 
@@ -878,6 +932,12 @@
 
       const sel = document.getElementById('employeeSelect');
       sel.innerHTML = '<option value="">-- เลือกชื่อ --</option>';
+
+      // รีเซ็ตปุ่มขอเบี้ยเลี้ยง
+      const allowanceBox = document.getElementById('allowanceBox');
+      allowanceBox.style.display = 'none';
+      allowanceBox.classList.remove('on');
+      document.getElementById('allowanceFlag').value = '';
 
       applyModeUI(mode);
 
@@ -1168,6 +1228,31 @@
       if (h === 0) return m + ' นาที';
       if (m === 0) return h + ' ชม.';
       return h + ' ชม. ' + m + ' นาที';
+    }
+
+    // ============================================================
+    // ====== เบี้ยเลี้ยง (เฉพาะ 3E Innovation, โหมดเริ่มงาน) ======
+    // ============================================================
+    const ALLOWANCE_COMPANY = '3E Innovation';
+
+    function onCompanyChange() {
+      const box = document.getElementById('allowanceBox');
+      const company = document.getElementById('companySelect').value;
+
+      if (currentMode === 'clock_in' && company === ALLOWANCE_COMPANY) {
+        box.style.display = 'block';
+      } else {
+        // บริษัทอื่น → ซ่อนและรีเซ็ตการติ๊ก
+        box.style.display = 'none';
+        box.classList.remove('on');
+        document.getElementById('allowanceFlag').value = '';
+      }
+    }
+
+    function toggleAllowance() {
+      const box = document.getElementById('allowanceBox');
+      const isOn = box.classList.toggle('on');
+      document.getElementById('allowanceFlag').value = isOn ? 'ขอรับเบี้ยเลี้ยง' : '';
     }
 
     // ============================================================
@@ -1713,12 +1798,15 @@
           return;
         }
 
+        const allowance = document.getElementById('allowanceFlag').value || '';
+
         const data = {
           otDate, employeeName,
           supervisorName,
           company,
           startTime: time,
           workDetail,
+          allowance,
           gpsCoords: gps,
           address: document.getElementById('address').value,
           selfieBase64: selfie,
@@ -1738,6 +1826,7 @@
               '<div class="info-row"><span>ชื่อ</span><b>' + escapeHtml(employeeName) + '</b></div>' +
               '<div class="info-row"><span>หัวหน้า</span><b>' + escapeHtml(supervisorName) + '</b></div>' +
               '<div class="info-row"><span>บริษัท</span><b>' + escapeHtml(company) + '</b></div>' +
+              (allowance ? '<div class="info-row"><span>เบี้ยเลี้ยง</span><b style="color:var(--warning);">🍱 ขอรับ</b></div>' : '') +
               '<div class="info-row"><span>เวลาเริ่ม</span><b style="color:var(--success); font-size:18px;">' + res.startTime + '</b></div>' +
               '<div class="info-row"><span>รหัส</span><b style="font-family:monospace; font-size:11px;">' + res.requestId + '</b></div>';
             activeClockInsByDate = {};
