@@ -331,6 +331,16 @@
     .action-card-icon { width: 32px; height: 32px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; }
     .icon-cam { background: #ff9500; color: white; }
 
+    /* ===== GPS status pill (header) ===== */
+    .gps-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 700; padding: 4px 10px;
+      border-radius: 980px; letter-spacing: 0.02em;
+    }
+    .gps-pill.searching { background: rgba(0,122,255,0.12); color: var(--accent); }
+    .gps-pill.ready { background: var(--success-bg); color: #1e7a2e; }
+    .gps-pill.fail { background: var(--error-bg); color: #c8201a; }
+
     /* ===== Photo source buttons ===== */
     .photo-source-grid {
       display: grid;
@@ -650,7 +660,10 @@
           </div>
         </div>
 
-        <div class="section-header" id="selfieHeader">ยืนยันตัวตน</div>
+        <div class="section-header" id="selfieHeader">
+          <span>ยืนยันตัวตน</span>
+          <span class="gps-pill searching" id="gpsPill" style="display:none;"><span class="spinner" style="margin:0;width:9px;height:9px;"></span> หาตำแหน่ง...</span>
+        </div>
 
         <div class="action-card" id="selfieCard">
           <div class="action-card-title">
@@ -755,6 +768,12 @@
             showLineBlockScreen(det);
           }
         }, det.isLine && alreadyTried ? 800 : 0);
+      } else {
+        // ⚡ ไม่ได้อยู่ใน in-app → ขอสิทธิ์ + อุ่นเครื่อง GPS ทันทีที่เข้าเว็บ
+        // พอผู้ใช้กดเข้าฟอร์ม จะมีพิกัดรออยู่แล้ว ไม่ต้องรอ
+        setTimeout(function() {
+          try { startGpsLookup(); } catch (e) {}
+        }, 300);
       }
     })();
 
@@ -856,6 +875,15 @@
       const mm = String(now.getMinutes()).padStart(2, '0');
       document.getElementById('timeInput').value = hh + ':' + mm;
 
+      // ⚡ เริ่มหา GPS (ถ้ายังไม่เริ่มตั้งแต่เข้าเว็บ) — ปกติเริ่มไปแล้ว
+      startGpsLookup();
+      // sync ป้ายสถานะให้ตรงกับผลปัจจุบัน
+      if (gpsResult) {
+        updateGpsPill('ready', '±' + gpsResult.acc + ' ม.');
+      } else if (gpsPromise) {
+        updateGpsPill('searching', 'หาตำแหน่ง...');
+      }
+
       if (mode === 'clock_out') {
         loadActiveClockIns();
       }
@@ -870,6 +898,8 @@
       document.getElementById('formView').classList.remove('active');
       document.getElementById('selectView').classList.add('active');
       document.getElementById('backBtn').classList.remove('show');
+      // หยุด watch เฉพาะตอนที่ยังหาไม่เสร็จ — ถ้าได้พิกัดแล้วเก็บไว้ใช้ซ้ำ
+      if (!gpsResult) stopGpsWatch();
       window.scrollTo({ top: 0 });
     }
 
@@ -885,6 +915,7 @@
       const supervisorField = document.getElementById('supervisorField');
       const companyField = document.getElementById('companyField');
       const workDetailSection = document.getElementById('workDetailSection');
+      const selfieHeaderText = selfieHeader.querySelector('span');
 
       if (mode === 'clock_out') {
         badge.textContent = '🏁 เลิกงาน';
@@ -894,7 +925,7 @@
         timeLabel.innerHTML = 'เวลาเลิกงาน <span class="required">*</span>';
         submitBtn.textContent = '🏁 เลิกงาน';
         submitBtn.className = 'btn btn-warning';
-        selfieHeader.innerHTML = 'ยืนยันตัวตน (รูปเลิกงาน)';
+        if (selfieHeaderText) selfieHeaderText.textContent = 'ยืนยันตัวตน (รูปเลิกงาน)';
 
         nameInputField.style.display = 'none';
         nameSelectField.style.display = 'block';
@@ -909,7 +940,7 @@
         timeLabel.innerHTML = 'เวลาเริ่มงาน <span class="required">*</span>';
         submitBtn.textContent = '⏱️ เริ่มงาน OT';
         submitBtn.className = 'btn btn-primary';
-        selfieHeader.innerHTML = 'ยืนยันตัวตน';
+        if (selfieHeaderText) selfieHeaderText.textContent = 'ยืนยันตัวตน';
 
         nameInputField.style.display = 'block';
         nameSelectField.style.display = 'none';
@@ -1075,34 +1106,60 @@
       return h + ' ชม. ' + m + ' นาที';
     }
 
-    // ====== GPS ======
+    // ============================================================
+    // ====== GPS (เร็วขึ้น: เริ่มหาตั้งแต่เข้าฟอร์ม) ======
+    // ============================================================
     let gpsPromise = null;
     let gpsWatchId = null;
     let gpsBestReading = null;
+    let gpsResult = null;       // เก็บผลที่ได้แล้ว (lat,lng,acc)
     let cameraOpenedAt = 0;
 
-    const GPS_GOOD_ACCURACY = 10;
-    const GPS_ACCEPTABLE = 30;
-    const GPS_MAX_WAIT = 15000;
+    // เน้นแม่นยำ: รอ ±10ม. แต่เริ่มหาเร็ว (ตั้งแต่เข้าเว็บ)
+    const GPS_GOOD_ACCURACY = 10;    // ได้ ±10ม. → resolve ทันที
+    const GPS_ACCEPTABLE = 30;       // ระดับพอใช้ได้
+    const GPS_MAX_WAIT = 15000;      // รอสูงสุด 15 วิ (ถ้ายังไม่ถึง ±10 ใช้ค่าที่ดีที่สุดที่มี)
 
     function onCameraOpen() {
       cameraOpenedAt = Date.now();
-      startGpsLookup();
+      // GPS เริ่มไปแล้วตอนเข้าฟอร์ม — ไม่ต้องเริ่มใหม่
+      if (!gpsPromise) startGpsLookup();
+    }
+
+    function updateGpsPill(state, text) {
+      const pill = document.getElementById('gpsPill');
+      if (!pill) return;
+      pill.style.display = 'inline-flex';
+      pill.className = 'gps-pill ' + state;
+      if (state === 'searching') {
+        pill.innerHTML = '<span class="spinner" style="margin:0;width:9px;height:9px;"></span> ' + text;
+      } else if (state === 'ready') {
+        pill.innerHTML = '✓ ' + text;
+      } else {
+        pill.innerHTML = '⚠️ ' + text;
+      }
     }
 
     function startGpsLookup() {
       if (!navigator.geolocation) {
         gpsPromise = Promise.reject({ code: 0, message: 'เบราว์เซอร์ไม่รองรับ GPS' });
+        updateGpsPill('fail', 'ไม่รองรับ GPS');
         return;
       }
 
       const isSecure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
       if (!isSecure) {
         gpsPromise = Promise.reject({ code: 1, message: 'GPS ต้องใช้บน HTTPS เท่านั้น (ตอนนี้คือ ' + location.protocol + ')' });
+        updateGpsPill('fail', 'ต้องใช้ HTTPS');
         return;
       }
 
+      // ถ้ากำลังหาอยู่แล้ว ไม่ต้องเริ่มซ้ำ
+      if (gpsPromise) return;
+
       gpsBestReading = null;
+      gpsResult = null;
+      updateGpsPill('searching', 'หาตำแหน่ง...');
 
       if (gpsWatchId !== null) {
         try { navigator.geolocation.clearWatch(gpsWatchId); } catch (e) {}
@@ -1111,101 +1168,78 @@
 
       gpsPromise = new Promise(function(resolve, reject) {
         let resolved = false;
-        let firstFixReceived = false;
 
-        navigator.geolocation.getCurrentPosition(
+        function finish(reading) {
+          if (resolved) return;
+          resolved = true;
+          stopGpsWatch();
+          const r = formatReading(reading);
+          gpsResult = r;
+          updateGpsPill('ready', '±' + r.acc + ' ม.');
+          resolve(r);
+        }
+
+        function fail(err) {
+          if (resolved) return;
+          resolved = true;
+          stopGpsWatch();
+          reject(err);
+        }
+
+        // เริ่ม watchPosition ทันที — เก็บค่าดีที่สุดแบบต่อเนื่อง
+        gpsWatchId = navigator.geolocation.watchPosition(
           function(pos) {
-            firstFixReceived = true;
             const reading = {
               lat: pos.coords.latitude,
               lng: pos.coords.longitude,
               acc: pos.coords.accuracy
             };
-            gpsBestReading = reading;
-            updateGpsProgress(reading.acc);
-
-            if (!resolved && reading.acc <= GPS_GOOD_ACCURACY) {
-              resolved = true;
-              resolve(formatReading(reading));
-              return;
+            if (!gpsBestReading || reading.acc < gpsBestReading.acc) {
+              gpsBestReading = reading;
+              updateGpsPill('searching', '±' + Math.round(reading.acc) + ' ม.');
+              updateGpsProgress(reading.acc);
             }
-
-            if (!resolved) {
-              startWatch();
+            // ได้ความแม่นยำดีพอ → จบทันที
+            if (reading.acc <= GPS_GOOD_ACCURACY) {
+              finish(gpsBestReading);
             }
           },
           function(err) {
-            if (!resolved) {
-              startWatch();
-              setTimeout(function() {
-                if (resolved) return;
-                if (gpsBestReading) {
-                  resolved = true;
-                  stopGpsWatch();
-                  resolve(formatReading(gpsBestReading));
-                } else {
-                  resolved = true;
-                  stopGpsWatch();
-                  reject(err);
-                }
-              }, GPS_MAX_WAIT);
-            }
+            // ถ้ายังไม่มีค่าเลย และ error ร้ายแรง → fail
+            if (!gpsBestReading) fail(err);
           },
-          { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+          { enableHighAccuracy: true, timeout: GPS_MAX_WAIT, maximumAge: 0 }
         );
 
-        function startWatch() {
-          gpsWatchId = navigator.geolocation.watchPosition(
-            function(pos) {
-              const reading = {
-                lat: pos.coords.latitude,
-                lng: pos.coords.longitude,
-                acc: pos.coords.accuracy
-              };
-
-              if (!gpsBestReading || reading.acc < gpsBestReading.acc) {
-                gpsBestReading = reading;
-                updateGpsProgress(reading.acc);
-              }
-
-              if (!resolved && reading.acc <= GPS_GOOD_ACCURACY) {
-                resolved = true;
-                stopGpsWatch();
-                resolve(formatReading(gpsBestReading));
-              }
-            },
-            function(err) { /* ignore */ },
-            { enableHighAccuracy: true, timeout: GPS_MAX_WAIT, maximumAge: 0 }
-          );
-        }
-
+        // หมดเวลา → ใช้ค่าที่ดีที่สุดเท่าที่มี
         setTimeout(function() {
           if (resolved) return;
-          stopGpsWatch();
-
           if (gpsBestReading) {
-            resolved = true;
-            resolve(formatReading(gpsBestReading));
-          } else if (!firstFixReceived) {
+            finish(gpsBestReading);
+          } else {
+            // ยังไม่ได้อะไรเลย ลองแบบเร็ว (low accuracy) เป็น fallback
             navigator.geolocation.getCurrentPosition(
               function(pos) {
-                if (resolved) return;
-                resolved = true;
-                resolve({
-                  lat: pos.coords.latitude.toFixed(6),
-                  lng: pos.coords.longitude.toFixed(6),
-                  acc: Math.round(pos.coords.accuracy)
+                finish({
+                  lat: pos.coords.latitude,
+                  lng: pos.coords.longitude,
+                  acc: pos.coords.accuracy
                 });
               },
-              function(err) {
-                if (resolved) return;
-                resolved = true;
-                reject(err);
-              },
-              { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+              function(err) { fail(err); },
+              { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
             );
           }
         }, GPS_MAX_WAIT);
+      });
+
+      // ผูก handler เพื่ออัปเดต hidden field ทันทีที่ได้ค่า (แม้ยังไม่ถ่ายรูป)
+      gpsPromise.then(function(g) {
+        setGpsValue(g.lat, g.lng, g.acc);
+      }).catch(function(err) {
+        console.error('GPS error:', err);
+        updateGpsPill('fail', 'หาตำแหน่งไม่ได้');
+        // แสดง error ที่ช่องรูปเฉพาะตอนที่ถ่ายรูปแล้วเท่านั้น (handleCapture จะจัดการ)
       });
     }
 
@@ -1245,7 +1279,7 @@
     }
 
     // ============================================================
-    // ✅ NEW: handleCapture รองรับทั้ง camera / gallery
+    // ✅ handleCapture รองรับทั้ง camera / gallery
     //   - camera: รูปต้องถ่ายในนาทีนี้ (≤ 1 นาทีจากตอนกดปุ่ม)
     //   - gallery: รูปต้องถ่ายไม่เกิน 10 นาทีที่แล้ว
     // ============================================================
@@ -1260,7 +1294,6 @@
       const nowMs = Date.now();
 
       if (sourceType === 'camera') {
-        // โหมดถ่ายรูป: ห้ามเก่ากว่า 1 นาทีจากตอนกดปุ่ม
         if (!cameraOpenedAt) cameraOpenedAt = nowMs;
         const MAX_AGE_BEFORE_CLICK = 60 * 1000;  // 1 นาที
         const ageBeforeClick = cameraOpenedAt - fileTime;
@@ -1272,7 +1305,6 @@
           return;
         }
       } else {
-        // โหมดเลือกจากคลัง: ห้ามเก่ากว่า 10 นาที
         const MAX_AGE_GALLERY = 10 * 60 * 1000;  // 10 นาที
         const age = nowMs - fileTime;
 
@@ -1283,7 +1315,6 @@
         }
       }
 
-      // ใช้เวลาปัจจุบันเป็น photo timestamp เสมอ
       const now = new Date();
       const photoTimestamp =
         String(now.getDate()).padStart(2, '0') + '/' +
@@ -1293,17 +1324,23 @@
         String(now.getMinutes()).padStart(2, '0') + ':' +
         String(now.getSeconds()).padStart(2, '0');
 
-      // บันทึก source ลง hidden field
       document.getElementById('photoSource').value = sourceType;
 
       const statusDiv = document.getElementById('captureStatus');
       const sourceLabel = sourceType === 'camera' ? 'ถ่ายรูปสำเร็จ' : 'เลือกรูปจากคลังสำเร็จ';
 
+      // ถ้าได้พิกัดแล้ว → แสดงเลย / ถ้ายัง → แสดงกำลังหา (ปกติได้แล้วเพราะเริ่มตั้งแต่เข้าฟอร์ม)
+      let gpsRowHtml;
+      if (gpsResult) {
+        gpsRowHtml = '<div class="step-status" id="gpsRow"><span class="step-icon step-done">✓</span><span>📍 ได้ตำแหน่งแล้ว (±' + gpsResult.acc + ' ม.)</span></div>';
+      } else {
+        gpsRowHtml = '<div class="step-status" id="gpsRow"><span class="step-icon step-active"><span class="spinner" style="margin:0; width:10px; height:10px;"></span></span><span>กำลังหาตำแหน่ง GPS...</span></div>';
+      }
+
       statusDiv.innerHTML =
         '<div class="step-status"><span class="step-icon step-done">✓</span><span>' + sourceLabel + '</span></div>' +
-        '<div class="step-status" id="gpsRow"><span class="step-icon step-active"><span class="spinner" style="margin:0; width:10px; height:10px;"></span></span><span>กำลังหาตำแหน่ง GPS (รอ ~10-15 วิ)...</span></div>';
+        gpsRowHtml;
 
-      // แสดง badge แหล่งที่มา
       const badgeWrap = document.getElementById('sourceBadgeWrap');
       if (sourceType === 'camera') {
         badgeWrap.innerHTML = '<span class="photo-source-badge camera">📸 ถ่ายสด</span>';
@@ -1319,19 +1356,21 @@
       };
       reader.readAsDataURL(file);
 
-      if (!gpsPromise) {
-        startGpsLookup();
-      }
+      // GPS เริ่มไปแล้ว — แค่รอผล (ปกติได้ทันที)
+      if (!gpsPromise) startGpsLookup();
 
-      gpsPromise.then(function(g) {
-        setGpsValue(g.lat, g.lng, g.acc);
-      }).catch(function(err) {
-        console.error('GPS error:', err);
-        showGpsError(err);
-      });
+      if (gpsResult) {
+        setGpsValue(gpsResult.lat, gpsResult.lng, gpsResult.acc);
+      } else {
+        gpsPromise.then(function(g) {
+          setGpsValue(g.lat, g.lng, g.acc);
+        }).catch(function(err) {
+          console.error('GPS error:', err);
+          showGpsError(err);
+        });
+      }
     }
 
-    // แสดงข้อความเตือนรูปเก่าเกินไป
     function showAgeError(ageMs, sourceType) {
       const ageMin = Math.round(ageMs / 60000);
       const ageText = ageMin < 60
@@ -1401,14 +1440,14 @@
       img.onload = function() {
         const canvas = document.createElement('canvas');
         let w = img.width, h = img.height;
-        const maxDim = 1024;
+        const maxDim = 900;
         if (w > maxDim || h > maxDim) {
           if (w > h) { h = h * (maxDim / w); w = maxDim; }
           else { w = w * (maxDim / h); h = maxDim; }
         }
         canvas.width = w; canvas.height = h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        callback(canvas.toDataURL('image/jpeg', 0.7));
+        callback(canvas.toDataURL('image/jpeg', 0.62));
       };
       img.onerror = function() { callback(dataUrl); };
       img.src = dataUrl;
@@ -1462,16 +1501,11 @@
       document.getElementById('captureStatus').innerHTML = '';
       document.getElementById('sourceBadgeWrap').innerHTML = '';
 
-      // reset ทั้ง input ของ camera และ gallery
       const inputs = document.querySelectorAll('#photoSourceWrap input[type="file"]');
       inputs.forEach(function(inp) { inp.value = ''; });
 
-      document.getElementById('gpsCoords').value = '';
-      document.getElementById('address').value = '';
+      // หมายเหตุ: ไม่ล้าง GPS เพราะตำแหน่งยังใช้ได้อยู่ — ถ่ายรูปใหม่ก็ใช้พิกัดเดิม
       document.getElementById('photoSource').value = '';
-      gpsPromise = null;
-      gpsBestReading = null;
-      stopGpsWatch();
     }
 
     function showSuccessModal(type, message, info) {
@@ -1525,13 +1559,26 @@
       }
 
       const selfie = document.getElementById('selfiePreview').dataset.base64 || '';
-      const gps = document.getElementById('gpsCoords').value;
+      let gps = document.getElementById('gpsCoords').value;
       const photoSource = document.getElementById('photoSource').value || '';
 
       if (!selfie) {
         status.innerHTML = '<div class="status-box status-error">กรุณาเลือก "ถ่ายรูป" หรือ "เลือกจากคลัง" ก่อน</div>';
         return;
       }
+
+      // เผื่อ GPS ยังหาไม่เสร็จตอนกดส่ง → รออีกนิด
+      if (!gps && gpsPromise) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span>กำลังหาตำแหน่ง...';
+        try {
+          const g = await gpsPromise;
+          setGpsValue(g.lat, g.lng, g.acc);
+          gps = document.getElementById('gpsCoords').value;
+        } catch (err) { /* ปล่อยให้เช็คด้านล่าง */ }
+        btn.disabled = false;
+      }
+
       if (!gps) {
         status.innerHTML = '<div class="status-box status-error">ยังไม่มีพิกัด GPS</div>';
         return;
