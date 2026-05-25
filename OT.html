@@ -455,10 +455,13 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .view { display: none; }
-    .view.active { display: block; animation: viewIn 0.25s ease; }
+    .view.active { display: block; animation: viewIn 0.13s ease-out; }
     @keyframes viewIn {
-      from { opacity: 0; transform: translateX(8px); }
+      from { opacity: 0.4; transform: translateX(4px); }
       to { opacity: 1; transform: translateX(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .view.active { animation: none; }
     }
 
     .modal-overlay {
@@ -467,7 +470,7 @@
       backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
       z-index: 1000; display: flex; align-items: center; justify-content: center;
       padding: 24px; opacity: 0; pointer-events: none;
-      transition: opacity 0.25s ease;
+      transition: opacity 0.15s ease;
     }
     .modal-overlay.show { opacity: 1; pointer-events: auto; }
     .modal-card {
@@ -476,7 +479,7 @@
       width: 100%; max-width: 340px; text-align: center;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
       transform: scale(0.85);
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
     .modal-overlay.show .modal-card { transform: scale(1); }
     .modal-icon {
@@ -773,6 +776,14 @@
         // พอผู้ใช้กดเข้าฟอร์ม จะมีพิกัดรออยู่แล้ว ไม่ต้องรอ
         setTimeout(function() {
           try { startGpsLookup(); } catch (e) {}
+          // prefetch รายชื่อ "เลิกงาน" ของวันนี้ล่วงหน้า → กดเลิกงานแล้วเด้งทันที
+          try {
+            const today = new Date();
+            const d = today.getFullYear() + '-' +
+              String(today.getMonth() + 1).padStart(2, '0') + '-' +
+              String(today.getDate()).padStart(2, '0');
+            fetchActiveClockIns(d).catch(function() {});
+          } catch (e) {}
         }, 300);
       }
     })();
@@ -950,41 +961,94 @@
       }
     }
 
+    // cache รายชื่อ active clock-ins แยกตามวันที่ { 'yyyy-mm-dd': [...] }
+    let activeClockInsByDate = {};
+    let activeClockInsInflight = {};
+
+    function renderActiveClockIns(list) {
+      const sel = document.getElementById('employeeSelect');
+      const warningBox = document.getElementById('warningBox');
+      activeClockInsCache = list || [];
+      sel.disabled = false;
+
+      // จำค่าที่เลือกไว้ (เผื่อรีเฟรชเบื้องหลังแล้วไม่อยากให้เด้ง)
+      const prevName = (sel.value !== '' && activeClockInsCache[sel.value])
+        ? activeClockInsCache[sel.value].employeeName : '';
+
+      if (!activeClockInsCache.length) {
+        sel.innerHTML = '<option value="">-- ไม่มีคนกำลังทำงาน --</option>';
+        warningBox.style.display = 'block';
+        warningBox.innerHTML =
+          '<div class="empty-active-box">' +
+          '<div class="emoji">🔍</div>' +
+          '<div class="title">ไม่พบบันทึกเริ่มงาน</div>' +
+          '<div class="desc">วันนี้ยังไม่มีพนักงานคนใดกด "เริ่มงาน" ไว้<br>กรุณากลับไปกดเริ่มงานก่อน</div>' +
+          '</div>';
+        return;
+      }
+
+      warningBox.style.display = 'none';
+      let html = '<option value="">-- เลือกชื่อ --</option>';
+      let reselectIdx = '';
+      activeClockInsCache.forEach((p, idx) => {
+        if (prevName && p.employeeName === prevName) reselectIdx = String(idx);
+        html += '<option value="' + idx + '">' +
+          escapeHtml(p.employeeName) + '  ·  เริ่ม ' + p.startTime + '</option>';
+      });
+      sel.innerHTML = html;
+      if (reselectIdx !== '') sel.value = reselectIdx;
+    }
+
+    // ดึงข้อมูลจากเซิร์ฟเวอร์ (ใช้ร่วมกับ prefetch) — เก็บลง cache
+    function fetchActiveClockIns(date) {
+      if (!date) return Promise.resolve([]);
+      if (activeClockInsInflight[date]) return activeClockInsInflight[date];
+      const p = apiCall('getActiveClockIns', { otDate: date })
+        .then(function(res) {
+          const data = res.data || [];
+          activeClockInsByDate[date] = data;
+          delete activeClockInsInflight[date];
+          return data;
+        })
+        .catch(function(err) {
+          delete activeClockInsInflight[date];
+          throw err;
+        });
+      activeClockInsInflight[date] = p;
+      return p;
+    }
+
+    // เรียกตอนกดเข้าโหมดเลิกงาน / เปลี่ยนวันที่
     async function loadActiveClockIns() {
       const date = document.getElementById('otDate').value;
       const sel = document.getElementById('employeeSelect');
-      const warningBox = document.getElementById('warningBox');
 
+      // ถ้ามี cache ของวันนี้แล้ว → แสดงทันที (ลื่น) แล้วรีเฟรชเงียบ ๆ
+      if (activeClockInsByDate[date]) {
+        renderActiveClockIns(activeClockInsByDate[date]);
+        // รีเฟรชเบื้องหลังเพื่อความสด ไม่บล็อก UI
+        fetchActiveClockIns(date).then(function(data) {
+          // อัปเดตเฉพาะเมื่อยังอยู่ในโหมด/วันเดิม
+          if (currentMode === 'clock_out' &&
+              document.getElementById('otDate').value === date) {
+            renderActiveClockIns(data);
+          }
+        }).catch(function() {});
+        return;
+      }
+
+      // ยังไม่มี cache → แสดงกำลังโหลดแล้วรอ
       sel.innerHTML = '<option value="">กำลังโหลด...</option>';
       sel.disabled = true;
-      warningBox.style.display = 'none';
+      document.getElementById('warningBox').style.display = 'none';
 
       try {
-        const res = await apiCall('getActiveClockIns', { otDate: date });
-        activeClockInsCache = res.data || [];
-        sel.disabled = false;
-
-        if (!activeClockInsCache.length) {
-          sel.innerHTML = '<option value="">-- ไม่มีคนกำลังทำงาน --</option>';
-          warningBox.style.display = 'block';
-          warningBox.innerHTML =
-            '<div class="empty-active-box">' +
-            '<div class="emoji">🔍</div>' +
-            '<div class="title">ไม่พบบันทึกเริ่มงาน</div>' +
-            '<div class="desc">วันนี้ยังไม่มีพนักงานคนใดกด "เริ่มงาน" ไว้<br>กรุณากลับไปกดเริ่มงานก่อน</div>' +
-            '</div>';
-          return;
-        }
-
-        sel.innerHTML = '<option value="">-- เลือกชื่อ --</option>' +
-          activeClockInsCache.map((p, idx) =>
-            '<option value="' + idx + '">' +
-            escapeHtml(p.employeeName) + '  ·  เริ่ม ' + p.startTime +
-            '</option>'
-          ).join('');
+        const data = await fetchActiveClockIns(date);
+        renderActiveClockIns(data);
       } catch (err) {
         sel.disabled = false;
         sel.innerHTML = '<option value="">โหลดไม่สำเร็จ</option>';
+        const warningBox = document.getElementById('warningBox');
         warningBox.style.display = 'block';
         warningBox.innerHTML = '<div class="warning-box">❌ โหลดข้อมูลไม่ได้: ' + escapeHtml(err.message) + '</div>';
       }
@@ -1619,6 +1683,7 @@
               '<div class="info-row"><span>เวลาเริ่ม</span><b>' + res.startTime + '</b></div>' +
               '<div class="info-row"><span>เวลาเลิก</span><b>' + res.endTime + '</b></div>' +
               '<div class="info-row" style="border-top:1px solid rgba(0,0,0,0.1); margin-top:6px; padding-top:8px;"><span>รวม</span><b style="color:var(--success); font-size:18px;">' + res.hours + '</b></div>';
+            activeClockInsByDate = {};
             showSuccessModal('clock_out', 'บันทึกเวลาเลิกงานเรียบร้อย', info);
           } else {
             status.innerHTML = '<div class="status-box status-error">' + escapeHtml(res.message) + '</div>';
@@ -1675,6 +1740,9 @@
               '<div class="info-row"><span>บริษัท</span><b>' + escapeHtml(company) + '</b></div>' +
               '<div class="info-row"><span>เวลาเริ่ม</span><b style="color:var(--success); font-size:18px;">' + res.startTime + '</b></div>' +
               '<div class="info-row"><span>รหัส</span><b style="font-family:monospace; font-size:11px;">' + res.requestId + '</b></div>';
+            activeClockInsByDate = {};
+            // prefetch รายชื่อใหม่ล่วงหน้า (มีคนเพิ่งเริ่มงานเพิ่ม)
+            try { fetchActiveClockIns(otDate).catch(function(){}); } catch (e) {}
             showSuccessModal('clock_in', 'บันทึกเวลาเริ่มงานเรียบร้อย กลับมากดเลิกงานเมื่อเสร็จ', info);
           } else {
             status.innerHTML = '<div class="status-box status-error">' + escapeHtml(res.message) + '</div>';
