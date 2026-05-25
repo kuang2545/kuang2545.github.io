@@ -688,7 +688,7 @@
               <span class="hours-summary-value" id="hoursValue">0</span>
             </div>
 
-            <!-- ปุ่มขอเบี้ยเลี้ยง: แสดงเฉพาะ 3E Innovation (โหมดเริ่มงาน) -->
+            <!-- ปุ่มขอเบี้ยเลี้ยง: แสดงในหน้าเลิกงาน เฉพาะพนักงาน 3E Innovation -->
             <div class="allowance-box" id="allowanceBox" style="display:none;">
               <div class="allowance-toggle" onclick="toggleAllowance()">
                 <span class="allowance-emoji">🍱</span>
@@ -891,6 +891,7 @@
     let currentMode = 'clock_in';
     let existingClockIn = null;
     let activeClockInsCache = [];
+    const ALLOWANCE_COMPANY = '3E Innovation';
 
     function escapeHtml(s) {
       return String(s || '').replace(/[&<>"']/g, c =>
@@ -1135,6 +1136,11 @@
         existingClockIn = null;
         clockInBox.style.display = 'none';
         document.getElementById('hoursSummary').style.display = 'none';
+        // ซ่อน/รีเซ็ตปุ่มเบี้ยเลี้ยง
+        const ab = document.getElementById('allowanceBox');
+        ab.style.display = 'none';
+        ab.classList.remove('on');
+        document.getElementById('allowanceFlag').value = '';
         return;
       }
 
@@ -1147,6 +1153,16 @@
         company: picked.company,
         otDate: picked.otDate
       };
+
+      // แสดงปุ่มขอเบี้ยเลี้ยงเฉพาะพนักงาน 3E Innovation (รีเซ็ตการติ๊กทุกครั้งที่เปลี่ยนคน)
+      const allowanceBox = document.getElementById('allowanceBox');
+      allowanceBox.classList.remove('on');
+      document.getElementById('allowanceFlag').value = '';
+      if (picked.company === ALLOWANCE_COMPANY) {
+        allowanceBox.style.display = 'block';
+      } else {
+        allowanceBox.style.display = 'none';
+      }
 
       warningBox.style.display = 'none';
       clockInBox.style.display = 'block';
@@ -1231,22 +1247,14 @@
     }
 
     // ============================================================
-    // ====== เบี้ยเลี้ยง (เฉพาะ 3E Innovation, โหมดเริ่มงาน) ======
+    // ====== เบี้ยเลี้ยง (เฉพาะ 3E Innovation — หน้าเลิกงาน) ======
     // ============================================================
-    const ALLOWANCE_COMPANY = '3E Innovation';
-
     function onCompanyChange() {
+      // เบี้ยเลี้ยงย้ายไปหน้าเลิกงานแล้ว — หน้าเริ่มงานไม่ต้องโชว์ปุ่มนี้
       const box = document.getElementById('allowanceBox');
-      const company = document.getElementById('companySelect').value;
-
-      if (currentMode === 'clock_in' && company === ALLOWANCE_COMPANY) {
-        box.style.display = 'block';
-      } else {
-        // บริษัทอื่น → ซ่อนและรีเซ็ตการติ๊ก
-        box.style.display = 'none';
-        box.classList.remove('on');
-        document.getElementById('allowanceFlag').value = '';
-      }
+      box.style.display = 'none';
+      box.classList.remove('on');
+      document.getElementById('allowanceFlag').value = '';
     }
 
     function toggleAllowance() {
@@ -1742,11 +1750,16 @@
         }
         const picked = activeClockInsCache[idx];
 
+        // เบี้ยเลี้ยง: เฉพาะ 3E Innovation (ปุ่มจะโชว์เฉพาะกรณีนี้)
+        const allowance = (picked.company === ALLOWANCE_COMPANY)
+          ? (document.getElementById('allowanceFlag').value || '') : '';
+
         const data = {
           employeeName: picked.employeeName,
           otDate: picked.otDate,
           endTime: time,
           workDetail: '',
+          allowance: allowance,
           gpsCoords: gps,
           address: document.getElementById('address').value,
           selfieBase64: selfie,
@@ -1768,6 +1781,7 @@
           '<div class="info-row"><span>ชื่อ</span><b>' + escapeHtml(picked.employeeName) + '</b></div>' +
           (picked.supervisor ? '<div class="info-row"><span>หัวหน้า</span><b>' + escapeHtml(picked.supervisor) + '</b></div>' : '') +
           (picked.company ? '<div class="info-row"><span>บริษัท</span><b>' + escapeHtml(picked.company) + '</b></div>' : '') +
+          (allowance ? '<div class="info-row"><span>เบี้ยเลี้ยง</span><b style="color:var(--warning);">🍱 ขอรับ</b></div>' : '') +
           '<div class="info-row"><span>เวลาเริ่ม</span><b>' + picked.startTime + '</b></div>' +
           '<div class="info-row"><span>เวลาเลิก</span><b>' + time + '</b></div>' +
           '<div class="info-row" style="border-top:1px solid rgba(0,0,0,0.1); margin-top:6px; padding-top:8px;"><span>รวม</span><b style="color:var(--success); font-size:18px;">' + hoursText + '</b></div>';
@@ -1799,13 +1813,10 @@
           return;
         }
 
-        const allowance = document.getElementById('allowanceFlag').value || '';
-
         const info =
           '<div class="info-row"><span>ชื่อ</span><b>' + escapeHtml(employeeName) + '</b></div>' +
           '<div class="info-row"><span>หัวหน้า</span><b>' + escapeHtml(supervisorName) + '</b></div>' +
           '<div class="info-row"><span>บริษัท</span><b>' + escapeHtml(company) + '</b></div>' +
-          (allowance ? '<div class="info-row"><span>เบี้ยเลี้ยง</span><b style="color:var(--warning);">🍱 ขอรับ</b></div>' : '') +
           '<div class="info-row"><span>เวลาเริ่ม</span><b style="color:var(--success); font-size:18px;">' + time + '</b></div>';
 
         // เด้งหน้าสำเร็จทันที + ล้าง cache
