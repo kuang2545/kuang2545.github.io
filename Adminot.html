@@ -1007,15 +1007,44 @@
         </div></td></tr>`;
       }
 
-      try {
-        const s = await apiCall('getAdminSummary');
-        if (!s.success) return;
-        document.getElementById('sumTotal').innerHTML = s.total + ' <span class="stat-sub">คำขอ</span>';
-        document.getElementById('sumWorking').innerHTML = (s.working || 0) + ' <span class="stat-sub">คน</span>';
-        document.getElementById('sumPending').innerHTML = s.pending + ' <span class="stat-sub">· ' + (s.pendingHoursText || '0') + '</span>';
-        document.getElementById('sumApproved').innerHTML = s.approved + ' <span class="stat-sub">คำขอ</span>';
-        document.getElementById('sumHours').innerHTML = (s.approvedHoursText || '0');
-      } catch (e) {}
+      // คำนวณสรุปจากข้อมูลที่โหลดมาแล้ว — ไม่ต้องเรียก API รอบสอง (เร็วขึ้น)
+      computeSummary();
+    }
+
+    function minutesBetween(startTime, endTime) {
+      if (!startTime || !endTime) return 0;
+      const sp = String(startTime).split(':').map(Number);
+      const ep = String(endTime).split(':').map(Number);
+      if (sp.length < 2 || ep.length < 2) return 0;
+      let s = sp[0] * 60 + sp[1];
+      let e = ep[0] * 60 + ep[1];
+      if (e <= s) e += 24 * 60;
+      return e - s;
+    }
+
+    function formatDurationMin(total) {
+      if (!total || total <= 0) return '0';
+      const h = Math.floor(total / 60), m = total % 60;
+      if (h === 0) return m + ' นาที';
+      if (m === 0) return h + ' ชม.';
+      return h + ' ชม. ' + m + ' นาที';
+    }
+
+    function computeSummary() {
+      let total = allData.length, working = 0, pending = 0, approved = 0;
+      let pendingMin = 0, approvedMin = 0;
+      allData.forEach(r => {
+        const mins = minutesBetween(r.startTime, r.endTime);
+        if (r.status === 'กำลังทำงาน') working++;
+        else if (r.status === 'อนุมัติ') { approved++; approvedMin += mins; }
+        else if (r.status === 'ไม่อนุมัติ') { /* ไม่รวมชั่วโมง */ }
+        else { pending++; pendingMin += mins; }
+      });
+      document.getElementById('sumTotal').innerHTML = total + ' <span class="stat-sub">คำขอ</span>';
+      document.getElementById('sumWorking').innerHTML = working + ' <span class="stat-sub">คน</span>';
+      document.getElementById('sumPending').innerHTML = pending + ' <span class="stat-sub">· ' + formatDurationMin(pendingMin) + '</span>';
+      document.getElementById('sumApproved').innerHTML = approved + ' <span class="stat-sub">คำขอ</span>';
+      document.getElementById('sumHours').innerHTML = formatDurationMin(approvedMin);
     }
 
     function populateSupervisorFilter() {
@@ -1245,9 +1274,16 @@
         btn.disabled = false;
         btn.textContent = original;
         if (res.success) {
+          // อัปเดตเฉพาะแถวนั้นในหน่วยความจำ → render ใหม่ทันที (ไม่ต้องโหลดข้อมูล+รูปใหม่หมด)
+          const row = allData.find(r => r.rowIndex === currentAction.rowIndex);
+          if (row) {
+            row.status = currentAction.status;
+            row.note = note;
+          }
           closeModal();
           showToast('บันทึกสำเร็จ', 'success');
-          loadData();
+          renderTable();
+          computeSummary();
         } else {
           showToast(res.message, 'error');
         }
@@ -1262,8 +1298,17 @@
       if (!confirm('ลบคำขอ ' + requestId + ' ?')) return;
       try {
         const res = await apiCall('deleteRequest', { rowIndex });
-        if (res.success) { showToast('ลบสำเร็จ', 'success'); loadData(); }
-        else { showToast(res.message, 'error'); }
+        if (res.success) {
+          showToast('ลบสำเร็จ', 'success');
+          // เอาแถวออกจากหน่วยความจำ + ปรับ rowIndex ของแถวที่อยู่ถัดลงไป
+          // (เพราะ Google Sheet เลื่อนแถวขึ้นหลังลบ)
+          allData = allData.filter(r => r.rowIndex !== rowIndex);
+          allData.forEach(r => { if (r.rowIndex > rowIndex) r.rowIndex--; });
+          renderTable();
+          computeSummary();
+        } else {
+          showToast(res.message, 'error');
+        }
       } catch (err) {
         showToast(err.message, 'error');
       }
