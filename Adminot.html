@@ -36,14 +36,12 @@
       font-family: 'Inter', 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
       background: var(--bg);
       color: var(--ink);
-      /* responsive base font: 12px (mobile) → 13.5px (desktop) */
       font-size: clamp(14px, 0.7vw + 10.5px, 14px);
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
 
-    /* Header */
     .header {
       background: var(--panel);
       border-bottom: 1px solid var(--line);
@@ -87,13 +85,11 @@
       text-overflow: ellipsis;
     }
     .header-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
-    /* mobile: ซ่อนข้อความใต้ subtitle, แสดงแค่ logo + h1 */
     @media (max-width: 540px) {
       .brand-sep, .brand-sub { display: none; }
       .btn-text-hide { display: none; }
     }
 
-    /* Buttons */
     .btn {
       height: clamp(28px, 3vw, 30px);
       padding: 0 clamp(8px, 1vw, 12px);
@@ -120,14 +116,12 @@
     .btn-danger { background: var(--red); color: white; border-color: var(--red); }
     .btn-danger:hover { background: #991b1b; border-color: #991b1b; }
 
-    /* Container */
     .container {
       max-width: 1800px;
       margin: 0 auto;
       padding: clamp(12px, 2vw, 20px) clamp(12px, 2vw, 24px) clamp(20px, 4vw, 32px);
     }
 
-    /* Stats */
     .stats {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -169,7 +163,6 @@
     .stat-dot.green { background: #16a34a; }
     .stat-dot.blue  { background: #0ea5e9; }
 
-    /* Filter Bar */
     .filter-bar {
       background: var(--panel);
       border: 1px solid var(--line);
@@ -244,7 +237,6 @@
     }
     .icon-clear:hover { background: var(--hover); color: var(--ink); }
 
-    /* Table */
     .table-wrap {
       background: var(--panel);
       border: 1px solid var(--line);
@@ -326,10 +318,21 @@
       white-space: nowrap;
     }
 
-    /* responsive hide columns:
-       - hide-md: ซ่อนเมื่อจอ <= 900px (tablet)
-       - hide-sm: ซ่อนเมื่อจอ <= 640px (มือถือ)
-    */
+    /* ป้ายเบี้ยเลี้ยง */
+    .allowance-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 980px;
+      background: var(--amber-bg);
+      color: var(--amber);
+      border: 1px solid #fde68a;
+      font-size: clamp(14px, 0.4vw + 11.0px, 14px);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
     @media (max-width: 900px) {
       .hide-md { display: none !important; }
     }
@@ -338,7 +341,6 @@
       .table-wrap { max-height: calc(100vh - 280px); }
     }
 
-    /* Badge */
     .badge {
       display: inline-flex;
       align-items: center;
@@ -370,7 +372,6 @@
     }
     .badge.b-working::before { animation: pulse-dot 1.6s ease-in-out infinite; }
 
-    /* View Photo Button */
     .btn-view {
       display: inline-flex;
       align-items: center;
@@ -395,7 +396,6 @@
     .dot-in  { background: #16a34a; }
     .dot-out { background: #d97706; }
 
-    /* Row Actions */
     .row-actions { display: flex; gap: 4px; justify-content: flex-end; }
     .icon-btn {
       width: 26px; height: 26px;
@@ -420,7 +420,6 @@
 
     .dim { color: var(--ink-4); }
 
-    /* Empty & Loading */
     .empty {
       padding: 64px 20px;
       text-align: center;
@@ -457,7 +456,6 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Modal */
     .modal-overlay {
       position: fixed; inset: 0;
       background: rgba(10, 10, 10, 0.4);
@@ -477,7 +475,6 @@
       overflow: auto;
       box-shadow: 0 12px 40px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06);
     }
-    /* Image Lightbox (full-screen) */
     .image-lightbox {
       position: fixed; inset: 0;
       background: rgba(0, 0, 0, 0.92);
@@ -609,7 +606,6 @@
     }
     .info-row .v { color: var(--ink); font-weight: 500; }
 
-    /* Photo Modal */
     .photo-modal {
       background: white;
       border-radius: 10px;
@@ -677,7 +673,6 @@
     }
     .photo-block-empty svg { width: 22px; height: 22px; opacity: 0.6; }
 
-    /* Map embed */
     .map-embed {
       position: relative;
       width: 100%;
@@ -753,7 +748,6 @@
       font-family: 'IBM Plex Mono', monospace;
     }
 
-    /* Toast */
     .toast {
       position: fixed;
       bottom: 20px;
@@ -845,6 +839,10 @@
       <select id="supervisorFilter" class="select" onchange="renderTable()">
         <option value="">ทุกหัวหน้า</option>
       </select>
+      <select id="allowanceFilter" class="select" onchange="renderTable()">
+        <option value="">เบี้ยเลี้ยง: ทั้งหมด</option>
+        <option value="yes">เฉพาะที่ขอเบี้ยเลี้ยง</option>
+      </select>
       <input type="date" id="dateFilter" class="input" onchange="renderTable()" style="min-width:auto;" title="กรองตามวันที่">
       <button class="icon-clear" type="button" onclick="clearDateFilter()" id="clearDateBtn" style="display:none;" title="ล้างวันที่">✕</button>
       <div class="filter-spacer"></div>
@@ -863,6 +861,7 @@
             <th>เวลา</th>
             <th>รวม</th>
             <th class="hide-sm">งานที่ทำ</th>
+            <th>เบี้ยเลี้ยง</th>
             <th>หลักฐาน</th>
             <th>สถานะ</th>
             <th class="hide-md">หมายเหตุ</th>
@@ -870,7 +869,7 @@
           </tr>
         </thead>
         <tbody id="tableBody">
-          <tr><td colspan="12">
+          <tr><td colspan="13">
             <div class="empty">
               <div class="spinner"></div>
               <div class="empty-desc">กำลังโหลดข้อมูล…</div>
@@ -881,7 +880,6 @@
     </div>
   </div>
 
-  <!-- Action Modal -->
   <div class="modal-overlay" id="actionModal" onclick="if(event.target===this) closeModal()">
     <div class="modal">
       <div class="modal-header">
@@ -895,6 +893,7 @@
         <div class="info-row"><span class="k">ชื่อ</span><span class="v" id="actionName"></span></div>
         <div class="info-row"><span class="k">หัวหน้า</span><span class="v" id="actionSupervisor"></span></div>
         <div class="info-row"><span class="k">บริษัท</span><span class="v" id="actionCompany"></span></div>
+        <div class="info-row"><span class="k">เบี้ยเลี้ยง</span><span class="v" id="actionAllowance"></span></div>
         <div class="info-row"><span class="k">เวลา</span><span class="v" id="actionTime"></span></div>
         <div class="info-row"><span class="k">รวม</span><span class="v" id="actionHours"></span></div>
         <div class="info-row" style="margin-bottom: 12px;"><span class="k">วันที่</span><span class="v" id="actionDate"></span></div>
@@ -908,7 +907,6 @@
     </div>
   </div>
 
-  <!-- Photo Modal -->
   <div class="modal-overlay" id="photoInfoModal" onclick="if(event.target===this) closePhotoModal()">
     <div class="photo-modal">
       <div class="modal-header">
@@ -923,7 +921,6 @@
     </div>
   </div>
 
-  <!-- Image Lightbox (full-screen) -->
   <div class="image-lightbox" id="imageModal" onclick="closeImageModal()">
     <button class="lightbox-close" onclick="event.stopPropagation(); closeImageModal()" title="ปิด (Esc)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -969,12 +966,12 @@
 
     async function loadData() {
       const body = document.getElementById('tableBody');
-      body.innerHTML = `<tr><td colspan="12"><div class="empty"><div class="spinner"></div><div class="empty-desc">กำลังโหลดข้อมูล…</div></div></td></tr>`;
+      body.innerHTML = `<tr><td colspan="13"><div class="empty"><div class="spinner"></div><div class="empty-desc">กำลังโหลดข้อมูล…</div></div></td></tr>`;
 
       let timedOut = false;
       const t = setTimeout(() => {
         timedOut = true;
-        body.innerHTML = `<tr><td colspan="12"><div class="empty">
+        body.innerHTML = `<tr><td colspan="13"><div class="empty">
           <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
           <div class="empty-title">หมดเวลารอ</div>
           <div class="empty-desc">เซิร์ฟเวอร์ไม่ตอบกลับภายใน 60 วินาที</div>
@@ -992,7 +989,7 @@
           populateCompanyFilter();
           renderTable();
         } else {
-          body.innerHTML = `<tr><td colspan="12"><div class="empty">
+          body.innerHTML = `<tr><td colspan="13"><div class="empty">
             <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
             <div class="empty-title">เซิร์ฟเวอร์แจ้ง error</div>
             <div class="empty-desc">${escapeHtml(res.message || 'ไม่ทราบสาเหตุ')}</div>
@@ -1002,7 +999,7 @@
       } catch (err) {
         if (timedOut) return;
         clearTimeout(t);
-        body.innerHTML = `<tr><td colspan="12"><div class="empty">
+        body.innerHTML = `<tr><td colspan="13"><div class="empty">
           <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
           <div class="empty-title">โหลดไม่สำเร็จ</div>
           <div class="empty-desc">${escapeHtml(err.message || err)}</div>
@@ -1047,11 +1044,16 @@
       if (current && ordered.indexOf(current) !== -1) sel.value = current;
     }
 
+    function hasAllowance(r) {
+      return !!(r.allowance && String(r.allowance).trim());
+    }
+
     function renderTable() {
       const search = document.getElementById('searchInput').value.toLowerCase().trim();
       const statusF = document.getElementById('statusFilter').value;
       const supervisorF = document.getElementById('supervisorFilter').value;
       const companyF = document.getElementById('companyFilter').value;
+      const allowanceF = document.getElementById('allowanceFilter').value;
       const dateF = document.getElementById('dateFilter').value;
       document.getElementById('clearDateBtn').style.display = dateF ? 'inline-flex' : 'none';
 
@@ -1067,6 +1069,7 @@
         }
         if (supervisorF && (r.supervisor || '').trim() !== supervisorF) return false;
         if (companyF && (r.company || '').trim() !== companyF) return false;
+        if (allowanceF === 'yes' && !hasAllowance(r)) return false;
         if (dateF) {
           const otDate = parseDDMMYYYY(r.otDate);
           const target = new Date(dateF);
@@ -1082,14 +1085,14 @@
 
       if (filtered.length === 0) {
         if (statusF === '__open__') {
-          body.innerHTML = `<tr><td colspan="12"><div class="empty">
+          body.innerHTML = `<tr><td colspan="13"><div class="empty">
             <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
             <div class="empty-title">ไม่มีงานค้างอยู่</div>
             <div class="empty-desc">ทุกคำขอได้รับการดำเนินการแล้ว</div>
             <a href="#" onclick="document.getElementById('statusFilter').value=''; onStatusFilterChange(); return false;">ดูทั้งหมด →</a>
           </div></td></tr>`;
         } else {
-          body.innerHTML = `<tr><td colspan="12"><div class="empty">
+          body.innerHTML = `<tr><td colspan="13"><div class="empty">
             <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div>
             <div class="empty-title">ไม่พบข้อมูล</div>
             <div class="empty-desc">ลองปรับตัวกรอง หรือล้างคำค้นหา</div>
@@ -1153,6 +1156,9 @@
 
         const supCell = r.supervisor ? escapeHtml(r.supervisor) : '<span class="dim">—</span>';
         const compCell = r.company ? `<span class="company-tag">${escapeHtml(r.company)}</span>` : '<span class="dim">—</span>';
+        const allowCell = hasAllowance(r)
+          ? `<span class="allowance-tag">🍱 ขอรับ</span>`
+          : '<span class="dim">—</span>';
 
         return `<tr>
           <td class="mono hide-md">${escapeHtml(r.submittedAt)}</td>
@@ -1163,6 +1169,7 @@
           <td class="col-time">${timeRange}</td>
           <td class="col-hours">${escapeHtml(r.hours || (isWorking ? '—' : '—'))}</td>
           <td class="col-detail hide-sm"><div class="clip" title="${escapeHtml(r.workDetail || '')}">${escapeHtml(r.workDetail || '—')}</div></td>
+          <td>${allowCell}</td>
           <td>${viewBtn}</td>
           <td><span class="badge ${badgeClass}">${escapeHtml(r.status)}</span></td>
           <td class="hide-md" style="color:var(--ink-2);font-size: clamp(14px, 0.5vw + 10.5px, 14px);max-width:160px;">${escapeHtml(r.note || '—')}</td>
@@ -1206,6 +1213,7 @@
       document.getElementById('actionName').textContent = record.employeeName;
       document.getElementById('actionSupervisor').textContent = record.supervisor || '—';
       document.getElementById('actionCompany').textContent = record.company || '—';
+      document.getElementById('actionAllowance').textContent = hasAllowance(record) ? '🍱 ขอรับเบี้ยเลี้ยง' : '—';
       document.getElementById('actionTime').textContent =
         (record.startTime && record.endTime) ? (record.startTime + ' → ' + record.endTime) : '—';
       document.getElementById('actionHours').textContent = record.hours || '—';
@@ -1279,7 +1287,6 @@
     function toggleZoom(img) {
       img.classList.toggle('zoomed');
     }
-    // ปิด lightbox ด้วย Esc
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
         const lightbox = document.getElementById('imageModal');
@@ -1295,13 +1302,10 @@
         ' · ' + (record.employeeName || '') + ' · ' + (record.otDate || '');
 
       function buildBlock(kind, label, selfieEmbed, selfieFull, mapUrl, gps, photoTime) {
-        // สร้าง URL รูปขนาดใหญ่สำหรับ lightbox
-        // ถ้า embed url เป็น thumbnail?id=X&sz=w800 → แปลงเป็น sz=w2400 เพื่อความคม
         let largeUrl = selfieFull || selfieEmbed || '';
         if (selfieEmbed && /sz=w\d+/.test(selfieEmbed)) {
           largeUrl = selfieEmbed.replace(/sz=w\d+/, 'sz=w2400');
         } else if (selfieEmbed) {
-          // ถ้าไม่มี sz parameter ก็ใช้ embed url ตรงๆ
           largeUrl = selfieEmbed;
         }
 
@@ -1318,9 +1322,6 @@
                <div>ยังไม่มีรูป</div>
              </div>`;
 
-        // ===== Map embed: ฝังแผนที่ในหน้าเลย =====
-        // ต้องการพิกัด lat,lng จากฟิลด์ gps (เช่น "13.756331, 100.501765")
-        // หรือ extract จาก mapUrl ถ้าเป็น Google Maps link
         let coords = '';
         if (gps && /^-?\d+\.?\d*\s*,\s*-?\d+\.?\d*$/.test(gps.trim())) {
           coords = gps.trim().replace(/\s/g, '');
@@ -1331,7 +1332,6 @@
 
         let mapHtml;
         if (coords) {
-          // ใช้ Google Maps embed แบบไม่ต้องใช้ API key (q= parameter)
           const embedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(coords)}&z=17&output=embed`;
           const openUrl = mapUrl || `https://maps.google.com/?q=${encodeURIComponent(coords)}`;
           mapHtml = `<div class="map-embed">
@@ -1387,9 +1387,10 @@
 
     function exportCSV() {
       if (!allData.length) { showToast('ไม่มีข้อมูล', 'error'); return; }
-      const headers = ['รหัสคำขอ','ส่งเมื่อ','วันที่ OT','ชื่อ','หัวหน้า','บริษัท','แผนก','เวลาเริ่ม','เวลาเลิก','เวลารวม','งานที่ทำ','GPS เริ่ม','แผนที่เริ่ม','รูปเริ่ม','เวลาถ่ายรูปเริ่ม','GPS เลิก','แผนที่เลิก','รูปเลิก','เวลาถ่ายรูปเลิก','สถานะ','หมายเหตุ'];
+      const headers = ['รหัสคำขอ','ส่งเมื่อ','วันที่ OT','ชื่อ','หัวหน้า','บริษัท','แผนก','เบี้ยเลี้ยง','เวลาเริ่ม','เวลาเลิก','เวลารวม','งานที่ทำ','GPS เริ่ม','แผนที่เริ่ม','รูปเริ่ม','เวลาถ่ายรูปเริ่ม','GPS เลิก','แผนที่เลิก','รูปเลิก','เวลาถ่ายรูปเลิก','สถานะ','หมายเหตุ'];
       const rows = allData.map(r => [
         r.requestId, r.submittedAt, r.otDate, r.employeeName, r.supervisor || '', r.company || '', r.department,
+        (r.allowance ? 'ขอรับเบี้ยเลี้ยง' : ''),
         r.startTime, r.endTime, r.hours, r.workDetail,
         r.gpsIn, r.mapIn, r.selfieIn, r.photoTimeIn || '',
         r.gpsOut, r.mapOut, r.selfieOut, r.photoTimeOut || '',
