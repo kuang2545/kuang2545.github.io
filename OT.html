@@ -1753,31 +1753,32 @@
           photoTimestamp: document.getElementById('selfiePreview').dataset.timestamp || '',
           photoSource: photoSource
         };
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner"></span>กำลังบันทึก...';
 
-        try {
-          const res = await apiCall('clockOut', data);
-          btn.disabled = false;
-          btn.innerHTML = '🏁 เลิกงาน';
-          if (res.success) {
-            const info =
-              '<div class="info-row"><span>ชื่อ</span><b>' + escapeHtml(picked.employeeName) + '</b></div>' +
-              (picked.supervisor ? '<div class="info-row"><span>หัวหน้า</span><b>' + escapeHtml(picked.supervisor) + '</b></div>' : '') +
-              (picked.company ? '<div class="info-row"><span>บริษัท</span><b>' + escapeHtml(picked.company) + '</b></div>' : '') +
-              '<div class="info-row"><span>เวลาเริ่ม</span><b>' + res.startTime + '</b></div>' +
-              '<div class="info-row"><span>เวลาเลิก</span><b>' + res.endTime + '</b></div>' +
-              '<div class="info-row" style="border-top:1px solid rgba(0,0,0,0.1); margin-top:6px; padding-top:8px;"><span>รวม</span><b style="color:var(--success); font-size:18px;">' + res.hours + '</b></div>';
-            activeClockInsByDate = {};
-            showSuccessModal('clock_out', 'บันทึกเวลาเลิกงานเรียบร้อย', info);
-          } else {
-            status.innerHTML = '<div class="status-box status-error">' + escapeHtml(res.message) + '</div>';
-          }
-        } catch (err) {
-          btn.disabled = false;
-          btn.innerHTML = '🏁 เลิกงาน';
-          status.innerHTML = '<div class="status-box status-error">' + escapeHtml(err.message) + '</div>';
-        }
+        // ⚡ คำนวณชั่วโมงฝั่ง client เพื่อแสดงผลทันที (ไม่ต้องรอเซิร์ฟเวอร์)
+        const mins = (function() {
+          const [sh, sm] = picked.startTime.split(':').map(Number);
+          const [eh, em] = time.split(':').map(Number);
+          let s = sh * 60 + sm, e = eh * 60 + em;
+          if (e <= s) e += 24 * 60;
+          return e - s;
+        })();
+        const hoursText = formatDuration(mins);
+
+        const info =
+          '<div class="info-row"><span>ชื่อ</span><b>' + escapeHtml(picked.employeeName) + '</b></div>' +
+          (picked.supervisor ? '<div class="info-row"><span>หัวหน้า</span><b>' + escapeHtml(picked.supervisor) + '</b></div>' : '') +
+          (picked.company ? '<div class="info-row"><span>บริษัท</span><b>' + escapeHtml(picked.company) + '</b></div>' : '') +
+          '<div class="info-row"><span>เวลาเริ่ม</span><b>' + picked.startTime + '</b></div>' +
+          '<div class="info-row"><span>เวลาเลิก</span><b>' + time + '</b></div>' +
+          '<div class="info-row" style="border-top:1px solid rgba(0,0,0,0.1); margin-top:6px; padding-top:8px;"><span>รวม</span><b style="color:var(--success); font-size:18px;">' + hoursText + '</b></div>';
+
+        // เด้งหน้าสำเร็จทันที + ล้าง cache
+        activeClockInsByDate = {};
+        showSuccessModal('clock_out', 'บันทึกเวลาเลิกงานเรียบร้อย', info);
+        btn.innerHTML = '🏁 เลิกงาน';
+
+        // ส่งข้อมูลขึ้นเซิร์ฟเวอร์เบื้องหลัง — แจ้งเตือนเฉพาะตอนล้มเหลว
+        sendInBackground('clockOut', data, '🏁 เลิกงาน (' + picked.employeeName + ')');
 
       } else {
         const employeeName = document.getElementById('employeeName').value.trim();
@@ -1800,48 +1801,51 @@
 
         const allowance = document.getElementById('allowanceFlag').value || '';
 
-        const data = {
-          otDate, employeeName,
-          supervisorName,
-          company,
-          startTime: time,
-          workDetail,
-          allowance,
-          gpsCoords: gps,
-          address: document.getElementById('address').value,
-          selfieBase64: selfie,
-          photoTimestamp: document.getElementById('selfiePreview').dataset.timestamp || '',
-          photoSource: photoSource
-        };
+        const info =
+          '<div class="info-row"><span>ชื่อ</span><b>' + escapeHtml(employeeName) + '</b></div>' +
+          '<div class="info-row"><span>หัวหน้า</span><b>' + escapeHtml(supervisorName) + '</b></div>' +
+          '<div class="info-row"><span>บริษัท</span><b>' + escapeHtml(company) + '</b></div>' +
+          (allowance ? '<div class="info-row"><span>เบี้ยเลี้ยง</span><b style="color:var(--warning);">🍱 ขอรับ</b></div>' : '') +
+          '<div class="info-row"><span>เวลาเริ่ม</span><b style="color:var(--success); font-size:18px;">' + time + '</b></div>';
 
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner"></span>กำลังบันทึก...';
+        // เด้งหน้าสำเร็จทันที + ล้าง cache
+        activeClockInsByDate = {};
+        showSuccessModal('clock_in', 'บันทึกเวลาเริ่มงานเรียบร้อย กลับมากดเลิกงานเมื่อเสร็จ', info);
+        btn.innerHTML = '⏱️ เริ่มงาน OT';
 
-        try {
-          const res = await apiCall('clockIn', data);
-          btn.disabled = false;
-          btn.innerHTML = '⏱️ เริ่มงาน OT';
-          if (res.success) {
-            const info =
-              '<div class="info-row"><span>ชื่อ</span><b>' + escapeHtml(employeeName) + '</b></div>' +
-              '<div class="info-row"><span>หัวหน้า</span><b>' + escapeHtml(supervisorName) + '</b></div>' +
-              '<div class="info-row"><span>บริษัท</span><b>' + escapeHtml(company) + '</b></div>' +
-              (allowance ? '<div class="info-row"><span>เบี้ยเลี้ยง</span><b style="color:var(--warning);">🍱 ขอรับ</b></div>' : '') +
-              '<div class="info-row"><span>เวลาเริ่ม</span><b style="color:var(--success); font-size:18px;">' + res.startTime + '</b></div>' +
-              '<div class="info-row"><span>รหัส</span><b style="font-family:monospace; font-size:11px;">' + res.requestId + '</b></div>';
-            activeClockInsByDate = {};
-            // prefetch รายชื่อใหม่ล่วงหน้า (มีคนเพิ่งเริ่มงานเพิ่ม)
-            try { fetchActiveClockIns(otDate).catch(function(){}); } catch (e) {}
-            showSuccessModal('clock_in', 'บันทึกเวลาเริ่มงานเรียบร้อย กลับมากดเลิกงานเมื่อเสร็จ', info);
-          } else {
-            status.innerHTML = '<div class="status-box status-error">' + escapeHtml(res.message) + '</div>';
-          }
-        } catch (err) {
-          btn.disabled = false;
-          btn.innerHTML = '⏱️ เริ่มงาน OT';
-          status.innerHTML = '<div class="status-box status-error">' + escapeHtml(err.message) + '</div>';
-        }
+        // ส่งข้อมูลขึ้นเซิร์ฟเวอร์เบื้องหลัง — แจ้งเตือนเฉพาะตอนล้มเหลว
+        sendInBackground('clockIn', data, '⏱️ เริ่มงาน (' + employeeName + ')', function() {
+          // สำเร็จ → prefetch รายชื่อใหม่ล่วงหน้า
+          try { fetchActiveClockIns(otDate).catch(function(){}); } catch (e) {}
+        });
       }
+    }
+
+    // ============================================================
+    // ⚡ ส่งข้อมูลขึ้นเซิร์ฟเวอร์เบื้องหลัง (ไม่บล็อก UI)
+    //    - สำเร็จ: เงียบ (เรียก onSuccess ถ้ามี)
+    //    - ล้มเหลว: แจ้งเตือนผู้ใช้ให้ทราบ จะได้ลองใหม่
+    // ============================================================
+    function sendInBackground(action, data, label, onSuccess) {
+      apiCall(action, data).then(function(res) {
+        if (res && res.success) {
+          if (onSuccess) { try { onSuccess(res); } catch (e) {} }
+        } else {
+          notifyBackgroundFail(label, (res && res.message) ? res.message : 'บันทึกไม่สำเร็จ');
+        }
+      }).catch(function(err) {
+        notifyBackgroundFail(label, err.message || 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้');
+      });
+    }
+
+    function notifyBackgroundFail(label, message) {
+      // ปิด modal สำเร็จถ้ายังเปิดอยู่ แล้วแจ้งเตือนให้ชัด
+      try {
+        document.getElementById('successModal').classList.remove('show');
+        document.body.style.overflow = '';
+      } catch (e) {}
+      alert('⚠️ บันทึกข้อมูลไม่สำเร็จ\n\nรายการ: ' + label + '\nสาเหตุ: ' + message +
+            '\n\nกรุณาทำรายการใหม่อีกครั้ง');
     }
   </script>
 </body>
