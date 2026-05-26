@@ -824,7 +824,7 @@
     </div>
 
     <div class="filter-bar">
-      <input type="search" id="searchInput" class="input search" placeholder="ค้นหาชื่อ บริษัท รหัส หรืองาน…" oninput="renderTable()">
+      <input type="search" id="searchInput" class="input search" placeholder="ค้นหาชื่อ บริษัท รหัส หรืองาน…" oninput="onSearchInput()">
       <select id="statusFilter" class="select" onchange="onStatusFilterChange()">
         <option value="__open__">ยังไม่ปิดเคส</option>
         <option value="">ทุกสถานะ</option>
@@ -948,6 +948,12 @@
     function clearDateFilter() {
       document.getElementById('dateFilter').value = '';
       renderTable();
+    }
+
+    let searchTimer = null;
+    function onSearchInput() {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(renderTable, 180);
     }
 
     async function apiCall(action, payload) {
@@ -1136,7 +1142,7 @@
                         : r.status === 'กำลังทำงาน' ? 'b-working'
                         : 'b-pending';
 
-        const recordJson = JSON.stringify(r).replace(/'/g, "\\'");
+        const rid = escapeJs(r.requestId);
 
         const hasIn = !!(r.selfieInEmbed || r.mapIn);
         const hasOut = !!(r.selfieOutEmbed || r.mapOut);
@@ -1146,7 +1152,7 @@
         } else {
           const dots = (hasIn ? '<span class="dot dot-in"></span>' : '') +
                        (hasOut ? '<span class="dot dot-out"></span>' : '');
-          viewBtn = `<button class="btn-view" onclick='openPhotoModal(${recordJson})'>
+          viewBtn = `<button class="btn-view" onclick="openPhotoModalById('${rid}')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><polyline points="21 15 16 10 5 21"/></svg>
             <span>ดูรูป</span>
             <span class="view-dots">${dots}</span>
@@ -1168,18 +1174,18 @@
         let actions = '';
         if (isPending) {
           actions = `
-            <button class="icon-btn approve" title="อนุมัติ" onclick='openAction(${r.rowIndex}, "อนุมัติ", ${recordJson})'>
+            <button class="icon-btn approve" title="อนุมัติ" onclick="openActionById('${rid}', 'อนุมัติ')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
             </button>
-            <button class="icon-btn reject" title="ไม่อนุมัติ" onclick='openAction(${r.rowIndex}, "ไม่อนุมัติ", ${recordJson})'>
+            <button class="icon-btn reject" title="ไม่อนุมัติ" onclick="openActionById('${rid}', 'ไม่อนุมัติ')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>`;
         } else if (!isWorking) {
-          actions = `<button class="icon-btn" title="เปลี่ยนสถานะ" onclick='openAction(${r.rowIndex}, "เปลี่ยน", ${recordJson})'>
+          actions = `<button class="icon-btn" title="เปลี่ยนสถานะ" onclick="openActionById('${rid}', 'เปลี่ยน')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>`;
         }
-        actions += `<button class="icon-btn delete" title="ลบ" onclick="deleteRow(${r.rowIndex}, '${escapeJs(r.requestId)}')">
+        actions += `<button class="icon-btn delete" title="ลบ" onclick="deleteRow(${r.rowIndex}, '${rid}')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
         </button>`;
 
@@ -1212,6 +1218,22 @@
       const parts = s.split('/');
       if (parts.length !== 3) return 0;
       return new Date(+parts[2], +parts[1]-1, +parts[0]).getTime();
+    }
+
+    function findRecord(requestId) {
+      return allData.find(r => r.requestId === requestId);
+    }
+
+    function openActionById(requestId, status) {
+      const record = findRecord(requestId);
+      if (!record) { showToast('ไม่พบข้อมูลแถวนี้', 'error'); return; }
+      openAction(record.rowIndex, status, record);
+    }
+
+    function openPhotoModalById(requestId) {
+      const record = findRecord(requestId);
+      if (!record) { showToast('ไม่พบข้อมูลแถวนี้', 'error'); return; }
+      openPhotoModal(record);
     }
 
     function openAction(rowIndex, status, record) {
