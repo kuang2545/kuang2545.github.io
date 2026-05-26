@@ -943,6 +943,47 @@
     </div>
   </div>
 
+  <!-- Export Modal -->
+  <div class="modal-overlay" id="exportModal" onclick="if(event.target===this) closeExportModal()">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>ดาวน์โหลดข้อมูล<span class="sub" id="exportCountSub"></span></h3>
+        <button class="modal-close" onclick="closeExportModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <label for="expMonth">รอบเดือน (26 เดือนก่อน – 25 เดือนนี้)</label>
+        <select id="expMonth" class="select" style="width:100%; height:38px; margin-bottom:14px;" onchange="updateExportCount()"></select>
+
+        <label for="expCompany">บริษัท</label>
+        <select id="expCompany" class="select" style="width:100%; height:38px; margin-bottom:14px;" onchange="updateExportCount()">
+          <option value="">ทุกบริษัท</option>
+        </select>
+
+        <label for="expStatus">สถานะ</label>
+        <select id="expStatus" class="select" style="width:100%; height:38px; margin-bottom:6px;" onchange="updateExportCount()">
+          <option value="">ทุกสถานะ</option>
+          <option value="กำลังทำงาน">กำลังทำงาน</option>
+          <option value="รออนุมัติ">รออนุมัติ</option>
+          <option value="อนุมัติ">อนุมัติ</option>
+          <option value="ไม่อนุมัติ">ไม่อนุมัติ</option>
+        </select>
+
+        <div id="exportPreview" style="font-size:13px; color:var(--ink-3); margin-top:10px; padding:10px 12px; background:#fafafa; border:1px solid var(--line); border-radius:var(--radius);">
+          จะดาวน์โหลด <b id="exportCount">0</b> รายการ
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeExportModal()">ยกเลิก</button>
+        <button class="btn btn-primary" onclick="confirmExport()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          ดาวน์โหลด CSV
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="image-lightbox" id="imageModal" onclick="closeImageModal()">
     <button class="lightbox-close" onclick="event.stopPropagation(); closeImageModal()" title="ปิด (Esc)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -1547,15 +1588,100 @@
       setTimeout(() => t.className = 'toast ' + (type || ''), 2500);
     }
 
+    // ===== รอบเดือน: 26 เดือนก่อน → 25 เดือนนี้ =====
+    // คืนช่วงของรอบที่ "offset" เดือน (0 = รอบปัจจุบัน, 1 = รอบก่อนหน้า)
+    function getCycleRange(offset) {
+      const now = new Date();
+      let y = now.getFullYear();
+      let m = now.getMonth(); // 0-11
+      // รอบปัจจุบัน: ถ้าวันนี้ >= 26 → รอบคือ 26 เดือนนี้ ถึง 25 เดือนหน้า
+      //             ถ้าวันนี้ < 26  → รอบคือ 26 เดือนก่อน ถึง 25 เดือนนี้
+      if (now.getDate() < 26) m -= 1;
+      m -= offset;
+      // normalize
+      const start = new Date(y, m, 26, 0, 0, 0, 0);
+      const end = new Date(y, m + 1, 25, 23, 59, 59, 999);
+      return { start: start, end: end };
+    }
+
+    function fmtCycleLabel(range) {
+      const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+      const s = range.start, e = range.end;
+      const sStr = s.getDate() + ' ' + months[s.getMonth()];
+      const eStr = e.getDate() + ' ' + months[e.getMonth()];
+      const yStr = (e.getFullYear() + 543); // พ.ศ.
+      return sStr + ' – ' + eStr + ' ' + yStr;
+    }
+
     function exportCSV() {
       if (!allData.length) { showToast('ไม่มีข้อมูล', 'error'); return; }
-      const headers = ['รหัสคำขอ','ส่งเมื่อ','วันที่ OT','ชื่อ','หัวหน้า','บริษัท','แผนก','เบี้ยเลี้ยง','เวลาเริ่ม','เวลาเลิก','เวลารวม','งานที่ทำ','GPS เริ่ม','แผนที่เริ่ม','รูปเริ่ม','เวลาถ่ายรูปเริ่ม','GPS เลิก','แผนที่เลิก','รูปเลิก','เวลาถ่ายรูปเลิก','สถานะ','หมายเหตุ'];
-      const rows = allData.map(r => [
+
+      // เติม dropdown รอบเดือน (รอบปัจจุบัน + ย้อนหลัง 12 รอบ)
+      const monthSel = document.getElementById('expMonth');
+      let opts = '<option value="all">ทุกเดือน (ไม่จำกัด)</option>';
+      for (let i = 0; i < 13; i++) {
+        const range = getCycleRange(i);
+        const label = fmtCycleLabel(range) + (i === 0 ? ' · รอบปัจจุบัน' : '');
+        opts += '<option value="' + i + '"' + (i === 0 ? ' selected' : '') + '>' + label + '</option>';
+      }
+      monthSel.innerHTML = opts;
+
+      // เติม dropdown บริษัท (ใช้ลำดับเดียวกับ filter หลัก)
+      const compSel = document.getElementById('expCompany');
+      const standardOrder = ['3E Empire', '3E Trading', '3E Innovation', 'AE&T', 'Eita & Paul', 'Hikari Denki', 'Chavest'];
+      const fromData = Array.from(new Set(allData.map(r => (r.company || '').trim()).filter(n => n)));
+      const ordered = [];
+      standardOrder.forEach(c => { if (fromData.indexOf(c) !== -1) ordered.push(c); });
+      fromData.forEach(c => { if (ordered.indexOf(c) === -1) ordered.push(c); });
+      compSel.innerHTML = '<option value="">ทุกบริษัท</option>' +
+        ordered.map(n => '<option value="' + escapeHtml(n) + '">' + escapeHtml(n) + '</option>').join('');
+
+      document.getElementById('expStatus').value = '';
+      updateExportCount();
+      document.getElementById('exportModal').classList.add('show');
+    }
+
+    function closeExportModal() {
+      document.getElementById('exportModal').classList.remove('show');
+    }
+
+    // กรองข้อมูลตามตัวเลือกใน export modal
+    function getExportFiltered() {
+      const monthVal = document.getElementById('expMonth').value;
+      const compVal = document.getElementById('expCompany').value;
+      const statusVal = document.getElementById('expStatus').value;
+
+      let range = null;
+      if (monthVal !== 'all') range = getCycleRange(parseInt(monthVal, 10));
+
+      return allData.filter(r => {
+        if (compVal && (r.company || '').trim() !== compVal) return false;
+        if (statusVal && r.status !== statusVal) return false;
+        if (range) {
+          const d = parseDDMMYYYY(r.otDate);
+          if (!d) return false;
+          if (d < range.start.getTime() || d > range.end.getTime()) return false;
+        }
+        return true;
+      });
+    }
+
+    function updateExportCount() {
+      const n = getExportFiltered().length;
+      document.getElementById('exportCount').textContent = n;
+      const btn = document.querySelector('#exportModal .btn-primary');
+      if (btn) btn.disabled = (n === 0);
+    }
+
+    function confirmExport() {
+      const filtered = getExportFiltered();
+      if (!filtered.length) { showToast('ไม่มีข้อมูลตามที่เลือก', 'error'); return; }
+
+      const headers = ['รหัสคำขอ','ส่งเมื่อ','วันที่ OT','ชื่อ','หัวหน้า','บริษัท','แผนก','เบี้ยเลี้ยง','เวลาเริ่ม','เวลาเลิก','เวลารวม','งานที่ทำ','สถานะ','หมายเหตุ'];
+      const rows = filtered.map(r => [
         r.requestId, r.submittedAt, r.otDate, r.employeeName, r.supervisor || '', r.company || '', r.department,
         (r.allowance ? (minutesBetween(r.startTime, r.endTime) >= 180 ? '+80' : '+0') : ''),
         r.startTime, r.endTime, r.hours, r.workDetail,
-        r.gpsIn, r.mapIn, r.selfieIn, r.photoTimeIn || '',
-        r.gpsOut, r.mapOut, r.selfieOut, r.photoTimeOut || '',
         r.status, r.note
       ]);
       const csv = [headers, ...rows].map(row =>
@@ -1563,11 +1689,25 @@
       ).join('\n');
       const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
+
+      // ตั้งชื่อไฟล์ตามตัวเลือก
+      const monthVal = document.getElementById('expMonth').value;
+      const compVal = document.getElementById('expCompany').value;
+      let fname = 'ot';
+      if (compVal) fname += '_' + compVal.replace(/[^\w]/g, '');
+      if (monthVal !== 'all') {
+        const range = getCycleRange(parseInt(monthVal, 10));
+        fname += '_' + range.start.toISOString().slice(0,10) + '_ถึง_' + range.end.toISOString().slice(0,10);
+      } else {
+        fname += '_ทั้งหมด';
+      }
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'ot_records_' + new Date().toISOString().slice(0,10) + '.csv';
+      a.download = fname + '.csv';
       a.click();
       URL.revokeObjectURL(url);
+      closeExportModal();
+      showToast('ดาวน์โหลด ' + filtered.length + ' รายการแล้ว', 'success');
     }
 
     function escapeHtml(s) {
