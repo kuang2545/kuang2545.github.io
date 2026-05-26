@@ -1186,7 +1186,7 @@
         const supCell = r.supervisor ? escapeHtml(r.supervisor) : '<span class="dim">—</span>';
         const compCell = r.company ? `<span class="company-tag">${escapeHtml(r.company)}</span>` : '<span class="dim">—</span>';
         const allowCell = hasAllowance(r)
-          ? `<span class="allowance-tag">🍱 ขอรับ</span>`
+          ? `<span class="allowance-tag">💰 ขอรับ</span>`
           : '<span class="dim">—</span>';
 
         return `<tr>
@@ -1242,7 +1242,7 @@
       document.getElementById('actionName').textContent = record.employeeName;
       document.getElementById('actionSupervisor').textContent = record.supervisor || '—';
       document.getElementById('actionCompany').textContent = record.company || '—';
-      document.getElementById('actionAllowance').textContent = hasAllowance(record) ? '🍱 ขอรับเบี้ยเลี้ยง' : '—';
+      document.getElementById('actionAllowance').textContent = hasAllowance(record) ? '💰 ขอรับเบี้ยเลี้ยง' : '—';
       document.getElementById('actionTime').textContent =
         (record.startTime && record.endTime) ? (record.startTime + ' → ' + record.endTime) : '—';
       document.getElementById('actionHours').textContent = record.hours || '—';
