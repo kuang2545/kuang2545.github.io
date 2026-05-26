@@ -907,8 +907,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: body,
-        redirect: 'follow',
-        keepalive: true
+        redirect: 'follow'
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const text = await res.text();
