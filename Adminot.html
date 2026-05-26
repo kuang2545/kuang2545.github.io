@@ -216,6 +216,18 @@
       font-weight: 500;
     }
     .filter-spacer { flex: 1; min-width: 4px; }
+
+    .refreshing-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 14px;
+      background: #f0f9ff;
+      border: 1px solid var(--line);
+      border-top: none;
+      font-size: 12.5px;
+      color: #0369a1;
+      font-weight: 500;
+    }
+    .refreshing-bar .spinner { border-color: #bae6fd; border-top-color: #0369a1; margin: 0; }
     .filter-count {
       font-size: 12px;
       color: var(--ink-3);
@@ -849,6 +861,11 @@
       <span class="filter-count" id="recordCount">0 รายการ</span>
     </div>
 
+    <div class="refreshing-bar" id="refreshingBar" style="display:none;">
+      <span class="spinner" style="width:12px;height:12px;margin:0;"></span>
+      <span class="rb-text">กำลังอัปเดต…</span>
+    </div>
+
     <div class="table-wrap">
       <table>
         <thead>
@@ -970,19 +987,55 @@
       catch (e) { throw new Error('ตอบกลับไม่ใช่ JSON: ' + text.slice(0, 200)); }
     }
 
-    async function loadData() {
+    const CACHE_KEY = 'ot_admin_cache_v1';
+
+    function saveCache(data) {
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: data }));
+      } catch (e) {}
+    }
+    function readCache() {
+      try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch (e) { return null; }
+    }
+
+    async function loadData(isInitial) {
       const body = document.getElementById('tableBody');
-      body.innerHTML = `<tr><td colspan="13"><div class="empty"><div class="spinner"></div><div class="empty-desc">กำลังโหลดข้อมูล…</div></div></td></tr>`;
+      let showedCache = false;
+
+      // ⚡ เปิดหน้าครั้งแรก: ถ้ามี cache → แสดงทันที ไม่ต้องรอเซิร์ฟเวอร์ (เลี่ยงจอเปล่า/cold start)
+      if (isInitial) {
+        const cached = readCache();
+        if (cached && cached.data && cached.data.length) {
+          allData = cached.data;
+          populateSupervisorFilter();
+          populateCompanyFilter();
+          renderTable();
+          computeSummary();
+          showedCache = true;
+          showRefreshing(true, cached.ts);
+        }
+      }
+
+      if (!showedCache) {
+        body.innerHTML = `<tr><td colspan="13"><div class="empty"><div class="spinner"></div><div class="empty-desc">กำลังโหลดข้อมูล…</div></div></td></tr>`;
+      }
 
       let timedOut = false;
       const t = setTimeout(() => {
         timedOut = true;
-        body.innerHTML = `<tr><td colspan="13"><div class="empty">
-          <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-          <div class="empty-title">หมดเวลารอ</div>
-          <div class="empty-desc">เซิร์ฟเวอร์ไม่ตอบกลับภายใน 60 วินาที</div>
-          <button class="btn" onclick="loadData()">ลองใหม่</button>
-        </div></td></tr>`;
+        if (!showedCache) {
+          body.innerHTML = `<tr><td colspan="13"><div class="empty">
+            <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <div class="empty-title">หมดเวลารอ</div>
+            <div class="empty-desc">เซิร์ฟเวอร์ไม่ตอบกลับภายใน 60 วินาที</div>
+            <button class="btn" onclick="loadData()">ลองใหม่</button>
+          </div></td></tr>`;
+        }
+        showRefreshing(false);
       }, 60000);
 
       try {
@@ -991,30 +1044,53 @@
         clearTimeout(t);
         if (res.success) {
           allData = res.data;
+          saveCache(res.data);
           populateSupervisorFilter();
           populateCompanyFilter();
           renderTable();
-        } else {
+        } else if (!showedCache) {
           body.innerHTML = `<tr><td colspan="13"><div class="empty">
             <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
             <div class="empty-title">เซิร์ฟเวอร์แจ้ง error</div>
             <div class="empty-desc">${escapeHtml(res.message || 'ไม่ทราบสาเหตุ')}</div>
             <button class="btn" onclick="loadData()">ลองใหม่</button>
           </div></td></tr>`;
+        } else {
+          showToast(res.message || 'อัปเดตข้อมูลไม่สำเร็จ', 'error');
         }
       } catch (err) {
         if (timedOut) return;
         clearTimeout(t);
-        body.innerHTML = `<tr><td colspan="13"><div class="empty">
-          <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
-          <div class="empty-title">โหลดไม่สำเร็จ</div>
-          <div class="empty-desc">${escapeHtml(err.message || err)}</div>
-          <button class="btn" onclick="loadData()">ลองใหม่</button>
-        </div></td></tr>`;
+        if (!showedCache) {
+          body.innerHTML = `<tr><td colspan="13"><div class="empty">
+            <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+            <div class="empty-title">โหลดไม่สำเร็จ</div>
+            <div class="empty-desc">${escapeHtml(err.message || err)}</div>
+            <button class="btn" onclick="loadData()">ลองใหม่</button>
+          </div></td></tr>`;
+        } else {
+          showToast('อัปเดตไม่สำเร็จ — แสดงข้อมูลล่าสุดที่บันทึกไว้', 'error');
+        }
       }
 
-      // คำนวณสรุปจากข้อมูลที่โหลดมาแล้ว — ไม่ต้องเรียก API รอบสอง (เร็วขึ้น)
+      showRefreshing(false);
       computeSummary();
+    }
+
+    function showRefreshing(on, ts) {
+      const el = document.getElementById('refreshingBar');
+      if (!el) return;
+      if (on) {
+        let timeStr = '';
+        if (ts) {
+          const mins = Math.round((Date.now() - ts) / 60000);
+          timeStr = mins < 1 ? ' (เมื่อสักครู่)' : mins < 60 ? ' (' + mins + ' นาทีก่อน)' : '';
+        }
+        el.querySelector('.rb-text').textContent = 'แสดงข้อมูลที่บันทึกไว้' + timeStr + ' · กำลังอัปเดต…';
+        el.style.display = 'flex';
+      } else {
+        el.style.display = 'none';
+      }
     }
 
     function minutesBetween(startTime, endTime) {
@@ -1306,6 +1382,7 @@
           showToast('บันทึกสำเร็จ', 'success');
           renderTable();
           computeSummary();
+          saveCache(allData);
         } else {
           showToast(res.message, 'error');
         }
@@ -1328,6 +1405,7 @@
           allData.forEach(r => { if (r.rowIndex > rowIndex) r.rowIndex--; });
           renderTable();
           computeSummary();
+          saveCache(allData);
         } else {
           showToast(res.message, 'error');
         }
@@ -1485,7 +1563,7 @@
     }
 
     updateStatusFilterStyle();
-    loadData();
+    loadData(true);
   </script>
 </body>
 </html>
