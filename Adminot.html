@@ -344,6 +344,11 @@
       font-weight: 500;
       white-space: nowrap;
     }
+    .allowance-tag.zero {
+      background: #f4f4f5;
+      color: var(--ink-3);
+      border-color: var(--line-2);
+    }
 
     @media (max-width: 900px) {
       .hide-md { display: none !important; }
@@ -1267,9 +1272,18 @@
 
         const supCell = r.supervisor ? escapeHtml(r.supervisor) : '<span class="dim">—</span>';
         const compCell = r.company ? `<span class="company-tag">${escapeHtml(r.company)}</span>` : '<span class="dim">—</span>';
-        const allowCell = hasAllowance(r)
-          ? `<span class="allowance-tag">💰 ขอรับ</span>`
-          : '<span class="dim">—</span>';
+        // เบี้ยเลี้ยง: เฉพาะคนที่กดขอ → ดูเวลารวม ถ้า ≥ 3 ชม. ได้ 💰 +80 / ไม่ถึง = +0
+        let allowCell;
+        if (hasAllowance(r)) {
+          const totalMins = minutesBetween(r.startTime, r.endTime);
+          if (totalMins >= 180) {
+            allowCell = `<span class="allowance-tag">💰 +80</span>`;
+          } else {
+            allowCell = `<span class="allowance-tag zero">+0</span>`;
+          }
+        } else {
+          allowCell = '<span class="dim">—</span>';
+        }
 
         return `<tr>
           <td class="mono hide-md">${escapeHtml(r.submittedAt)}</td>
@@ -1340,7 +1354,10 @@
       document.getElementById('actionName').textContent = record.employeeName;
       document.getElementById('actionSupervisor').textContent = record.supervisor || '—';
       document.getElementById('actionCompany').textContent = record.company || '—';
-      document.getElementById('actionAllowance').textContent = hasAllowance(record) ? '💰 ขอรับเบี้ยเลี้ยง' : '—';
+      document.getElementById('actionAllowance').textContent =
+        hasAllowance(record)
+          ? (minutesBetween(record.startTime, record.endTime) >= 180 ? '💰 +80 บาท' : '+0 (ไม่ถึง 3 ชม.)')
+          : '—';
       document.getElementById('actionTime').textContent =
         (record.startTime && record.endTime) ? (record.startTime + ' → ' + record.endTime) : '—';
       document.getElementById('actionHours').textContent = record.hours || '—';
@@ -1535,7 +1552,7 @@
       const headers = ['รหัสคำขอ','ส่งเมื่อ','วันที่ OT','ชื่อ','หัวหน้า','บริษัท','แผนก','เบี้ยเลี้ยง','เวลาเริ่ม','เวลาเลิก','เวลารวม','งานที่ทำ','GPS เริ่ม','แผนที่เริ่ม','รูปเริ่ม','เวลาถ่ายรูปเริ่ม','GPS เลิก','แผนที่เลิก','รูปเลิก','เวลาถ่ายรูปเลิก','สถานะ','หมายเหตุ'];
       const rows = allData.map(r => [
         r.requestId, r.submittedAt, r.otDate, r.employeeName, r.supervisor || '', r.company || '', r.department,
-        (r.allowance ? 'ขอรับเบี้ยเลี้ยง' : ''),
+        (r.allowance ? (minutesBetween(r.startTime, r.endTime) >= 180 ? '+80' : '+0') : ''),
         r.startTime, r.endTime, r.hours, r.workDetail,
         r.gpsIn, r.mapIn, r.selfieIn, r.photoTimeIn || '',
         r.gpsOut, r.mapOut, r.selfieOut, r.photoTimeOut || '',
