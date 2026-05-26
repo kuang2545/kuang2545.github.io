@@ -691,7 +691,7 @@
             <!-- ปุ่มขอเบี้ยเลี้ยง: แสดงในหน้าเลิกงาน เฉพาะพนักงาน 3E Innovation -->
             <div class="allowance-box" id="allowanceBox" style="display:none;">
               <div class="allowance-toggle" onclick="toggleAllowance()">
-                <span class="allowance-emoji">🍱</span>
+                <span class="allowance-emoji">💰</span>
                 <div class="allowance-text">
                   <div class="allowance-title">ขอรับเบี้ยเลี้ยง</div>
                   <div class="allowance-desc">สำหรับพนักงาน 3E Innovation</div>
@@ -1793,7 +1793,7 @@
               '<div class="info-row"><span>ชื่อ</span><b>' + escapeHtml(picked.employeeName) + '</b></div>' +
               (picked.supervisor ? '<div class="info-row"><span>หัวหน้า</span><b>' + escapeHtml(picked.supervisor) + '</b></div>' : '') +
               (picked.company ? '<div class="info-row"><span>บริษัท</span><b>' + escapeHtml(picked.company) + '</b></div>' : '') +
-              (allowance ? '<div class="info-row"><span>เบี้ยเลี้ยง</span><b style="color:var(--warning);">🍱 ขอรับ</b></div>' : '') +
+              (allowance ? '<div class="info-row"><span>เบี้ยเลี้ยง</span><b style="color:var(--warning);">💰 ขอรับ</b></div>' : '') +
               '<div class="info-row"><span>เวลาเริ่ม</span><b>' + (res.startTime || picked.startTime) + '</b></div>' +
               '<div class="info-row"><span>เวลาเลิก</span><b>' + (res.endTime || time) + '</b></div>' +
               '<div class="info-row" style="border-top:1px solid rgba(0,0,0,0.1); margin-top:6px; padding-top:8px;"><span>รวม</span><b style="color:var(--success); font-size:18px;">' + (res.hours || hoursText) + '</b></div>';
