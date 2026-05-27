@@ -405,7 +405,7 @@
     .worktype-btn .wt-emoji { font-size: 28px; line-height: 1; }
     .worktype-btn .wt-title { font-size: 15px; font-weight: 700; color: var(--text); }
     .worktype-btn .wt-desc { font-size: 11px; color: var(--text-tertiary); line-height: 1.3; }
-    /* ปุ่ม "เบี้ยเลี้ยงธรรมดา" เมื่อเลือก = เขียว */
+    /* ปุ่ม "รับเบี้ยเลี้ยง" เมื่อเลือก = เขียว */
     .worktype-btn.allow-normal.selected {
       border-color: var(--success);
       background: rgba(52, 199, 89, 0.10);
@@ -755,7 +755,7 @@
               <div class="worktype-grid">
                 <div class="worktype-btn allow-normal" id="worktypeNormal" onclick="selectWorktype('normal')">
                   <span class="wt-emoji">💵</span>
-                  <span class="wt-title">เบี้ยเลี้ยงธรรมดา</span>
+                  <span class="wt-title">รับเบี้ยเลี้ยง</span>
                   <span class="wt-desc">งานทั่วไป</span>
                 </div>
                 <div class="worktype-btn allow-field" id="worktypeField" onclick="selectWorktype('field')">
@@ -1340,9 +1340,9 @@
         hint.className = 'worktype-hint allow-field show';
         hint.innerHTML = '🚗 ออกหน้างาน — <b>มีเบี้ยเลี้ยง</b>';
       } else {
-        document.getElementById('allowanceFlag').value = 'เบี้ยเลี้ยงธรรมดา';
+        document.getElementById('allowanceFlag').value = 'รับเบี้ยเลี้ยง';
         hint.className = 'worktype-hint allow-normal show';
-        hint.innerHTML = '💵 เบี้ยเลี้ยงธรรมดา — <b>มีเบี้ยเลี้ยง</b>';
+        hint.innerHTML = '💵 รับเบี้ยเลี้ยง — <b>มีเบี้ยเลี้ยง</b>';
       }
     }
 
@@ -1851,7 +1851,7 @@
           if (!wt) {
             const ok = confirm('ยังไม่ได้เลือกประเภทเบี้ยเลี้ยง\n\nถ้า OT นี้ไม่มีเบี้ยเลี้ยง กด "ตกลง" เพื่อบันทึกต่อ\nถ้ามี กด "ยกเลิก" แล้วเลือกประเภทก่อน');
             if (!ok) {
-              status.innerHTML = '<div class="status-box status-error">กรุณาเลือกประเภทเบี้ยเลี้ยง (ธรรมดา หรือ ออกหน้างาน)</div>';
+              status.innerHTML = '<div class="status-box status-error">กรุณาเลือกประเภทเบี้ยเลี้ยง (รับเบี้ยเลี้ยง หรือ ออกหน้างาน)</div>';
               document.getElementById('worktypeBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
               return;
             }
