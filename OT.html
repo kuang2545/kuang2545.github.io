@@ -366,6 +366,67 @@
     }
     .allowance-box.on .allowance-confirmed { display: block; }
 
+    /* ===== ปุ่มเลือกประเภทงาน: ทำในบริษัท / ออกหน้างาน (เฉพาะ 3E Innovation) ===== */
+    .worktype-box {
+      margin-top: 12px;
+      border-radius: 14px;
+      border: 1.5px solid var(--separator);
+      background: var(--bg-elev);
+      padding: 14px;
+      animation: fadeIn 0.25s ease;
+    }
+    .worktype-label {
+      font-size: 13px; font-weight: 700; color: var(--text-secondary);
+      margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+    }
+    .worktype-label .req { color: var(--error); }
+    .worktype-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .worktype-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 16px 10px;
+      border-radius: 12px;
+      border: 2px solid var(--field-border);
+      background: var(--field-bg);
+      cursor: pointer;
+      user-select: none; -webkit-user-select: none;
+      transition: border-color 0.15s, background 0.15s, transform 0.1s;
+      min-height: 92px;
+      text-align: center;
+    }
+    .worktype-btn:active { transform: scale(0.97); }
+    .worktype-btn .wt-emoji { font-size: 28px; line-height: 1; }
+    .worktype-btn .wt-title { font-size: 15px; font-weight: 700; color: var(--text); }
+    .worktype-btn .wt-desc { font-size: 11px; color: var(--text-tertiary); line-height: 1.3; }
+    /* ปุ่ม "ทำในบริษัท" เมื่อเลือก = ฟ้า */
+    .worktype-btn.office.selected {
+      border-color: var(--accent);
+      background: rgba(0, 122, 255, 0.08);
+    }
+    .worktype-btn.office.selected .wt-title { color: var(--accent); }
+    /* ปุ่ม "ออกหน้างาน" เมื่อเลือก = ส้ม (มีเบี้ยเลี้ยง) */
+    .worktype-btn.field.selected {
+      border-color: var(--warning);
+      background: rgba(255, 149, 0, 0.10);
+    }
+    .worktype-btn.field.selected .wt-title { color: #c66800; }
+    .worktype-hint {
+      margin-top: 10px;
+      font-size: 12px;
+      line-height: 1.5;
+      display: none;
+    }
+    .worktype-hint.show { display: block; }
+    .worktype-hint.field { color: #c66800; }
+    .worktype-hint.office { color: var(--text-tertiary); }
+
     .action-card { background: var(--bg-elev); border-radius: 14px; padding: 18px; margin-bottom: 8px; }
     .action-card-title { font-size: 16px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
     .action-card-icon { width: 32px; height: 32px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; }
@@ -688,19 +749,25 @@
               <span class="hours-summary-value" id="hoursValue">0</span>
             </div>
 
-            <!-- ปุ่มออกหน้างาน (รับเบี้ยเลี้ยง): แสดงในหน้าเริ่มงาน เฉพาะพนักงาน 3E Innovation -->
-            <div class="allowance-box" id="allowanceBox" style="display:none;">
-              <div class="allowance-toggle" onclick="toggleAllowance()">
-                <span class="allowance-emoji">💰</span>
-                <div class="allowance-text">
-                  <div class="allowance-title">ออกหน้างาน (รับเบี้ยเลี้ยง)</div>
-                  <div class="allowance-desc">สำหรับพนักงาน 3E Innovation · ถ้าทำในบริษัทไม่ต้องติ๊ก</div>
+            <!-- เลือกประเภทงาน (รับเบี้ยเลี้ยงถ้าออกหน้างาน): แสดงในหน้าเริ่มงาน เฉพาะ 3E Innovation -->
+            <div class="worktype-box" id="worktypeBox" style="display:none;">
+              <div class="worktype-label">📋 ประเภทงานนี้ <span class="req">*</span></div>
+              <div class="worktype-grid">
+                <div class="worktype-btn office" id="worktypeOffice" onclick="selectWorktype('office')">
+                  <span class="wt-emoji">🏢</span>
+                  <span class="wt-title">ทำในบริษัท</span>
+                  <span class="wt-desc">ไม่มีเบี้ยเลี้ยง</span>
                 </div>
-                <div class="allowance-switch"></div>
+                <div class="worktype-btn field" id="worktypeField" onclick="selectWorktype('field')">
+                  <span class="wt-emoji">🚗</span>
+                  <span class="wt-title">ออกหน้างาน</span>
+                  <span class="wt-desc">มีเบี้ยเลี้ยง</span>
+                </div>
               </div>
-              <div class="allowance-confirmed">✓ ติ๊กว่าออกหน้างาน — มีเบี้ยเลี้ยง</div>
+              <div class="worktype-hint" id="worktypeHint"></div>
             </div>
             <input type="hidden" id="allowanceFlag" value="">
+            <input type="hidden" id="worktypeValue" value="">
           </div>
         </div>
 
@@ -934,11 +1001,8 @@
       const sel = document.getElementById('employeeSelect');
       sel.innerHTML = '<option value="">-- เลือกชื่อ --</option>';
 
-      // รีเซ็ตปุ่มขอเบี้ยเลี้ยง
-      const allowanceBox = document.getElementById('allowanceBox');
-      allowanceBox.style.display = 'none';
-      allowanceBox.classList.remove('on');
-      document.getElementById('allowanceFlag').value = '';
+      // รีเซ็ตปุ่มเลือกประเภทงาน
+      resetWorktype();
 
       applyModeUI(mode);
 
@@ -1232,25 +1296,53 @@
     }
 
     // ============================================================
-    // ====== เบี้ยเลี้ยง / ออกหน้างาน (เฉพาะ 3E Innovation — หน้าเริ่มงาน) ======
+    // ====== เลือกประเภทงาน / เบี้ยเลี้ยง (เฉพาะ 3E Innovation — หน้าเริ่มงาน) ======
     // ============================================================
     function onCompanyChange() {
-      // โชว์ปุ่ม "ออกหน้างาน (รับเบี้ยเลี้ยง)" เฉพาะ 3E Innovation ในหน้าเริ่มงาน
-      const box = document.getElementById('allowanceBox');
+      // โชว์ปุ่มเลือกประเภทงานเฉพาะ 3E Innovation ในหน้าเริ่มงาน
       const company = document.getElementById('companySelect').value;
-      box.classList.remove('on');
-      document.getElementById('allowanceFlag').value = '';
+      const box = document.getElementById('worktypeBox');
       if (currentMode === 'clock_in' && company === ALLOWANCE_COMPANY) {
         box.style.display = 'block';
       } else {
         box.style.display = 'none';
       }
+      // เปลี่ยนบริษัทแล้วรีเซ็ตการเลือกเสมอ (ต้องกดเลือกใหม่)
+      resetWorktype();
     }
 
-    function toggleAllowance() {
-      const box = document.getElementById('allowanceBox');
-      const isOn = box.classList.toggle('on');
-      document.getElementById('allowanceFlag').value = isOn ? 'ขอรับเบี้ยเลี้ยง' : '';
+    // เลือกประเภทงาน: 'office' = ทำในบริษัท (ไม่มีเบี้ยเลี้ยง) / 'field' = ออกหน้างาน (มีเบี้ยเลี้ยง)
+    function selectWorktype(type) {
+      const officeBtn = document.getElementById('worktypeOffice');
+      const fieldBtn = document.getElementById('worktypeField');
+      const hint = document.getElementById('worktypeHint');
+
+      officeBtn.classList.toggle('selected', type === 'office');
+      fieldBtn.classList.toggle('selected', type === 'field');
+
+      document.getElementById('worktypeValue').value = type;
+
+      if (type === 'field') {
+        document.getElementById('allowanceFlag').value = 'ขอรับเบี้ยเลี้ยง';
+        hint.className = 'worktype-hint field show';
+        hint.innerHTML = '💰 งานนี้ออกหน้างาน — <b>มีเบี้ยเลี้ยง</b>';
+      } else {
+        document.getElementById('allowanceFlag').value = '';
+        hint.className = 'worktype-hint office show';
+        hint.innerHTML = '🏢 งานนี้ทำในบริษัท — ไม่มีเบี้ยเลี้ยง';
+      }
+    }
+
+    // รีเซ็ตปุ่มประเภทงานให้กลับมาเป็น "ยังไม่เลือก"
+    function resetWorktype() {
+      const officeBtn = document.getElementById('worktypeOffice');
+      const fieldBtn = document.getElementById('worktypeField');
+      const hint = document.getElementById('worktypeHint');
+      if (officeBtn) officeBtn.classList.remove('selected');
+      if (fieldBtn) fieldBtn.classList.remove('selected');
+      if (hint) { hint.className = 'worktype-hint'; hint.innerHTML = ''; }
+      document.getElementById('worktypeValue').value = '';
+      document.getElementById('allowanceFlag').value = '';
     }
 
     // ============================================================
@@ -1808,6 +1900,16 @@
           status.innerHTML = '<div class="status-box status-error">กรุณาเลือกบริษัท</div>';
           document.getElementById('companySelect').focus();
           return;
+        }
+
+        // เฉพาะ 3E Innovation: ต้องเลือกประเภทงานก่อน (ทำในบริษัท / ออกหน้างาน)
+        if (company === ALLOWANCE_COMPANY) {
+          const wt = document.getElementById('worktypeValue').value;
+          if (!wt) {
+            status.innerHTML = '<div class="status-box status-error">กรุณาเลือกประเภทงาน (ทำในบริษัท หรือ ออกหน้างาน)</div>';
+            document.getElementById('worktypeBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+          }
         }
 
         // เบี้ยเลี้ยง: เฉพาะ 3E Innovation (ปุ่มจะโชว์เฉพาะกรณีนี้)
