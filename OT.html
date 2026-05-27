@@ -1845,20 +1845,8 @@
         }
         const picked = activeClockInsCache[idx];
 
-        // เฉพาะ 3E Innovation: ถ้ายังไม่เลือกประเภทเบี้ยเลี้ยง ให้ยืนยันก่อน (กันลืม)
-        if (picked.company === ALLOWANCE_COMPANY) {
-          const wt = document.getElementById('worktypeValue').value;
-          if (!wt) {
-            const ok = confirm('ยังไม่ได้เลือกประเภทเบี้ยเลี้ยง\n\nถ้า OT นี้ไม่มีเบี้ยเลี้ยง กด "ตกลง" เพื่อบันทึกต่อ\nถ้ามี กด "ยกเลิก" แล้วเลือกประเภทก่อน');
-            if (!ok) {
-              status.innerHTML = '<div class="status-box status-error">กรุณาเลือกประเภทเบี้ยเลี้ยง (รับเบี้ยเลี้ยง หรือ ออกหน้างาน)</div>';
-              document.getElementById('worktypeBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
-              return;
-            }
-          }
-        }
-
         // เบี้ยเลี้ยง: เฉพาะ 3E Innovation (ปุ่มจะโชว์เฉพาะกรณีนี้)
+        // ไม่เลือก = ไม่มีเบี้ยเลี้ยง (ช่องในชีทว่าง) — ไม่บังคับเลือก
         const allowance = (picked.company === ALLOWANCE_COMPANY)
           ? (document.getElementById('allowanceFlag').value || '') : '';
 
