@@ -405,18 +405,18 @@
     .worktype-btn .wt-emoji { font-size: 28px; line-height: 1; }
     .worktype-btn .wt-title { font-size: 15px; font-weight: 700; color: var(--text); }
     .worktype-btn .wt-desc { font-size: 11px; color: var(--text-tertiary); line-height: 1.3; }
-    /* ปุ่ม "ทำในบริษัท" เมื่อเลือก = ฟ้า */
-    .worktype-btn.office.selected {
-      border-color: var(--accent);
-      background: rgba(0, 122, 255, 0.08);
+    /* ปุ่ม "เบี้ยเลี้ยงธรรมดา" เมื่อเลือก = เขียว */
+    .worktype-btn.allow-normal.selected {
+      border-color: var(--success);
+      background: rgba(52, 199, 89, 0.10);
     }
-    .worktype-btn.office.selected .wt-title { color: var(--accent); }
-    /* ปุ่ม "ออกหน้างาน" เมื่อเลือก = ส้ม (มีเบี้ยเลี้ยง) */
-    .worktype-btn.field.selected {
+    .worktype-btn.allow-normal.selected .wt-title { color: #1e7a2e; }
+    /* ปุ่ม "ออกหน้างาน" เมื่อเลือก = ส้ม */
+    .worktype-btn.allow-field.selected {
       border-color: var(--warning);
       background: rgba(255, 149, 0, 0.10);
     }
-    .worktype-btn.field.selected .wt-title { color: #c66800; }
+    .worktype-btn.allow-field.selected .wt-title { color: #c66800; }
     .worktype-hint {
       margin-top: 10px;
       font-size: 12px;
@@ -424,8 +424,8 @@
       display: none;
     }
     .worktype-hint.show { display: block; }
-    .worktype-hint.field { color: #c66800; }
-    .worktype-hint.office { color: var(--text-tertiary); }
+    .worktype-hint.allow-field { color: #c66800; }
+    .worktype-hint.allow-normal { color: #1e7a2e; }
 
     .action-card { background: var(--bg-elev); border-radius: 14px; padding: 18px; margin-bottom: 8px; }
     .action-card-title { font-size: 16px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
@@ -749,19 +749,19 @@
               <span class="hours-summary-value" id="hoursValue">0</span>
             </div>
 
-            <!-- เลือกประเภทงาน (รับเบี้ยเลี้ยงถ้าออกหน้างาน): แสดงในหน้าเริ่มงาน เฉพาะ 3E Innovation -->
+            <!-- เลือกประเภทเบี้ยเลี้ยง: แสดงในหน้าเริ่มงาน เฉพาะ 3E Innovation -->
             <div class="worktype-box" id="worktypeBox" style="display:none;">
-              <div class="worktype-label">📋 ประเภทงานนี้ <span class="req">*</span></div>
+              <div class="worktype-label">💰 ประเภทเบี้ยเลี้ยง <span class="req">*</span></div>
               <div class="worktype-grid">
-                <div class="worktype-btn office" id="worktypeOffice" onclick="selectWorktype('office')">
-                  <span class="wt-emoji">🏢</span>
-                  <span class="wt-title">ทำในบริษัท</span>
-                  <span class="wt-desc">ไม่มีเบี้ยเลี้ยง</span>
+                <div class="worktype-btn allow-normal" id="worktypeNormal" onclick="selectWorktype('normal')">
+                  <span class="wt-emoji">💵</span>
+                  <span class="wt-title">เบี้ยเลี้ยงธรรมดา</span>
+                  <span class="wt-desc">งานทั่วไป</span>
                 </div>
-                <div class="worktype-btn field" id="worktypeField" onclick="selectWorktype('field')">
+                <div class="worktype-btn allow-field" id="worktypeField" onclick="selectWorktype('field')">
                   <span class="wt-emoji">🚗</span>
                   <span class="wt-title">ออกหน้างาน</span>
-                  <span class="wt-desc">มีเบี้ยเลี้ยง</span>
+                  <span class="wt-desc">ออกไซต์งาน</span>
                 </div>
               </div>
               <div class="worktype-hint" id="worktypeHint"></div>
@@ -1311,34 +1311,41 @@
       resetWorktype();
     }
 
-    // เลือกประเภทงาน: 'office' = ทำในบริษัท (ไม่มีเบี้ยเลี้ยง) / 'field' = ออกหน้างาน (มีเบี้ยเลี้ยง)
+    // เลือกประเภทเบี้ยเลี้ยง: 'normal' = ธรรมดา / 'field' = ออกหน้างาน (เงินเท่ากัน แยกประเภท)
+    // กดปุ่มที่เลือกอยู่ซ้ำ = ยกเลิกการเลือก (กรณี OT ที่ไม่มีเบี้ยเลี้ยง)
     function selectWorktype(type) {
-      const officeBtn = document.getElementById('worktypeOffice');
+      const normalBtn = document.getElementById('worktypeNormal');
       const fieldBtn = document.getElementById('worktypeField');
       const hint = document.getElementById('worktypeHint');
+      const current = document.getElementById('worktypeValue').value;
 
-      officeBtn.classList.toggle('selected', type === 'office');
+      // กดซ้ำปุ่มเดิม → ยกเลิกการเลือก
+      if (current === type) {
+        resetWorktype();
+        return;
+      }
+
+      normalBtn.classList.toggle('selected', type === 'normal');
       fieldBtn.classList.toggle('selected', type === 'field');
-
       document.getElementById('worktypeValue').value = type;
 
       if (type === 'field') {
-        document.getElementById('allowanceFlag').value = 'ขอรับเบี้ยเลี้ยง';
-        hint.className = 'worktype-hint field show';
-        hint.innerHTML = '💰 งานนี้ออกหน้างาน — <b>มีเบี้ยเลี้ยง</b>';
+        document.getElementById('allowanceFlag').value = 'เบี้ยเลี้ยงออกหน้างาน';
+        hint.className = 'worktype-hint allow-field show';
+        hint.innerHTML = '🚗 ออกหน้างาน — <b>มีเบี้ยเลี้ยง</b>';
       } else {
-        document.getElementById('allowanceFlag').value = '';
-        hint.className = 'worktype-hint office show';
-        hint.innerHTML = '🏢 งานนี้ทำในบริษัท — ไม่มีเบี้ยเลี้ยง';
+        document.getElementById('allowanceFlag').value = 'เบี้ยเลี้ยงธรรมดา';
+        hint.className = 'worktype-hint allow-normal show';
+        hint.innerHTML = '💵 เบี้ยเลี้ยงธรรมดา — <b>มีเบี้ยเลี้ยง</b>';
       }
     }
 
-    // รีเซ็ตปุ่มประเภทงานให้กลับมาเป็น "ยังไม่เลือก"
+    // รีเซ็ตปุ่มประเภทเบี้ยเลี้ยงให้กลับมาเป็น "ยังไม่เลือก"
     function resetWorktype() {
-      const officeBtn = document.getElementById('worktypeOffice');
+      const normalBtn = document.getElementById('worktypeNormal');
       const fieldBtn = document.getElementById('worktypeField');
       const hint = document.getElementById('worktypeHint');
-      if (officeBtn) officeBtn.classList.remove('selected');
+      if (normalBtn) normalBtn.classList.remove('selected');
       if (fieldBtn) fieldBtn.classList.remove('selected');
       if (hint) { hint.className = 'worktype-hint'; hint.innerHTML = ''; }
       document.getElementById('worktypeValue').value = '';
@@ -1869,7 +1876,7 @@
               '<div class="info-row"><span>ชื่อ</span><b>' + escapeHtml(picked.employeeName) + '</b></div>' +
               (picked.supervisor ? '<div class="info-row"><span>หัวหน้า</span><b>' + escapeHtml(picked.supervisor) + '</b></div>' : '') +
               (picked.company ? '<div class="info-row"><span>บริษัท</span><b>' + escapeHtml(picked.company) + '</b></div>' : '') +
-              (res.allowance ? '<div class="info-row"><span>เบี้ยเลี้ยง</span><b style="color:var(--warning);">💰 ออกหน้างาน</b></div>' : '') +
+              (res.allowance ? '<div class="info-row"><span>เบี้ยเลี้ยง</span><b style="color:var(--warning);">💰 ' + escapeHtml(res.allowance) + '</b></div>' : '') +
               '<div class="info-row"><span>เวลาเริ่ม</span><b>' + (res.startTime || picked.startTime) + '</b></div>' +
               '<div class="info-row"><span>เวลาเลิก</span><b>' + (res.endTime || time) + '</b></div>' +
               '<div class="info-row" style="border-top:1px solid rgba(0,0,0,0.1); margin-top:6px; padding-top:8px;"><span>รวม</span><b style="color:var(--success); font-size:18px;">' + (res.hours || hoursText) + '</b></div>';
@@ -1902,13 +1909,16 @@
           return;
         }
 
-        // เฉพาะ 3E Innovation: ต้องเลือกประเภทงานก่อน (ทำในบริษัท / ออกหน้างาน)
+        // เฉพาะ 3E Innovation: ถ้ายังไม่เลือกประเภทเบี้ยเลี้ยง ให้ยืนยันก่อน (กันลืม)
         if (company === ALLOWANCE_COMPANY) {
           const wt = document.getElementById('worktypeValue').value;
           if (!wt) {
-            status.innerHTML = '<div class="status-box status-error">กรุณาเลือกประเภทงาน (ทำในบริษัท หรือ ออกหน้างาน)</div>';
-            document.getElementById('worktypeBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
-            return;
+            const ok = confirm('ยังไม่ได้เลือกประเภทเบี้ยเลี้ยง\n\nถ้า OT นี้ไม่มีเบี้ยเลี้ยง กด "ตกลง" เพื่อบันทึกต่อ\nถ้ามี กด "ยกเลิก" แล้วเลือกประเภทก่อน');
+            if (!ok) {
+              status.innerHTML = '<div class="status-box status-error">กรุณาเลือกประเภทเบี้ยเลี้ยง (ธรรมดา หรือ ออกหน้างาน)</div>';
+              document.getElementById('worktypeBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
+              return;
+            }
           }
         }
 
@@ -1947,7 +1957,7 @@
               '<div class="info-row"><span>ชื่อ</span><b>' + escapeHtml(employeeName) + '</b></div>' +
               '<div class="info-row"><span>หัวหน้า</span><b>' + escapeHtml(supervisorName) + '</b></div>' +
               '<div class="info-row"><span>บริษัท</span><b>' + escapeHtml(company) + '</b></div>' +
-              (allowance ? '<div class="info-row"><span>เบี้ยเลี้ยง</span><b style="color:var(--warning);">💰 ออกหน้างาน</b></div>' : '') +
+              (allowance ? '<div class="info-row"><span>เบี้ยเลี้ยง</span><b style="color:var(--warning);">💰 ' + escapeHtml(allowance) + '</b></div>' : '') +
               '<div class="info-row"><span>เวลาเริ่ม</span><b style="color:var(--success); font-size:18px;">' + (res.startTime || time) + '</b></div>' +
               (res.requestId ? '<div class="info-row"><span>รหัส</span><b style="font-family:monospace; font-size:11px;">' + res.requestId + '</b></div>' : '');
             showSuccessModal('clock_in', 'บันทึกเวลาเริ่มงานเรียบร้อย กลับมากดเลิกงานเมื่อเสร็จ', info);
