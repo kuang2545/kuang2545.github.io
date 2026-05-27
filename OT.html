@@ -1200,6 +1200,9 @@
         existingClockIn = null;
         clockInBox.style.display = 'none';
         document.getElementById('hoursSummary').style.display = 'none';
+        // ซ่อน/รีเซ็ตปุ่มเบี้ยเลี้ยง
+        document.getElementById('worktypeBox').style.display = 'none';
+        resetWorktype();
         return;
       }
 
@@ -1230,6 +1233,15 @@
       timeInput.removeEventListener('change', calcHoursListener);
       timeInput.addEventListener('change', calcHoursListener);
       calcHoursListener();
+
+      // โชว์ปุ่มเลือกประเภทเบี้ยเลี้ยงเฉพาะพนักงาน 3E Innovation (รีเซ็ตทุกครั้งที่เปลี่ยนคน)
+      const wtBox = document.getElementById('worktypeBox');
+      resetWorktype();
+      if (picked.company === ALLOWANCE_COMPANY) {
+        wtBox.style.display = 'block';
+      } else {
+        wtBox.style.display = 'none';
+      }
     }
 
     async function checkClockStatusUI() {
@@ -1296,18 +1308,12 @@
     }
 
     // ============================================================
-    // ====== เลือกประเภทงาน / เบี้ยเลี้ยง (เฉพาะ 3E Innovation — หน้าเริ่มงาน) ======
+    // ====== เลือกประเภทเบี้ยเลี้ยง (เฉพาะ 3E Innovation — หน้าเลิกงาน) ======
     // ============================================================
     function onCompanyChange() {
-      // โชว์ปุ่มเลือกประเภทงานเฉพาะ 3E Innovation ในหน้าเริ่มงาน
-      const company = document.getElementById('companySelect').value;
+      // เบี้ยเลี้ยงย้ายไปหน้าเลิกงานแล้ว — หน้าเริ่มงานไม่ต้องโชว์ปุ่มนี้
       const box = document.getElementById('worktypeBox');
-      if (currentMode === 'clock_in' && company === ALLOWANCE_COMPANY) {
-        box.style.display = 'block';
-      } else {
-        box.style.display = 'none';
-      }
-      // เปลี่ยนบริษัทแล้วรีเซ็ตการเลือกเสมอ (ต้องกดเลือกใหม่)
+      box.style.display = 'none';
       resetWorktype();
     }
 
@@ -1839,11 +1845,29 @@
         }
         const picked = activeClockInsCache[idx];
 
+        // เฉพาะ 3E Innovation: ถ้ายังไม่เลือกประเภทเบี้ยเลี้ยง ให้ยืนยันก่อน (กันลืม)
+        if (picked.company === ALLOWANCE_COMPANY) {
+          const wt = document.getElementById('worktypeValue').value;
+          if (!wt) {
+            const ok = confirm('ยังไม่ได้เลือกประเภทเบี้ยเลี้ยง\n\nถ้า OT นี้ไม่มีเบี้ยเลี้ยง กด "ตกลง" เพื่อบันทึกต่อ\nถ้ามี กด "ยกเลิก" แล้วเลือกประเภทก่อน');
+            if (!ok) {
+              status.innerHTML = '<div class="status-box status-error">กรุณาเลือกประเภทเบี้ยเลี้ยง (ธรรมดา หรือ ออกหน้างาน)</div>';
+              document.getElementById('worktypeBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
+              return;
+            }
+          }
+        }
+
+        // เบี้ยเลี้ยง: เฉพาะ 3E Innovation (ปุ่มจะโชว์เฉพาะกรณีนี้)
+        const allowance = (picked.company === ALLOWANCE_COMPANY)
+          ? (document.getElementById('allowanceFlag').value || '') : '';
+
         const data = {
           employeeName: picked.employeeName,
           otDate: picked.otDate,
           endTime: time,
           workDetail: '',
+          allowance: allowance,
           gpsCoords: gps,
           address: document.getElementById('address').value,
           selfieBase64: selfie,
@@ -1909,22 +1933,7 @@
           return;
         }
 
-        // เฉพาะ 3E Innovation: ถ้ายังไม่เลือกประเภทเบี้ยเลี้ยง ให้ยืนยันก่อน (กันลืม)
-        if (company === ALLOWANCE_COMPANY) {
-          const wt = document.getElementById('worktypeValue').value;
-          if (!wt) {
-            const ok = confirm('ยังไม่ได้เลือกประเภทเบี้ยเลี้ยง\n\nถ้า OT นี้ไม่มีเบี้ยเลี้ยง กด "ตกลง" เพื่อบันทึกต่อ\nถ้ามี กด "ยกเลิก" แล้วเลือกประเภทก่อน');
-            if (!ok) {
-              status.innerHTML = '<div class="status-box status-error">กรุณาเลือกประเภทเบี้ยเลี้ยง (ธรรมดา หรือ ออกหน้างาน)</div>';
-              document.getElementById('worktypeBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
-              return;
-            }
-          }
-        }
-
-        // เบี้ยเลี้ยง: เฉพาะ 3E Innovation (ปุ่มจะโชว์เฉพาะกรณีนี้)
-        const allowance = (company === ALLOWANCE_COMPANY)
-          ? (document.getElementById('allowanceFlag').value || '') : '';
+        const allowance = '';  // เบี้ยเลี้ยงย้ายไปเลือกตอนเลิกงานแล้ว
 
         const data = {
           otDate: otDate,
