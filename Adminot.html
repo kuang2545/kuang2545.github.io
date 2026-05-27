@@ -1205,6 +1205,20 @@
       return !!(r.allowance && String(r.allowance).trim());
     }
 
+    // ตรวจว่าเป็นเบี้ยเลี้ยงแบบ "ออกหน้างาน" หรือไม่ (ได้ 80 ทันที ไม่ต้องครบ 3 ชม.)
+    function isFieldAllowance(r) {
+      return !!(r.allowance && String(r.allowance).indexOf('ออกหน้างาน') !== -1);
+    }
+
+    // คำนวณยอดเบี้ยเลี้ยงเป็นตัวเลข (0 หรือ 80)
+    // - ออกหน้างาน → 80 ทันที
+    // - เบี้ยเลี้ยงธรรมดา → ต้องทำงาน >= 3 ชม. ถึงได้ 80 ไม่ถึง = 0
+    function allowanceAmount(r) {
+      if (!hasAllowance(r)) return 0;
+      if (isFieldAllowance(r)) return 80;
+      return minutesBetween(r.startTime, r.endTime) >= 180 ? 80 : 0;
+    }
+
     function renderTable() {
       const search = document.getElementById('searchInput').value.toLowerCase().trim();
       const statusF = document.getElementById('statusFilter').value;
@@ -1313,12 +1327,13 @@
 
         const supCell = r.supervisor ? escapeHtml(r.supervisor) : '<span class="dim">—</span>';
         const compCell = r.company ? `<span class="company-tag">${escapeHtml(r.company)}</span>` : '<span class="dim">—</span>';
-        // เบี้ยเลี้ยง: เฉพาะคนที่กดขอ → ดูเวลารวม ถ้า ≥ 3 ชม. ได้ 💰 +80 / ไม่ถึง = +0
+        // เบี้ยเลี้ยง: ออกหน้างาน = 💰 +80 ทันที / ธรรมดา = ต้อง >= 3 ชม. ถึงได้ 80
         let allowCell;
         if (hasAllowance(r)) {
-          const totalMins = minutesBetween(r.startTime, r.endTime);
-          if (totalMins >= 180) {
-            allowCell = `<span class="allowance-tag">💰 +80</span>`;
+          const amt = allowanceAmount(r);
+          if (amt > 0) {
+            const label = isFieldAllowance(r) ? '💰 +80 · ออกหน้างาน' : '💰 +80';
+            allowCell = `<span class="allowance-tag">${label}</span>`;
           } else {
             allowCell = `<span class="allowance-tag zero">+0</span>`;
           }
@@ -1397,7 +1412,9 @@
       document.getElementById('actionCompany').textContent = record.company || '—';
       document.getElementById('actionAllowance').textContent =
         hasAllowance(record)
-          ? (minutesBetween(record.startTime, record.endTime) >= 180 ? '💰 +80 บาท' : '+0 (ไม่ถึง 3 ชม.)')
+          ? (allowanceAmount(record) > 0
+              ? (isFieldAllowance(record) ? '💰 +80 บาท (ออกหน้างาน)' : '💰 +80 บาท')
+              : '+0 (ไม่ถึง 3 ชม.)')
           : '—';
       document.getElementById('actionTime').textContent =
         (record.startTime && record.endTime) ? (record.startTime + ' → ' + record.endTime) : '—';
@@ -1677,10 +1694,11 @@
       const filtered = getExportFiltered();
       if (!filtered.length) { showToast('ไม่มีข้อมูลตามที่เลือก', 'error'); return; }
 
-      const headers = ['รหัสคำขอ','ส่งเมื่อ','วันที่ OT','ชื่อ','หัวหน้า','บริษัท','แผนก','เบี้ยเลี้ยง','เวลาเริ่ม','เวลาเลิก','เวลารวม','งานที่ทำ','สถานะ','หมายเหตุ'];
+      const headers = ['รหัสคำขอ','ส่งเมื่อ','วันที่ OT','ชื่อ','หัวหน้า','บริษัท','แผนก','เบี้ยเลี้ยง','ยอดเบี้ยเลี้ยง','เวลาเริ่ม','เวลาเลิก','เวลารวม','งานที่ทำ','สถานะ','หมายเหตุ'];
       const rows = filtered.map(r => [
         r.requestId, r.submittedAt, r.otDate, r.employeeName, r.supervisor || '', r.company || '', r.department,
-        (r.allowance ? (minutesBetween(r.startTime, r.endTime) >= 180 ? '+80' : '+0') : ''),
+        (r.allowance || ''),
+        (hasAllowance(r) ? '+' + allowanceAmount(r) : ''),
         r.startTime, r.endTime, r.hours, r.workDetail,
         r.status, r.note
       ]);
