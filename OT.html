@@ -42,7 +42,6 @@
       overscroll-behavior-y: contain;
     }
 
-    /* ============ LINE Block Screen ============ */
     .line-block-screen {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -58,93 +57,36 @@
       overflow-y: auto;
     }
     .line-block-screen.show { display: flex; }
-    .line-block-icon {
-      font-size: 80px;
-      margin-bottom: 20px;
-    }
-    .line-block-title {
-      font-size: 28px;
-      font-weight: 800;
-      margin-bottom: 14px;
-      line-height: 1.3;
-    }
-    .line-block-desc {
-      font-size: 16px;
-      line-height: 1.6;
-      margin-bottom: 28px;
-      opacity: 0.95;
-      max-width: 320px;
-    }
+    .line-block-icon { font-size: 80px; margin-bottom: 20px; }
+    .line-block-title { font-size: 28px; font-weight: 800; margin-bottom: 14px; line-height: 1.3; }
+    .line-block-desc { font-size: 16px; line-height: 1.6; margin-bottom: 28px; opacity: 0.95; max-width: 320px; }
     .line-action-btn {
-      background: white;
-      color: #00a000;
-      border: none;
-      padding: 18px 28px;
-      border-radius: 14px;
-      font-size: 17px;
-      font-weight: 700;
-      font-family: inherit;
-      cursor: pointer;
-      width: 100%;
-      max-width: 340px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
-      margin-bottom: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
+      background: white; color: #00a000; border: none;
+      padding: 18px 28px; border-radius: 14px; font-size: 17px; font-weight: 700;
+      font-family: inherit; cursor: pointer; width: 100%; max-width: 340px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25); margin-bottom: 14px;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
     }
     .line-action-btn:active { transform: scale(0.98); }
     .line-action-btn .icon { font-size: 22px; }
-
     .line-divider {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      width: 100%;
-      max-width: 340px;
-      margin: 8px 0 14px;
-      color: rgba(255,255,255,0.7);
-      font-size: 13px;
+      display: flex; align-items: center; gap: 12px;
+      width: 100%; max-width: 340px; margin: 8px 0 14px;
+      color: rgba(255,255,255,0.7); font-size: 13px;
     }
-    .line-divider::before, .line-divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: rgba(255,255,255,0.3);
-    }
-
+    .line-divider::before, .line-divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.3); }
     .line-manual-card {
-      background: rgba(255,255,255,0.15);
-      backdrop-filter: blur(10px);
-      border-radius: 16px;
-      padding: 18px 20px;
-      max-width: 340px;
-      width: 100%;
-      text-align: left;
-      font-size: 14px;
-      line-height: 1.7;
+      background: rgba(255,255,255,0.15); backdrop-filter: blur(10px);
+      border-radius: 16px; padding: 18px 20px; max-width: 340px; width: 100%;
+      text-align: left; font-size: 14px; line-height: 1.7;
       border: 1px solid rgba(255,255,255,0.2);
     }
     .line-manual-card b { font-weight: 700; }
-    .line-manual-step {
-      display: flex;
-      gap: 10px;
-      padding: 5px 0;
-    }
+    .line-manual-step { display: flex; gap: 10px; padding: 5px 0; }
     .line-manual-step-num {
-      flex-shrink: 0;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background: white;
-      color: #00a000;
-      font-weight: 700;
-      font-size: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-top: 2px;
+      flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+      background: white; color: #00a000; font-weight: 700; font-size: 12px;
+      display: flex; align-items: center; justify-content: center; margin-top: 2px;
     }
 
     .top-bar {
@@ -156,31 +98,16 @@
       border-bottom: 0.5px solid var(--separator);
     }
     .top-bar-inner {
-      padding: 10px 16px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      min-height: 44px;
+      padding: 10px 16px 12px; display: flex; align-items: center;
+      justify-content: center; position: relative; min-height: 44px;
     }
     .top-bar h1 { font-size: 18px; font-weight: 600; }
     .back-btn {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: transparent;
-      border: none;
-      color: var(--accent);
-      font-size: 16px;
-      font-weight: 500;
-      cursor: pointer;
-      padding: 6px 10px;
-      border-radius: 8px;
-      font-family: inherit;
-      display: none;
-      align-items: center;
-      gap: 4px;
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      background: transparent; border: none; color: var(--accent);
+      font-size: 16px; font-weight: 500; cursor: pointer; padding: 6px 10px;
+      border-radius: 8px; font-family: inherit; display: none;
+      align-items: center; gap: 4px;
     }
     .back-btn.show { display: inline-flex; }
     .back-btn:active { background: rgba(0,0,0,0.05); }
@@ -193,27 +120,19 @@
 
     .mode-select { padding: 8px 16px 40px; }
     .mode-card {
-      background: var(--bg-elev);
-      border-radius: 20px;
-      padding: 28px 22px;
-      margin-bottom: 16px;
-      cursor: pointer;
+      background: var(--bg-elev); border-radius: 20px; padding: 28px 22px;
+      margin-bottom: 16px; cursor: pointer;
       transition: transform 0.15s, box-shadow 0.15s;
-      border: 2px solid transparent;
-      display: flex;
-      align-items: center;
-      gap: 18px;
+      border: 2px solid transparent; display: flex; align-items: center; gap: 18px;
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-      user-select: none;
-      -webkit-user-select: none;
+      user-select: none; -webkit-user-select: none;
     }
     .mode-card:active { transform: scale(0.97); }
     .mode-card.start { background: linear-gradient(135deg, #34c759 0%, #2da349 100%); color: white; }
     .mode-card.end { background: linear-gradient(135deg, #ff9500 0%, #ff7a00 100%); color: white; }
     .mode-card-icon {
       width: 72px; height: 72px; border-radius: 20px;
-      background: rgba(255, 255, 255, 0.25);
-      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(10px);
       display: flex; align-items: center; justify-content: center;
       font-size: 38px; flex-shrink: 0;
     }
@@ -232,10 +151,7 @@
       padding: 20px 4px 10px;
       display: flex; justify-content: space-between; align-items: center;
     }
-    .mode-badge {
-      font-size: 11px; padding: 4px 10px; border-radius: 980px;
-      font-weight: 700; letter-spacing: 0.04em;
-    }
+    .mode-badge { font-size: 11px; padding: 4px 10px; border-radius: 980px; font-weight: 700; letter-spacing: 0.04em; }
     .mode-badge.clock-in { background: var(--success-bg); color: #1e7a2e; }
     .mode-badge.clock-out { background: var(--warning-bg); color: #c66800; }
 
@@ -326,19 +242,15 @@
     .hours-summary.error { background: var(--error-bg); border-color: rgba(255, 59, 48, 0.3); }
     .hours-summary.error .hours-summary-value { color: var(--error); font-size: 14px; }
 
-    /* ===== ปุ่มขอเบี้ยเลี้ยง (เฉพาะ 3E Innovation) ===== */
     .allowance-box {
-      margin-top: 12px;
-      border-radius: 14px;
+      margin-top: 12px; border-radius: 14px;
       border: 1.5px solid rgba(255, 149, 0, 0.35);
       background: linear-gradient(135deg, rgba(255, 149, 0, 0.10), rgba(255, 149, 0, 0.03));
-      overflow: hidden;
-      animation: fadeIn 0.25s ease;
+      overflow: hidden; animation: fadeIn 0.25s ease;
     }
     .allowance-toggle {
       display: flex; align-items: center; gap: 12px;
-      padding: 14px 16px;
-      cursor: pointer; user-select: none; -webkit-user-select: none;
+      padding: 14px 16px; cursor: pointer; user-select: none; -webkit-user-select: none;
     }
     .allowance-toggle:active { background: rgba(255, 149, 0, 0.08); }
     .allowance-emoji { font-size: 26px; flex-shrink: 0; }
@@ -346,10 +258,8 @@
     .allowance-title { font-size: 15px; font-weight: 700; color: #c66800; }
     .allowance-desc { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; line-height: 1.4; }
     .allowance-switch {
-      flex-shrink: 0;
-      width: 52px; height: 31px; border-radius: 980px;
-      background: rgba(120,120,128,0.32);
-      position: relative; transition: background 0.2s;
+      flex-shrink: 0; width: 52px; height: 31px; border-radius: 980px;
+      background: rgba(120,120,128,0.32); position: relative; transition: background 0.2s;
     }
     .allowance-switch::after {
       content: ''; position: absolute; top: 2px; left: 2px;
@@ -359,70 +269,36 @@
     }
     .allowance-box.on .allowance-switch { background: var(--success); }
     .allowance-box.on .allowance-switch::after { transform: translateX(21px); }
-    .allowance-confirmed {
-      display: none;
-      padding: 0 16px 14px;
-      font-size: 13px; color: #1e7a2e; font-weight: 600;
-    }
+    .allowance-confirmed { display: none; padding: 0 16px 14px; font-size: 13px; color: #1e7a2e; font-weight: 600; }
     .allowance-box.on .allowance-confirmed { display: block; }
 
-    /* ===== ปุ่มเลือกประเภทงาน: ทำในบริษัท / ออกหน้างาน (เฉพาะ 3E Innovation) ===== */
     .worktype-box {
-      margin-top: 12px;
-      border-radius: 14px;
-      border: 1.5px solid var(--separator);
-      background: var(--bg-elev);
-      padding: 14px;
-      animation: fadeIn 0.25s ease;
+      margin-top: 12px; border-radius: 14px; border: 1.5px solid var(--separator);
+      background: var(--bg-elev); padding: 14px; animation: fadeIn 0.25s ease;
     }
     .worktype-label {
       font-size: 13px; font-weight: 700; color: var(--text-secondary);
       margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
     }
     .worktype-label .req { color: var(--error); }
-    .worktype-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
+    .worktype-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .worktype-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 16px 10px;
-      border-radius: 12px;
-      border: 2px solid var(--field-border);
-      background: var(--field-bg);
-      cursor: pointer;
-      user-select: none; -webkit-user-select: none;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 6px; padding: 16px 10px; border-radius: 12px;
+      border: 2px solid var(--field-border); background: var(--field-bg);
+      cursor: pointer; user-select: none; -webkit-user-select: none;
       transition: border-color 0.15s, background 0.15s, transform 0.1s;
-      min-height: 92px;
-      text-align: center;
+      min-height: 92px; text-align: center;
     }
     .worktype-btn:active { transform: scale(0.97); }
     .worktype-btn .wt-emoji { font-size: 28px; line-height: 1; }
     .worktype-btn .wt-title { font-size: 15px; font-weight: 700; color: var(--text); }
     .worktype-btn .wt-desc { font-size: 11px; color: var(--text-tertiary); line-height: 1.3; }
-    /* ปุ่ม "รับเบี้ยเลี้ยง" เมื่อเลือก = เขียว */
-    .worktype-btn.allow-normal.selected {
-      border-color: var(--success);
-      background: rgba(52, 199, 89, 0.10);
-    }
+    .worktype-btn.allow-normal.selected { border-color: var(--success); background: rgba(52, 199, 89, 0.10); }
     .worktype-btn.allow-normal.selected .wt-title { color: #1e7a2e; }
-    /* ปุ่ม "ออกหน้างาน" เมื่อเลือก = ส้ม */
-    .worktype-btn.allow-field.selected {
-      border-color: var(--warning);
-      background: rgba(255, 149, 0, 0.10);
-    }
+    .worktype-btn.allow-field.selected { border-color: var(--warning); background: rgba(255, 149, 0, 0.10); }
     .worktype-btn.allow-field.selected .wt-title { color: #c66800; }
-    .worktype-hint {
-      margin-top: 10px;
-      font-size: 12px;
-      line-height: 1.5;
-      display: none;
-    }
+    .worktype-hint { margin-top: 10px; font-size: 12px; line-height: 1.5; display: none; }
     .worktype-hint.show { display: block; }
     .worktype-hint.allow-field { color: #c66800; }
     .worktype-hint.allow-normal { color: #1e7a2e; }
@@ -432,7 +308,6 @@
     .action-card-icon { width: 32px; height: 32px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; }
     .icon-cam { background: #ff9500; color: white; }
 
-    /* ===== GPS status pill (header) ===== */
     .gps-pill {
       display: inline-flex; align-items: center; gap: 6px;
       font-size: 11px; font-weight: 700; padding: 4px 10px;
@@ -442,25 +317,21 @@
     .gps-pill.ready { background: var(--success-bg); color: #1e7a2e; }
     .gps-pill.fail { background: var(--error-bg); color: #c8201a; }
 
-    /* ===== Photo source buttons ===== */
     .photo-source-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
     }
+    /* เมื่อซ่อนปุ่มคลัง → กริดคอลัมน์เดียว */
+    .photo-source-grid.camera-only {
+      grid-template-columns: 1fr;
+    }
     .photo-source-btn {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 18px 12px;
-      border-radius: 12px;
-      border: 1.5px solid var(--field-border);
-      background: var(--field-bg);
-      cursor: pointer;
-      user-select: none;
-      -webkit-user-select: none;
+      position: relative; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 18px 12px; border-radius: 12px;
+      border: 1.5px solid var(--field-border); background: var(--field-bg);
+      cursor: pointer; user-select: none; -webkit-user-select: none;
       transition: background 0.15s, transform 0.1s, border-color 0.15s;
       min-height: 100px;
     }
@@ -469,23 +340,9 @@
       position: absolute; left: 0; top: 0; width: 100%; height: 100%;
       opacity: 0; cursor: pointer; font-size: 0;
     }
-    .photo-source-btn .ps-icon {
-      font-size: 30px;
-      margin-bottom: 8px;
-      line-height: 1;
-    }
-    .photo-source-btn .ps-title {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 2px;
-    }
-    .photo-source-btn .ps-desc {
-      font-size: 11px;
-      color: var(--text-tertiary);
-      line-height: 1.3;
-      text-align: center;
-    }
+    .photo-source-btn .ps-icon { font-size: 30px; margin-bottom: 8px; line-height: 1; }
+    .photo-source-btn .ps-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .photo-source-btn .ps-desc { font-size: 11px; color: var(--text-tertiary); line-height: 1.3; text-align: center; }
     .photo-source-btn.camera {
       background: linear-gradient(135deg, rgba(255, 149, 0, 0.12), rgba(255, 149, 0, 0.05));
       border-color: rgba(255, 149, 0, 0.35);
@@ -498,17 +355,13 @@
     .photo-source-btn.gallery .ps-title { color: var(--accent); }
 
     .photo-source-hint {
-      font-size: 12px;
-      color: var(--text-tertiary);
-      text-align: center;
-      margin-top: 10px;
-      line-height: 1.5;
+      font-size: 12px; color: var(--text-tertiary); text-align: center;
+      margin-top: 10px; line-height: 1.5;
     }
 
     .btn {
       padding: 16px 22px; border: none; border-radius: 12px;
-      font-size: 17px; font-weight: 600;
-      cursor: pointer;
+      font-size: 17px; font-weight: 600; cursor: pointer;
       transition: opacity 0.15s, transform 0.1s, background 0.15s;
       font-family: inherit; letter-spacing: -0.022em;
       display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -539,8 +392,7 @@
     .photo-source-badge {
       display: inline-flex; align-items: center; gap: 6px;
       padding: 4px 10px; border-radius: 980px;
-      font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
-      margin-top: 10px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.04em; margin-top: 10px;
     }
     .photo-source-badge.camera { background: var(--warning-bg); color: #c66800; }
     .photo-source-badge.gallery { background: rgba(0, 122, 255, 0.12); color: var(--accent); }
@@ -561,65 +413,50 @@
       from { opacity: 0.4; transform: translateX(4px); }
       to { opacity: 1; transform: translateX(0); }
     }
-    @media (prefers-reduced-motion: reduce) {
-      .view.active { animation: none; }
-    }
+    @media (prefers-reduced-motion: reduce) { .view.active { animation: none; } }
 
     .modal-overlay {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0, 0, 0, 0.5);
       backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
       z-index: 1000; display: flex; align-items: center; justify-content: center;
-      padding: 24px; opacity: 0; pointer-events: none;
-      transition: opacity 0.15s ease;
+      padding: 24px; opacity: 0; pointer-events: none; transition: opacity 0.15s ease;
     }
     .modal-overlay.show { opacity: 1; pointer-events: auto; }
     .modal-card {
       background: var(--bg-elev); border-radius: 20px;
-      padding: 32px 24px 24px;
-      width: 100%; max-width: 340px; text-align: center;
+      padding: 32px 24px 24px; width: 100%; max-width: 340px; text-align: center;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-      transform: scale(0.85);
-      transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transform: scale(0.85); transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
     .modal-overlay.show .modal-card { transform: scale(1); }
     .modal-icon {
       width: 80px; height: 80px; border-radius: 50%;
       background: var(--success); color: white; font-size: 44px;
       display: inline-flex; align-items: center; justify-content: center;
-      margin-bottom: 16px;
-      box-shadow: 0 8px 20px rgba(52, 199, 89, 0.35);
+      margin-bottom: 16px; box-shadow: 0 8px 20px rgba(52, 199, 89, 0.35);
       animation: bounceIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
     .modal-icon.warning { background: var(--warning); box-shadow: 0 8px 20px rgba(255, 149, 0, 0.35); }
-    @keyframes bounceIn {
-      0% { transform: scale(0); }
-      60% { transform: scale(1.15); }
-      100% { transform: scale(1); }
-    }
+    @keyframes bounceIn { 0% { transform: scale(0); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
     .modal-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
     .modal-message { font-size: 15px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.5; }
     .modal-info-box {
-      padding: 12px; background: rgba(0,0,0,0.04);
-      border-radius: 10px; margin-bottom: 20px;
-      font-size: 14px; text-align: left;
+      padding: 12px; background: rgba(0,0,0,0.04); border-radius: 10px;
+      margin-bottom: 20px; font-size: 14px; text-align: left;
     }
     .modal-info-box .info-row { display: flex; justify-content: space-between; padding: 4px 0; gap: 12px; }
     .modal-info-box .info-row b { font-weight: 600; text-align: right; word-break: break-all; }
     .modal-btn {
-      width: 100%; padding: 14px;
-      border: none; border-radius: 12px;
-      background: var(--accent); color: white;
-      font-size: 17px; font-weight: 600;
-      font-family: inherit; cursor: pointer;
-      transition: background 0.15s, transform 0.1s;
+      width: 100%; padding: 14px; border: none; border-radius: 12px;
+      background: var(--accent); color: white; font-size: 17px; font-weight: 600;
+      font-family: inherit; cursor: pointer; transition: background 0.15s, transform 0.1s;
     }
     .modal-btn:active { background: var(--accent-hover); transform: scale(0.98); }
   </style>
 </head>
 <body>
 
-  <!-- ============ LINE Block Screen ============ -->
   <div class="line-block-screen" id="lineBlock">
     <div class="line-block-icon">📍</div>
     <div class="line-block-title">เปิดในเบราว์เซอร์ก่อน</div>
@@ -627,14 +464,11 @@
       ระบบต้องใช้ GPS ซึ่งใช้ใน LINE ไม่ได้<br>
       <b>คัดลอกลิงก์</b> แล้วเปิดใน Safari / Chrome
     </div>
-
     <button class="line-action-btn" onclick="copyLink()">
       <span class="icon">📋</span>
       <span>คัดลอกลิงก์</span>
     </button>
-
     <div class="line-divider">หรือเปิดด้วยตัวเอง</div>
-
     <div class="line-manual-card">
       <div class="line-manual-step" id="iosSteps" style="display:none;">
         <div class="line-manual-step-num">i</div>
@@ -660,13 +494,11 @@
     </div>
   </div>
 
-  <!-- ============ VIEW 1: หน้าเลือกโหมด ============ -->
   <div class="view active" id="selectView">
     <div class="large-title">
       <h2>บันทึก OT</h2>
       <p>เลือกประเภทการบันทึก</p>
     </div>
-
     <div class="mode-select">
       <div class="mode-card start" onclick="goToFormView('clock_in')">
         <div class="mode-card-icon">⏱️</div>
@@ -676,7 +508,6 @@
         </div>
         <div class="mode-card-arrow">›</div>
       </div>
-
       <div class="mode-card end" onclick="goToFormView('clock_out')">
         <div class="mode-card-icon">🏁</div>
         <div class="mode-card-text">
@@ -685,21 +516,17 @@
         </div>
         <div class="mode-card-arrow">›</div>
       </div>
-
       <p class="mode-tip">💡 กดเริ่มงานก่อนเริ่มทำ OT<br>แล้วกลับมากด "เลิกงาน" เมื่อเสร็จ</p>
     </div>
   </div>
 
-  <!-- ============ VIEW 2: ฟอร์มบันทึก ============ -->
   <div class="view" id="formView">
     <div class="large-title">
       <h2 id="pageTitle">บันทึก OT</h2>
       <p id="pageDesc">กรอกข้อมูล → ถ่ายรูป → กดเริ่มงาน</p>
     </div>
-
     <form id="otForm" onsubmit="handleSubmit(event)">
       <div class="content">
-
         <div class="section-header">
           <span>ข้อมูลพนักงาน</span>
           <span class="mode-badge clock-in" id="modeBadge">⏱️ เริ่มงาน</span>
@@ -709,24 +536,20 @@
             <label class="field-label" for="otDate">วันที่ <span class="required">*</span></label>
             <input type="date" id="otDate" class="field-input" required onchange="onDateChange()">
           </div>
-
           <div class="field" id="nameInputField">
             <label class="field-label" for="employeeName">ชื่อ - นามสกุล <span class="required">*</span></label>
             <input type="text" id="employeeName" class="field-input" placeholder="กรอกชื่อ - นามสกุล" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onblur="checkClockStatusUI()">
           </div>
-
           <div class="field" id="nameSelectField" style="display:none;">
             <label class="field-label" for="employeeSelect">เลือกชื่อพนักงาน <span class="required">*</span></label>
             <select id="employeeSelect" class="field-input" onchange="onEmployeeSelected()">
               <option value="">-- เลือกชื่อ --</option>
             </select>
           </div>
-
           <div class="field" id="supervisorField">
             <label class="field-label" for="supervisorName">ชื่อหัวหน้า <span class="required">*</span></label>
             <input type="text" id="supervisorName" class="field-input" placeholder="กรอกชื่อหัวหน้า" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
           </div>
-
           <div class="field" id="companyField">
             <label class="field-label" for="companySelect">บริษัท <span class="required">*</span></label>
             <select id="companySelect" class="field-input" onchange="onCompanyChange()">
@@ -740,7 +563,6 @@
               <option value="Chavest">Chavest</option>
             </select>
           </div>
-
           <div class="field">
             <label class="field-label" id="timeLabel">เวลาเริ่มงาน <span class="required">*</span></label>
             <input type="time" id="timeInput" class="field-input" required>
@@ -748,8 +570,6 @@
               <span class="hours-summary-label">เวลารวม</span>
               <span class="hours-summary-value" id="hoursValue">0</span>
             </div>
-
-            <!-- เลือกประเภทเบี้ยเลี้ยง: แสดงในหน้าเริ่มงาน เฉพาะ 3E Innovation -->
             <div class="worktype-box" id="worktypeBox" style="display:none;">
               <div class="worktype-label">💰 ประเภทเบี้ยเลี้ยง <span class="req">*</span></div>
               <div class="worktype-grid">
@@ -795,9 +615,8 @@
             รูปยืนยัน + ตำแหน่ง
           </div>
 
-          <!-- ======= ปุ่ม 2 ตัวเลือก: ถ่ายรูป / คลัง ======= -->
           <div id="photoSourceWrap">
-            <div class="photo-source-grid">
+            <div class="photo-source-grid" id="photoSourceGrid">
               <label class="photo-source-btn camera">
                 <div class="ps-icon">📸</div>
                 <div class="ps-title">ถ่ายรูป</div>
@@ -806,7 +625,7 @@
                        onclick="onCameraOpen()"
                        onchange="handleCapture(event, 'camera')">
               </label>
-              <label class="photo-source-btn gallery">
+              <label class="photo-source-btn gallery" id="galleryBtnLabel">
                 <div class="ps-icon">🖼️</div>
                 <div class="ps-title">เลือกจากคลัง</div>
                 <div class="ps-desc">ถ่ายไว้ไม่เกิน 10 นาที</div>
@@ -814,6 +633,7 @@
                        onchange="handleCapture(event, 'gallery')">
               </label>
             </div>
+            <div class="photo-source-hint" id="photoSourceHint"></div>
           </div>
 
           <img id="selfiePreview" style="display:none;" alt="selfie preview">
@@ -849,14 +669,13 @@
   </div>
 
   <script>
-    // ============================================================
-    // ⚠️ ใส่ Web App URL ของคุณตรงนี้
-    // ============================================================
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzUnBvZvRtG_pK6UVWLbL8pD-_zTGDMz2mrm95kAzYjHu_04mZZZ9MiqwHMESTnaMwCww/exec';
 
     // ============================================================
-    // 🔍 ตรวจจับ LINE / Device
+    // 🔒 บริษัทที่อนุญาตให้เลือกรูปจากคลังได้
     // ============================================================
+    const GALLERY_ALLOWED_COMPANY = '3E Empire';
+
     function detectBrowser() {
       const ua = navigator.userAgent || '';
       const isLine = /Line\//i.test(ua);
@@ -888,16 +707,11 @@
       if (det.isInApp && !userSkipped) {
         setTimeout(function() {
           const stillInApp = detectBrowser().isInApp;
-          if (stillInApp) {
-            showLineBlockScreen(det);
-          }
+          if (stillInApp) showLineBlockScreen(det);
         }, det.isLine && alreadyTried ? 800 : 0);
       } else {
-        // ⚡ ไม่ได้อยู่ใน in-app → ขอสิทธิ์ + อุ่นเครื่อง GPS ทันทีที่เข้าเว็บ
-        // พอผู้ใช้กดเข้าฟอร์ม จะมีพิกัดรออยู่แล้ว ไม่ต้องรอ
         setTimeout(function() {
           try { startGpsLookup(); } catch (e) {}
-          // prefetch รายชื่อ "เลิกงาน" ของวันนี้ล่วงหน้า → กดเลิกงานแล้วเด้งทันที
           try {
             const today = new Date();
             const d = today.getFullYear() + '-' +
@@ -912,12 +726,9 @@
     function showLineBlockScreen(det) {
       const screen = document.getElementById('lineBlock');
       screen.classList.add('show');
-
-      if (det.isIOS) {
-        document.getElementById('iosSteps').style.display = 'flex';
-      } else if (det.isAndroid) {
-        document.getElementById('androidSteps').style.display = 'flex';
-      } else {
+      if (det.isIOS) document.getElementById('iosSteps').style.display = 'flex';
+      else if (det.isAndroid) document.getElementById('androidSteps').style.display = 'flex';
+      else {
         document.getElementById('iosSteps').style.display = 'flex';
         document.getElementById('androidSteps').style.display = 'flex';
       }
@@ -927,31 +738,19 @@
       const url = new URL(window.location.href);
       url.searchParams.delete('openExternalBrowser');
       const cleanUrl = url.toString();
-
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(cleanUrl).then(function() {
           alert('✓ คัดลอกลิงก์แล้ว!\n\n1. ปิดหน้านี้\n2. เปิดแอป Safari (iPhone) หรือ Chrome (Android)\n3. วางลิงก์ที่ช่อง URL ด้านบน');
-        }).catch(function() {
-          fallbackCopy(cleanUrl);
-        });
-      } else {
-        fallbackCopy(cleanUrl);
-      }
+        }).catch(function() { fallbackCopy(cleanUrl); });
+      } else { fallbackCopy(cleanUrl); }
     }
 
     function fallbackCopy(text) {
       const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.select();
-      try {
-        document.execCommand('copy');
-        alert('✓ คัดลอกลิงก์แล้ว!\n\nเปิด Safari / Chrome แล้ววางลิงก์');
-      } catch (e) {
-        prompt('คัดลอกลิงก์นี้:', text);
-      }
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); alert('✓ คัดลอกลิงก์แล้ว!\n\nเปิด Safari / Chrome แล้ววางลิงก์'); }
+      catch (e) { prompt('คัดลอกลิงก์นี้:', text); }
       document.body.removeChild(ta);
     }
 
@@ -978,10 +777,44 @@
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const text = await res.text();
-      try {
-        return JSON.parse(text);
-      } catch (e) {
-        throw new Error('ตอบกลับไม่ใช่ JSON: ' + text.slice(0, 200));
+      try { return JSON.parse(text); }
+      catch (e) { throw new Error('ตอบกลับไม่ใช่ JSON: ' + text.slice(0, 200)); }
+    }
+
+    // ============================================================
+    // 📸 แสดง/ซ่อนปุ่มเลือกรูปจากคลัง — เฉพาะ 3E Empire เท่านั้น
+    // ============================================================
+    function getSelectedCompany() {
+      if (currentMode === 'clock_out') {
+        // ดึงบริษัทจากข้อมูลพนักงานที่เลือก
+        if (existingClockIn && existingClockIn.company) return existingClockIn.company;
+        return '';
+      } else {
+        return document.getElementById('companySelect').value;
+      }
+    }
+
+    function updatePhotoOptions(company) {
+      const galleryBtn = document.getElementById('galleryBtnLabel');
+      const grid = document.getElementById('photoSourceGrid');
+      const hint = document.getElementById('photoSourceHint');
+
+      if (!galleryBtn || !grid) return;
+
+      const allowGallery = (company === GALLERY_ALLOWED_COMPANY);
+
+      if (allowGallery) {
+        galleryBtn.style.display = 'flex';
+        grid.classList.remove('camera-only');
+        hint.textContent = '';
+      } else {
+        galleryBtn.style.display = 'none';
+        grid.classList.add('camera-only');
+        if (company) {
+          hint.textContent = '📸 บริษัทนี้ต้องถ่ายรูปสดเท่านั้น';
+        } else {
+          hint.textContent = '';
+        }
       }
     }
 
@@ -1001,9 +834,7 @@
       const sel = document.getElementById('employeeSelect');
       sel.innerHTML = '<option value="">-- เลือกชื่อ --</option>';
 
-      // รีเซ็ตปุ่มเลือกประเภทงาน
       resetWorktype();
-
       applyModeUI(mode);
 
       const now = new Date();
@@ -1011,17 +842,17 @@
       const mm = String(now.getMinutes()).padStart(2, '0');
       document.getElementById('timeInput').value = hh + ':' + mm;
 
-      // ⚡ เริ่มหา GPS (ถ้ายังไม่เริ่มตั้งแต่เข้าเว็บ) — ปกติเริ่มไปแล้ว
       startGpsLookup();
-      // sync ป้ายสถานะให้ตรงกับผลปัจจุบัน
-      if (gpsResult) {
-        updateGpsPill('ready', '±' + gpsResult.acc + ' ม.');
-      } else if (gpsPromise) {
-        updateGpsPill('searching', 'หาตำแหน่ง...');
-      }
+      if (gpsResult) updateGpsPill('ready', '±' + gpsResult.acc + ' ม.');
+      else if (gpsPromise) updateGpsPill('searching', 'หาตำแหน่ง...');
 
       if (mode === 'clock_out') {
         loadActiveClockIns();
+        // เลิกงาน: ยังไม่เลือกคน → ซ่อนคลังไว้ก่อน (จะโชว์ตอนเลือกคนถ้าเป็น 3E Empire)
+        updatePhotoOptions('');
+      } else {
+        // เริ่มงาน: ยังไม่เลือกบริษัท → ซ่อนคลังไว้ก่อน
+        updatePhotoOptions('');
       }
 
       document.getElementById('selectView').classList.remove('active');
@@ -1034,7 +865,6 @@
       document.getElementById('formView').classList.remove('active');
       document.getElementById('selectView').classList.add('active');
       document.getElementById('backBtn').classList.remove('show');
-      // หยุด watch เฉพาะตอนที่ยังหาไม่เสร็จ — ถ้าได้พิกัดแล้วเก็บไว้ใช้ซ้ำ
       if (!gpsResult) stopGpsWatch();
       window.scrollTo({ top: 0 });
     }
@@ -1062,7 +892,6 @@
         submitBtn.textContent = '🏁 เลิกงาน';
         submitBtn.className = 'btn btn-warning';
         if (selfieHeaderText) selfieHeaderText.textContent = 'ยืนยันตัวตน (รูปเลิกงาน)';
-
         nameInputField.style.display = 'none';
         nameSelectField.style.display = 'block';
         supervisorField.style.display = 'none';
@@ -1077,7 +906,6 @@
         submitBtn.textContent = '⏱️ เริ่มงาน OT';
         submitBtn.className = 'btn btn-primary';
         if (selfieHeaderText) selfieHeaderText.textContent = 'ยืนยันตัวตน';
-
         nameInputField.style.display = 'block';
         nameSelectField.style.display = 'none';
         supervisorField.style.display = 'block';
@@ -1086,7 +914,6 @@
       }
     }
 
-    // cache รายชื่อ active clock-ins แยกตามวันที่ { 'yyyy-mm-dd': [...] }
     let activeClockInsByDate = {};
     let activeClockInsInflight = {};
 
@@ -1096,7 +923,6 @@
       activeClockInsCache = list || [];
       sel.disabled = false;
 
-      // จำค่าที่เลือกไว้ (เผื่อรีเฟรชเบื้องหลังแล้วไม่อยากให้เด้ง)
       const prevName = (sel.value !== '' && activeClockInsCache[sel.value])
         ? activeClockInsCache[sel.value].employeeName : '';
 
@@ -1124,7 +950,6 @@
       if (reselectIdx !== '') sel.value = reselectIdx;
     }
 
-    // ดึงข้อมูลจากเซิร์ฟเวอร์ (ใช้ร่วมกับ prefetch) — เก็บลง cache
     function fetchActiveClockIns(date) {
       if (!date) return Promise.resolve([]);
       if (activeClockInsInflight[date]) return activeClockInsInflight[date];
@@ -1143,17 +968,13 @@
       return p;
     }
 
-    // เรียกตอนกดเข้าโหมดเลิกงาน / เปลี่ยนวันที่
     async function loadActiveClockIns() {
       const date = document.getElementById('otDate').value;
       const sel = document.getElementById('employeeSelect');
 
-      // ถ้ามี cache ของวันนี้แล้ว → แสดงทันที (ลื่น) แล้วรีเฟรชเงียบ ๆ
       if (activeClockInsByDate[date]) {
         renderActiveClockIns(activeClockInsByDate[date]);
-        // รีเฟรชเบื้องหลังเพื่อความสด ไม่บล็อก UI
         fetchActiveClockIns(date).then(function(data) {
-          // อัปเดตเฉพาะเมื่อยังอยู่ในโหมด/วันเดิม
           if (currentMode === 'clock_out' &&
               document.getElementById('otDate').value === date) {
             renderActiveClockIns(data);
@@ -1162,7 +983,6 @@
         return;
       }
 
-      // ยังไม่มี cache → แสดงกำลังโหลดแล้วรอ
       sel.innerHTML = '<option value="">กำลังโหลด...</option>';
       sel.disabled = true;
       document.getElementById('warningBox').style.display = 'none';
@@ -1200,9 +1020,10 @@
         existingClockIn = null;
         clockInBox.style.display = 'none';
         document.getElementById('hoursSummary').style.display = 'none';
-        // ซ่อน/รีเซ็ตปุ่มเบี้ยเลี้ยง
         document.getElementById('worktypeBox').style.display = 'none';
         resetWorktype();
+        // ยังไม่เลือกคน → ซ่อนคลัง
+        updatePhotoOptions('');
         return;
       }
 
@@ -1234,28 +1055,21 @@
       timeInput.addEventListener('change', calcHoursListener);
       calcHoursListener();
 
-      // โชว์ปุ่มเลือกประเภทเบี้ยเลี้ยงเฉพาะพนักงาน 3E Innovation (รีเซ็ตทุกครั้งที่เปลี่ยนคน)
       const wtBox = document.getElementById('worktypeBox');
       resetWorktype();
-      if (picked.company === ALLOWANCE_COMPANY) {
-        wtBox.style.display = 'block';
-      } else {
-        wtBox.style.display = 'none';
-      }
+      if (picked.company === ALLOWANCE_COMPANY) wtBox.style.display = 'block';
+      else wtBox.style.display = 'none';
+
+      // ★ อัปเดตปุ่มรูปตามบริษัทของพนักงานที่เลือก
+      updatePhotoOptions(picked.company || '');
     }
 
     async function checkClockStatusUI() {
       if (currentMode !== 'clock_in') return;
-
       const name = document.getElementById('employeeName').value.trim();
       const date = document.getElementById('otDate').value;
       const warningBox = document.getElementById('warningBox');
-
-      if (!name || !date) {
-        warningBox.style.display = 'none';
-        return;
-      }
-
+      if (!name || !date) { warningBox.style.display = 'none'; return; }
       try {
         const res = await apiCall('checkClockStatus', { employeeName: name, otDate: date });
         if (res.status === 'clocked_in') {
@@ -1266,37 +1080,25 @@
             'เริ่มไว้ตอน <b>' + res.startTime + '</b> ยังไม่ได้กดเลิกงาน<br>' +
             'กรุณากลับไปกด "เลิกงาน" ก่อน' +
             '</div>';
-        } else {
-          warningBox.style.display = 'none';
-        }
-      } catch (e) {
-        warningBox.style.display = 'none';
-      }
+        } else { warningBox.style.display = 'none'; }
+      } catch (e) { warningBox.style.display = 'none'; }
     }
 
     function calcHoursListener() {
       if (currentMode !== 'clock_out' || !existingClockIn) return;
       const end = document.getElementById('timeInput').value;
       if (!end) return;
-
       const [sh, sm] = existingClockIn.startTime.split(':').map(Number);
       const [eh, em] = end.split(':').map(Number);
       let startMin = sh * 60 + sm;
       let endMin = eh * 60 + em;
       if (endMin <= startMin) endMin += 24 * 60;
-
       const totalMin = endMin - startMin;
       const box = document.getElementById('hoursSummary');
       const val = document.getElementById('hoursValue');
       box.style.display = 'flex';
-
-      if (totalMin <= 0) {
-        box.classList.add('error');
-        val.textContent = 'เวลาไม่ถูกต้อง';
-      } else {
-        box.classList.remove('error');
-        val.textContent = formatDuration(totalMin);
-      }
+      if (totalMin <= 0) { box.classList.add('error'); val.textContent = 'เวลาไม่ถูกต้อง'; }
+      else { box.classList.remove('error'); val.textContent = formatDuration(totalMin); }
     }
 
     function formatDuration(totalMin) {
@@ -1307,34 +1109,25 @@
       return h + ' ชม. ' + m + ' นาที';
     }
 
-    // ============================================================
-    // ====== เลือกประเภทเบี้ยเลี้ยง (เฉพาะ 3E Innovation — หน้าเลิกงาน) ======
-    // ============================================================
     function onCompanyChange() {
-      // เบี้ยเลี้ยงย้ายไปหน้าเลิกงานแล้ว — หน้าเริ่มงานไม่ต้องโชว์ปุ่มนี้
       const box = document.getElementById('worktypeBox');
       box.style.display = 'none';
       resetWorktype();
+
+      // ★ อัปเดตปุ่มรูปตามบริษัทที่เลือก
+      const company = document.getElementById('companySelect').value;
+      updatePhotoOptions(company);
     }
 
-    // เลือกประเภทเบี้ยเลี้ยง: 'normal' = ธรรมดา / 'field' = ออกหน้างาน (เงินเท่ากัน แยกประเภท)
-    // กดปุ่มที่เลือกอยู่ซ้ำ = ยกเลิกการเลือก (กรณี OT ที่ไม่มีเบี้ยเลี้ยง)
     function selectWorktype(type) {
       const normalBtn = document.getElementById('worktypeNormal');
       const fieldBtn = document.getElementById('worktypeField');
       const hint = document.getElementById('worktypeHint');
       const current = document.getElementById('worktypeValue').value;
-
-      // กดซ้ำปุ่มเดิม → ยกเลิกการเลือก
-      if (current === type) {
-        resetWorktype();
-        return;
-      }
-
+      if (current === type) { resetWorktype(); return; }
       normalBtn.classList.toggle('selected', type === 'normal');
       fieldBtn.classList.toggle('selected', type === 'field');
       document.getElementById('worktypeValue').value = type;
-
       if (type === 'field') {
         document.getElementById('allowanceFlag').value = 'เบี้ยเลี้ยงออกหน้างาน';
         hint.className = 'worktype-hint allow-field show';
@@ -1346,7 +1139,6 @@
       }
     }
 
-    // รีเซ็ตปุ่มประเภทเบี้ยเลี้ยงให้กลับมาเป็น "ยังไม่เลือก"
     function resetWorktype() {
       const normalBtn = document.getElementById('worktypeNormal');
       const fieldBtn = document.getElementById('worktypeField');
@@ -1358,23 +1150,18 @@
       document.getElementById('allowanceFlag').value = '';
     }
 
-    // ============================================================
-    // ====== GPS (เร็วขึ้น: เริ่มหาตั้งแต่เข้าฟอร์ม) ======
-    // ============================================================
     let gpsPromise = null;
     let gpsWatchId = null;
     let gpsBestReading = null;
-    let gpsResult = null;       // เก็บผลที่ได้แล้ว (lat,lng,acc)
+    let gpsResult = null;
     let cameraOpenedAt = 0;
 
-    // เน้นแม่นยำ: รอ ±10ม. แต่เริ่มหาเร็ว (ตั้งแต่เข้าเว็บ)
-    const GPS_GOOD_ACCURACY = 10;    // ได้ ±10ม. → resolve ทันที
-    const GPS_ACCEPTABLE = 30;       // ระดับพอใช้ได้
-    const GPS_MAX_WAIT = 15000;      // รอสูงสุด 15 วิ (ถ้ายังไม่ถึง ±10 ใช้ค่าที่ดีที่สุดที่มี)
+    const GPS_GOOD_ACCURACY = 10;
+    const GPS_ACCEPTABLE = 30;
+    const GPS_MAX_WAIT = 15000;
 
     function onCameraOpen() {
       cameraOpenedAt = Date.now();
-      // GPS เริ่มไปแล้วตอนเข้าฟอร์ม — ไม่ต้องเริ่มใหม่
       if (!gpsPromise) startGpsLookup();
     }
 
@@ -1383,13 +1170,9 @@
       if (!pill) return;
       pill.style.display = 'inline-flex';
       pill.className = 'gps-pill ' + state;
-      if (state === 'searching') {
-        pill.innerHTML = '<span class="spinner" style="margin:0;width:9px;height:9px;"></span> ' + text;
-      } else if (state === 'ready') {
-        pill.innerHTML = '✓ ' + text;
-      } else {
-        pill.innerHTML = '⚠️ ' + text;
-      }
+      if (state === 'searching') pill.innerHTML = '<span class="spinner" style="margin:0;width:9px;height:9px;"></span> ' + text;
+      else if (state === 'ready') pill.innerHTML = '✓ ' + text;
+      else pill.innerHTML = '⚠️ ' + text;
     }
 
     function startGpsLookup() {
@@ -1398,86 +1181,48 @@
         updateGpsPill('fail', 'ไม่รองรับ GPS');
         return;
       }
-
       const isSecure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
       if (!isSecure) {
         gpsPromise = Promise.reject({ code: 1, message: 'GPS ต้องใช้บน HTTPS เท่านั้น (ตอนนี้คือ ' + location.protocol + ')' });
         updateGpsPill('fail', 'ต้องใช้ HTTPS');
         return;
       }
-
-      // ถ้ากำลังหาอยู่แล้ว ไม่ต้องเริ่มซ้ำ
       if (gpsPromise) return;
-
-      gpsBestReading = null;
-      gpsResult = null;
+      gpsBestReading = null; gpsResult = null;
       updateGpsPill('searching', 'หาตำแหน่ง...');
-
-      if (gpsWatchId !== null) {
-        try { navigator.geolocation.clearWatch(gpsWatchId); } catch (e) {}
-        gpsWatchId = null;
-      }
+      if (gpsWatchId !== null) { try { navigator.geolocation.clearWatch(gpsWatchId); } catch (e) {} gpsWatchId = null; }
 
       gpsPromise = new Promise(function(resolve, reject) {
         let resolved = false;
-
         function finish(reading) {
-          if (resolved) return;
-          resolved = true;
-          stopGpsWatch();
+          if (resolved) return; resolved = true; stopGpsWatch();
           const r = formatReading(reading);
           gpsResult = r;
           updateGpsPill('ready', '±' + r.acc + ' ม.');
           resolve(r);
         }
+        function fail(err) { if (resolved) return; resolved = true; stopGpsWatch(); reject(err); }
 
-        function fail(err) {
-          if (resolved) return;
-          resolved = true;
-          stopGpsWatch();
-          reject(err);
-        }
-
-        // เริ่ม watchPosition ทันที — เก็บค่าดีที่สุดแบบต่อเนื่อง
         gpsWatchId = navigator.geolocation.watchPosition(
           function(pos) {
-            const reading = {
-              lat: pos.coords.latitude,
-              lng: pos.coords.longitude,
-              acc: pos.coords.accuracy
-            };
+            const reading = { lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy };
             if (!gpsBestReading || reading.acc < gpsBestReading.acc) {
               gpsBestReading = reading;
               updateGpsPill('searching', '±' + Math.round(reading.acc) + ' ม.');
               updateGpsProgress(reading.acc);
             }
-            // ได้ความแม่นยำดีพอ → จบทันที
-            if (reading.acc <= GPS_GOOD_ACCURACY) {
-              finish(gpsBestReading);
-            }
+            if (reading.acc <= GPS_GOOD_ACCURACY) finish(gpsBestReading);
           },
-          function(err) {
-            // ถ้ายังไม่มีค่าเลย และ error ร้ายแรง → fail
-            if (!gpsBestReading) fail(err);
-          },
+          function(err) { if (!gpsBestReading) fail(err); },
           { enableHighAccuracy: true, timeout: GPS_MAX_WAIT, maximumAge: 0 }
         );
 
-        // หมดเวลา → ใช้ค่าที่ดีที่สุดเท่าที่มี
         setTimeout(function() {
           if (resolved) return;
-          if (gpsBestReading) {
-            finish(gpsBestReading);
-          } else {
-            // ยังไม่ได้อะไรเลย ลองแบบเร็ว (low accuracy) เป็น fallback
+          if (gpsBestReading) { finish(gpsBestReading); }
+          else {
             navigator.geolocation.getCurrentPosition(
-              function(pos) {
-                finish({
-                  lat: pos.coords.latitude,
-                  lng: pos.coords.longitude,
-                  acc: pos.coords.accuracy
-                });
-              },
+              function(pos) { finish({ lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy }); },
               function(err) { fail(err); },
               { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
             );
@@ -1485,36 +1230,22 @@
         }, GPS_MAX_WAIT);
       });
 
-      // ผูก handler เพื่ออัปเดต hidden field ทันทีที่ได้ค่า (แม้ยังไม่ถ่ายรูป)
-      gpsPromise.then(function(g) {
-        setGpsValue(g.lat, g.lng, g.acc);
-      }).catch(function(err) {
-        console.error('GPS error:', err);
-        updateGpsPill('fail', 'หาตำแหน่งไม่ได้');
-        // แสดง error ที่ช่องรูปเฉพาะตอนที่ถ่ายรูปแล้วเท่านั้น (handleCapture จะจัดการ)
-      });
+      gpsPromise.then(function(g) { setGpsValue(g.lat, g.lng, g.acc); })
+        .catch(function(err) { console.error('GPS error:', err); updateGpsPill('fail', 'หาตำแหน่งไม่ได้'); });
     }
 
     function stopGpsWatch() {
-      if (gpsWatchId !== null) {
-        try { navigator.geolocation.clearWatch(gpsWatchId); } catch (e) {}
-        gpsWatchId = null;
-      }
+      if (gpsWatchId !== null) { try { navigator.geolocation.clearWatch(gpsWatchId); } catch (e) {} gpsWatchId = null; }
     }
 
     function formatReading(r) {
-      return {
-        lat: r.lat.toFixed(6),
-        lng: r.lng.toFixed(6),
-        acc: Math.round(r.acc)
-      };
+      return { lat: r.lat.toFixed(6), lng: r.lng.toFixed(6), acc: Math.round(r.acc) };
     }
 
     function updateGpsProgress(currentAcc) {
       const gpsRow = document.getElementById('gpsRow');
       if (!gpsRow) return;
       const accInt = Math.round(currentAcc);
-
       let icon, msg;
       if (accInt <= GPS_GOOD_ACCURACY) {
         icon = '<span class="step-icon step-done">✓</span>';
@@ -1524,46 +1255,33 @@
         msg = '<span>📍 ปัจจุบัน ±' + accInt + ' ม. · กำลังหาความแม่นยำที่ดีกว่า...</span>';
       } else {
         icon = '<span class="step-icon step-active"><span class="spinner" style="margin:0; width:10px; height:10px;"></span></span>';
-        msg = '<span>📍 ปัจจุบัน ±' + accInt + ' ม. · ' +
-              '<span style="color:#c66800;">ออกที่โล่ง / เปิดที่กลางแจ้งช่วยได้</span></span>';
+        msg = '<span>📍 ปัจจุบัน ±' + accInt + ' ม. · <span style="color:#c66800;">ออกที่โล่ง / เปิดที่กลางแจ้งช่วยได้</span></span>';
       }
       gpsRow.innerHTML = icon + msg;
     }
 
-    // ============================================================
-    // ✅ handleCapture รองรับทั้ง camera / gallery
-    //   - camera: รูปต้องถ่ายในนาทีนี้ (≤ 1 นาทีจากตอนกดปุ่ม)
-    //   - gallery: รูปต้องถ่ายไม่เกิน 10 นาทีที่แล้ว
-    // ============================================================
     function handleCapture(event, sourceType) {
       const file = event.target.files[0];
       if (!file) return;
-
       sourceType = sourceType || 'camera';
 
-      // ===== ตรวจอายุไฟล์ทั้ง 2 โหมด =====
       const fileTime = file.lastModified || 0;
       const nowMs = Date.now();
 
       if (sourceType === 'camera') {
         if (!cameraOpenedAt) cameraOpenedAt = nowMs;
-        const MAX_AGE_BEFORE_CLICK = 60 * 1000;  // 1 นาที
+        const MAX_AGE_BEFORE_CLICK = 60 * 1000;
         const ageBeforeClick = cameraOpenedAt - fileTime;
-
         if (fileTime > 0 && ageBeforeClick > MAX_AGE_BEFORE_CLICK) {
           showAgeError(ageBeforeClick, 'camera');
-          event.target.value = '';
-          cameraOpenedAt = 0;
-          return;
+          event.target.value = ''; cameraOpenedAt = 0; return;
         }
       } else {
-        const MAX_AGE_GALLERY = 10 * 60 * 1000;  // 10 นาที
+        const MAX_AGE_GALLERY = 10 * 60 * 1000;
         const age = nowMs - fileTime;
-
         if (fileTime > 0 && age > MAX_AGE_GALLERY) {
           showAgeError(age, 'gallery');
-          event.target.value = '';
-          return;
+          event.target.value = ''; return;
         }
       }
 
@@ -1581,7 +1299,6 @@
       const statusDiv = document.getElementById('captureStatus');
       const sourceLabel = sourceType === 'camera' ? 'ถ่ายรูปสำเร็จ' : 'เลือกรูปจากคลังสำเร็จ';
 
-      // ถ้าได้พิกัดแล้ว → แสดงเลย / ถ้ายัง → แสดงกำลังหา (ปกติได้แล้วเพราะเริ่มตั้งแต่เข้าฟอร์ม)
       let gpsRowHtml;
       if (gpsResult) {
         gpsRowHtml = '<div class="step-status" id="gpsRow"><span class="step-icon step-done">✓</span><span>📍 ได้ตำแหน่งแล้ว (±' + gpsResult.acc + ' ม.)</span></div>';
@@ -1594,43 +1311,28 @@
         gpsRowHtml;
 
       const badgeWrap = document.getElementById('sourceBadgeWrap');
-      if (sourceType === 'camera') {
-        badgeWrap.innerHTML = '<span class="photo-source-badge camera">📸 ถ่ายสด</span>';
-      } else {
-        badgeWrap.innerHTML = '<span class="photo-source-badge gallery">🖼️ จากคลัง</span>';
-      }
+      if (sourceType === 'camera') badgeWrap.innerHTML = '<span class="photo-source-badge camera">📸 ถ่ายสด</span>';
+      else badgeWrap.innerHTML = '<span class="photo-source-badge gallery">🖼️ จากคลัง</span>';
 
       const reader = new FileReader();
       reader.onload = function(e) {
-        compressImage(e.target.result, function(compressed) {
-          showPreview(compressed, photoTimestamp);
-        });
+        compressImage(e.target.result, function(compressed) { showPreview(compressed, photoTimestamp); });
       };
       reader.readAsDataURL(file);
 
-      // GPS เริ่มไปแล้ว — แค่รอผล (ปกติได้ทันที)
       if (!gpsPromise) startGpsLookup();
-
-      if (gpsResult) {
-        setGpsValue(gpsResult.lat, gpsResult.lng, gpsResult.acc);
-      } else {
-        gpsPromise.then(function(g) {
-          setGpsValue(g.lat, g.lng, g.acc);
-        }).catch(function(err) {
-          console.error('GPS error:', err);
-          showGpsError(err);
-        });
+      if (gpsResult) setGpsValue(gpsResult.lat, gpsResult.lng, gpsResult.acc);
+      else {
+        gpsPromise.then(function(g) { setGpsValue(g.lat, g.lng, g.acc); })
+          .catch(function(err) { console.error('GPS error:', err); showGpsError(err); });
       }
     }
 
     function showAgeError(ageMs, sourceType) {
       const ageMin = Math.round(ageMs / 60000);
-      const ageText = ageMin < 60
-        ? ageMin + ' นาทีก่อน'
-        : ageMin < 1440
-          ? Math.round(ageMin / 60) + ' ชั่วโมงก่อน'
-          : Math.round(ageMin / 1440) + ' วันก่อน';
-
+      const ageText = ageMin < 60 ? ageMin + ' นาทีก่อน'
+        : ageMin < 1440 ? Math.round(ageMin / 60) + ' ชั่วโมงก่อน'
+        : Math.round(ageMin / 1440) + ' วันก่อน';
       let title, hint;
       if (sourceType === 'camera') {
         title = 'รูปนี้ไม่ใช่รูปสด';
@@ -1639,38 +1341,28 @@
         title = 'รูปนี้เก่าเกินไป';
         hint = 'รูปจากคลังต้องถ่ายไว้<b>ไม่เกิน 10 นาทีที่แล้ว</b><br>กรุณาเลือกรูปที่ถ่ายใหม่กว่านี้';
       }
-
       document.getElementById('captureStatus').innerHTML =
         '<div class="status-box status-error" style="line-height:1.6;">' +
         '🚫 <b>' + title + '</b><br>' +
-        'ระบบตรวจพบว่ารูปนี้ถ่ายไว้ตั้งแต่ ' + ageText + '<br>' +
-        hint +
-        '</div>';
+        'ระบบตรวจพบว่ารูปนี้ถ่ายไว้ตั้งแต่ ' + ageText + '<br>' + hint + '</div>';
     }
 
     function showGpsError(err) {
       let msg = '', help = '';
       const code = (err && err.code !== undefined) ? err.code : -1;
       const errMsg = (err && err.message) ? err.message : '';
-
       const det = detectBrowser();
       if (det.isInApp) {
         msg = 'GPS ไม่ทำงานใน LINE';
-        help = '<div style="margin-top:10px;">' +
-          '<button onclick="copyLink()" style="background:#00b900;color:white;border:none;padding:12px 20px;border-radius:10px;font-family:inherit;font-weight:700;cursor:pointer;font-size:15px;width:100%;">📋 คัดลอกลิงก์ไปเปิดในเบราว์เซอร์</button>' +
-          '</div>';
+        help = '<div style="margin-top:10px;"><button onclick="copyLink()" style="background:#00b900;color:white;border:none;padding:12px 20px;border-radius:10px;font-family:inherit;font-weight:700;cursor:pointer;font-size:15px;width:100%;">📋 คัดลอกลิงก์ไปเปิดในเบราว์เซอร์</button></div>';
         document.getElementById('captureStatus').innerHTML =
           '<div class="step-status"><span class="step-icon step-done">✓</span><span>ได้รูปแล้ว</span></div>' +
           '<div class="status-box status-error">❌ ' + msg + help + '</div>';
         return;
       }
-
       if (code === 1) {
         msg = 'ไม่ได้รับอนุญาตให้ใช้ตำแหน่ง';
-        help = '<div style="margin-top:8px; font-size:13px;"><b>วิธีแก้:</b><br>' +
-          '• <b>iPhone Safari:</b> Settings → Safari → Location → Ask / Allow<br>' +
-          '• <b>Android Chrome:</b> แตะ <b>🔒</b> ที่ address bar → Permissions → Location → Allow<br>' +
-          '• โหลดหน้านี้ใหม่หลังเปิดสิทธิ์แล้ว</div>';
+        help = '<div style="margin-top:8px; font-size:13px;"><b>วิธีแก้:</b><br>• <b>iPhone Safari:</b> Settings → Safari → Location → Ask / Allow<br>• <b>Android Chrome:</b> แตะ <b>🔒</b> ที่ address bar → Permissions → Location → Allow<br>• โหลดหน้านี้ใหม่หลังเปิดสิทธิ์แล้ว</div>';
       } else if (code === 2) {
         msg = 'ไม่พบสัญญาณ GPS — ลองออกกลางแจ้ง';
         help = '<div style="margin-top:6px; font-size:13px;">' + escapeHtml(errMsg) + '</div>';
@@ -1681,7 +1373,6 @@
         msg = errMsg || 'เกิดข้อผิดพลาด GPS';
         help = '<div style="margin-top:6px; font-size:13px;">รหัสข้อผิดพลาด: ' + code + '</div>';
       }
-
       document.getElementById('captureStatus').innerHTML =
         '<div class="step-status"><span class="step-icon step-done">✓</span><span>ได้รูปแล้ว</span></div>' +
         '<div class="status-box status-error">❌ ' + msg + help + '</div>';
@@ -1707,8 +1398,7 @@
 
     function showPreview(dataUrl, photoTimestamp) {
       const preview = document.getElementById('selfiePreview');
-      preview.src = dataUrl;
-      preview.style.display = 'block';
+      preview.src = dataUrl; preview.style.display = 'block';
       preview.dataset.base64 = dataUrl;
       preview.dataset.timestamp = photoTimestamp || '';
       document.getElementById('photoSourceWrap').style.display = 'none';
@@ -1719,22 +1409,12 @@
       document.getElementById('gpsCoords').value = lat + ', ' + lng;
       const mapsUrl = 'https://maps.google.com/?q=' + lat + ',' + lng;
       document.getElementById('address').value = mapsUrl;
-
       const gpsRow = document.getElementById('gpsRow');
       if (!gpsRow) return;
-
       let accColor, accLabel;
-      if (acc <= GPS_GOOD_ACCURACY) {
-        accColor = 'var(--success)';
-        accLabel = '✓ แม่นยำสูง';
-      } else if (acc <= GPS_ACCEPTABLE) {
-        accColor = '#c66800';
-        accLabel = '⚠️ พอใช้ได้';
-      } else {
-        accColor = 'var(--error)';
-        accLabel = '⚠️ ไม่แม่นยำ';
-      }
-
+      if (acc <= GPS_GOOD_ACCURACY) { accColor = 'var(--success)'; accLabel = '✓ แม่นยำสูง'; }
+      else if (acc <= GPS_ACCEPTABLE) { accColor = '#c66800'; accLabel = '⚠️ พอใช้ได้'; }
+      else { accColor = 'var(--error)'; accLabel = '⚠️ ไม่แม่นยำ'; }
       gpsRow.innerHTML =
         '<span class="step-icon step-done">✓</span>' +
         '<span>📍 ' + lat + ', ' + lng + ' · ' +
@@ -1752,12 +1432,12 @@
       document.getElementById('photoSourceWrap').style.display = 'block';
       document.getElementById('captureStatus').innerHTML = '';
       document.getElementById('sourceBadgeWrap').innerHTML = '';
-
       const inputs = document.querySelectorAll('#photoSourceWrap input[type="file"]');
       inputs.forEach(function(inp) { inp.value = ''; });
-
-      // หมายเหตุ: ไม่ล้าง GPS เพราะตำแหน่งยังใช้ได้อยู่ — ถ่ายรูปใหม่ก็ใช้พิกัดเดิม
       document.getElementById('photoSource').value = '';
+
+      // ★ อัปเดตปุ่มรูปตามบริษัทปัจจุบัน (เผื่อกด "เลือกรูปใหม่")
+      updatePhotoOptions(getSelectedCompany());
     }
 
     function showSuccessModal(type, message, info) {
@@ -1765,25 +1445,14 @@
       const title = document.getElementById('modalTitle');
       const msg = document.getElementById('modalMessage');
       const infoBox = document.getElementById('modalInfoBox');
-
       if (type === 'clock_in') {
-        icon.textContent = '⏱️';
-        icon.className = 'modal-icon warning';
-        title.textContent = 'เริ่มงานแล้ว';
+        icon.textContent = '⏱️'; icon.className = 'modal-icon warning'; title.textContent = 'เริ่มงานแล้ว';
       } else {
-        icon.textContent = '✓';
-        icon.className = 'modal-icon';
-        title.textContent = 'เลิกงานสำเร็จ';
+        icon.textContent = '✓'; icon.className = 'modal-icon'; title.textContent = 'เลิกงานสำเร็จ';
       }
       msg.textContent = message;
-
-      if (info) {
-        infoBox.style.display = 'block';
-        infoBox.innerHTML = info;
-      } else {
-        infoBox.style.display = 'none';
-      }
-
+      if (info) { infoBox.style.display = 'block'; infoBox.innerHTML = info; }
+      else { infoBox.style.display = 'none'; }
       document.getElementById('successModal').classList.add('show');
       document.body.style.overflow = 'hidden';
     }
@@ -1819,7 +1488,6 @@
         return;
       }
 
-      // เผื่อ GPS ยังหาไม่เสร็จตอนกดส่ง → รออีกนิด
       if (!gps && gpsPromise) {
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner"></span>กำลังหาตำแหน่ง...';
@@ -1827,7 +1495,7 @@
           const g = await gpsPromise;
           setGpsValue(g.lat, g.lng, g.acc);
           gps = document.getElementById('gpsCoords').value;
-        } catch (err) { /* ปล่อยให้เช็คด้านล่าง */ }
+        } catch (err) {}
         btn.disabled = false;
       }
 
@@ -1844,9 +1512,6 @@
           return;
         }
         const picked = activeClockInsCache[idx];
-
-        // เบี้ยเลี้ยง: เฉพาะ 3E Innovation (ปุ่มจะโชว์เฉพาะกรณีนี้)
-        // ไม่เลือก = ไม่มีเบี้ยเลี้ยง (ช่องในชีทว่าง) — ไม่บังคับเลือก
         const allowance = (picked.company === ALLOWANCE_COMPANY)
           ? (document.getElementById('allowanceFlag').value || '') : '';
 
@@ -1863,7 +1528,6 @@
           photoSource: photoSource
         };
 
-        // ⚡ คำนวณชั่วโมงฝั่ง client เพื่อแสดงผลทันที (ไม่ต้องรอเซิร์ฟเวอร์)
         const mins = (function() {
           const [sh, sm] = picked.startTime.split(':').map(Number);
           const [eh, em] = time.split(':').map(Number);
@@ -1873,15 +1537,12 @@
         })();
         const hoursText = formatDuration(mins);
 
-        // รอบันทึกให้สำเร็จก่อนเด้งหน้าสำเร็จ — กันข้อมูลหาย
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner"></span>กำลังบันทึก...';
 
         try {
           const res = await apiCall('clockOut', data);
-          btn.disabled = false;
-          btn.innerHTML = '🏁 เลิกงาน';
-
+          btn.disabled = false; btn.innerHTML = '🏁 เลิกงาน';
           if (res && res.success) {
             activeClockInsByDate = {};
             const info2 =
@@ -1897,8 +1558,7 @@
             status.innerHTML = '<div class="status-box status-error">❌ บันทึกไม่สำเร็จ: ' + escapeHtml((res && res.message) ? res.message : 'กรุณาลองใหม่') + '</div>';
           }
         } catch (err) {
-          btn.disabled = false;
-          btn.innerHTML = '🏁 เลิกงาน';
+          btn.disabled = false; btn.innerHTML = '🏁 เลิกงาน';
           status.innerHTML = '<div class="status-box status-error">❌ บันทึกไม่สำเร็จ: ' + escapeHtml(err.message) + '<br>กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่</div>';
         }
 
@@ -1907,46 +1567,27 @@
         const supervisorName = document.getElementById('supervisorName').value.trim();
         const company = document.getElementById('companySelect').value;
 
-        if (!employeeName) {
-          status.innerHTML = '<div class="status-box status-error">กรุณากรอกชื่อพนักงาน</div>';
-          return;
-        }
-        if (!supervisorName) {
-          status.innerHTML = '<div class="status-box status-error">กรุณากรอกชื่อหัวหน้า</div>';
-          return;
-        }
-        if (!company) {
-          status.innerHTML = '<div class="status-box status-error">กรุณาเลือกบริษัท</div>';
-          document.getElementById('companySelect').focus();
-          return;
-        }
+        if (!employeeName) { status.innerHTML = '<div class="status-box status-error">กรุณากรอกชื่อพนักงาน</div>'; return; }
+        if (!supervisorName) { status.innerHTML = '<div class="status-box status-error">กรุณากรอกชื่อหัวหน้า</div>'; return; }
+        if (!company) { status.innerHTML = '<div class="status-box status-error">กรุณาเลือกบริษัท</div>'; document.getElementById('companySelect').focus(); return; }
 
-        const allowance = '';  // เบี้ยเลี้ยงย้ายไปเลือกตอนเลิกงานแล้ว
+        const allowance = '';
 
         const data = {
-          otDate: otDate,
-          employeeName: employeeName,
-          supervisorName: supervisorName,
-          company: company,
-          startTime: time,
-          workDetail: workDetail,
-          allowance: allowance,
-          gpsCoords: gps,
-          address: document.getElementById('address').value,
+          otDate: otDate, employeeName: employeeName, supervisorName: supervisorName,
+          company: company, startTime: time, workDetail: workDetail, allowance: allowance,
+          gpsCoords: gps, address: document.getElementById('address').value,
           selfieBase64: selfie,
           photoTimestamp: document.getElementById('selfiePreview').dataset.timestamp || '',
           photoSource: photoSource
         };
 
-        // รอบันทึกให้สำเร็จก่อนเด้งหน้าสำเร็จ — กันข้อมูลหาย
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner"></span>กำลังบันทึก...';
 
         try {
           const res = await apiCall('clockIn', data);
-          btn.disabled = false;
-          btn.innerHTML = '⏱️ เริ่มงาน OT';
-
+          btn.disabled = false; btn.innerHTML = '⏱️ เริ่มงาน OT';
           if (res && res.success) {
             activeClockInsByDate = {};
             try { fetchActiveClockIns(otDate).catch(function(){}); } catch (e) {}
@@ -1962,13 +1603,11 @@
             status.innerHTML = '<div class="status-box status-error">❌ บันทึกไม่สำเร็จ: ' + escapeHtml((res && res.message) ? res.message : 'กรุณาลองใหม่') + '</div>';
           }
         } catch (err) {
-          btn.disabled = false;
-          btn.innerHTML = '⏱️ เริ่มงาน OT';
+          btn.disabled = false; btn.innerHTML = '⏱️ เริ่มงาน OT';
           status.innerHTML = '<div class="status-box status-error">❌ บันทึกไม่สำเร็จ: ' + escapeHtml(err.message) + '<br>กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่</div>';
         }
       }
     }
-
   </script>
 </body>
 </html>
