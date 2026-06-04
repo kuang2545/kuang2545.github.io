@@ -330,7 +330,6 @@
       white-space: nowrap;
     }
 
-    /* ป้ายเบี้ยเลี้ยง */
     .allowance-tag {
       display: inline-flex;
       align-items: center;
@@ -943,18 +942,23 @@
     </div>
   </div>
 
-  <!-- Export Modal -->
+  <!-- Export Modal — เปลี่ยนจากรอบเดือนล็อกเป็นเลือกวันอิสระ -->
   <div class="modal-overlay" id="exportModal" onclick="if(event.target===this) closeExportModal()">
     <div class="modal">
       <div class="modal-header">
-        <h3>ดาวน์โหลดข้อมูล<span class="sub" id="exportCountSub"></span></h3>
+        <h3>ดาวน์โหลดข้อมูล</h3>
         <button class="modal-close" onclick="closeExportModal()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
       <div class="modal-body">
-        <label for="expMonth">รอบเดือน (26 เดือนก่อน – 25 เดือนนี้)</label>
-        <select id="expMonth" class="select" style="width:100%; height:38px; margin-bottom:14px;" onchange="updateExportCount()"></select>
+        <label>ช่วงวันที่</label>
+        <div style="display:flex; gap:8px; align-items:center; margin-bottom:14px;">
+          <input type="date" id="expDateFrom" class="input" style="flex:1; height:38px;" onchange="updateExportCount()">
+          <span style="color:var(--ink-3); font-size:13px; flex-shrink:0;">ถึง</span>
+          <input type="date" id="expDateTo" class="input" style="flex:1; height:38px;" onchange="updateExportCount()">
+          <button class="icon-clear" type="button" onclick="clearExportDates()" title="ล้างวันที่">✕</button>
+        </div>
 
         <label for="expCompany">บริษัท</label>
         <select id="expCompany" class="select" style="width:100%; height:38px; margin-bottom:14px;" onchange="updateExportCount()">
@@ -1052,7 +1056,6 @@
       const body = document.getElementById('tableBody');
       let showedCache = false;
 
-      // ⚡ เปิดหน้าครั้งแรก: ถ้ามี cache → แสดงทันที ไม่ต้องรอเซิร์ฟเวอร์ (เลี่ยงจอเปล่า/cold start)
       if (isInitial) {
         const cached = readCache();
         if (cached && cached.data && cached.data.length) {
@@ -1205,14 +1208,10 @@
       return !!(r.allowance && String(r.allowance).trim());
     }
 
-    // ตรวจว่าเป็นเบี้ยเลี้ยงแบบ "ออกหน้างาน" หรือไม่ (ได้ 80 ทันที ไม่ต้องครบ 3 ชม.)
     function isFieldAllowance(r) {
       return !!(r.allowance && String(r.allowance).indexOf('ออกหน้างาน') !== -1);
     }
 
-    // คำนวณยอดเบี้ยเลี้ยงเป็นตัวเลข (0 หรือ 80)
-    // - ออกหน้างาน → 80 ทันที
-    // - เบี้ยเลี้ยงธรรมดา → ต้องทำงาน >= 3 ชม. ถึงได้ 80 ไม่ถึง = 0
     function allowanceAmount(r) {
       if (!hasAllowance(r)) return 0;
       if (isFieldAllowance(r)) return 80;
@@ -1327,7 +1326,6 @@
 
         const supCell = r.supervisor ? escapeHtml(r.supervisor) : '<span class="dim">—</span>';
         const compCell = r.company ? `<span class="company-tag">${escapeHtml(r.company)}</span>` : '<span class="dim">—</span>';
-        // เบี้ยเลี้ยง: ออกหน้างาน = 💰 +80 ทันที / ธรรมดา = ต้อง >= 3 ชม. ถึงได้ 80
         let allowCell;
         if (hasAllowance(r)) {
           const amt = allowanceAmount(r);
@@ -1447,7 +1445,6 @@
         btn.disabled = false;
         btn.textContent = original;
         if (res.success) {
-          // อัปเดตเฉพาะแถวนั้นในหน่วยความจำ → render ใหม่ทันที (ไม่ต้องโหลดข้อมูล+รูปใหม่หมด)
           const row = allData.find(r => r.rowIndex === currentAction.rowIndex);
           if (row) {
             row.status = currentAction.status;
@@ -1474,8 +1471,6 @@
         const res = await apiCall('deleteRequest', { rowIndex });
         if (res.success) {
           showToast('ลบสำเร็จ', 'success');
-          // เอาแถวออกจากหน่วยความจำ + ปรับ rowIndex ของแถวที่อยู่ถัดลงไป
-          // (เพราะ Google Sheet เลื่อนแถวขึ้นหลังลบ)
           allData = allData.filter(r => r.rowIndex !== rowIndex);
           allData.forEach(r => { if (r.rowIndex > rowIndex) r.rowIndex--; });
           renderTable();
@@ -1605,45 +1600,18 @@
       setTimeout(() => t.className = 'toast ' + (type || ''), 2500);
     }
 
-    // ===== รอบเดือน: 26 เดือนก่อน → 25 เดือนนี้ =====
-    // คืนช่วงของรอบที่ "offset" เดือน (0 = รอบปัจจุบัน, 1 = รอบก่อนหน้า)
-    function getCycleRange(offset) {
-      const now = new Date();
-      let y = now.getFullYear();
-      let m = now.getMonth(); // 0-11
-      // รอบปัจจุบัน: ถ้าวันนี้ >= 26 → รอบคือ 26 เดือนนี้ ถึง 25 เดือนหน้า
-      //             ถ้าวันนี้ < 26  → รอบคือ 26 เดือนก่อน ถึง 25 เดือนนี้
-      if (now.getDate() < 26) m -= 1;
-      m -= offset;
-      // normalize
-      const start = new Date(y, m, 26, 0, 0, 0, 0);
-      const end = new Date(y, m + 1, 25, 23, 59, 59, 999);
-      return { start: start, end: end };
-    }
-
-    function fmtCycleLabel(range) {
-      const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-      const s = range.start, e = range.end;
-      const sStr = s.getDate() + ' ' + months[s.getMonth()];
-      const eStr = e.getDate() + ' ' + months[e.getMonth()];
-      const yStr = (e.getFullYear() + 543); // พ.ศ.
-      return sStr + ' – ' + eStr + ' ' + yStr;
-    }
+    // ===== Export: เลือกวันอิสระ =====
 
     function exportCSV() {
       if (!allData.length) { showToast('ไม่มีข้อมูล', 'error'); return; }
 
-      // เติม dropdown รอบเดือน (รอบปัจจุบัน + ย้อนหลัง 12 รอบ)
-      const monthSel = document.getElementById('expMonth');
-      let opts = '<option value="all">ทุกเดือน (ไม่จำกัด)</option>';
-      for (let i = 0; i < 13; i++) {
-        const range = getCycleRange(i);
-        const label = fmtCycleLabel(range) + (i === 0 ? ' · รอบปัจจุบัน' : '');
-        opts += '<option value="' + i + '"' + (i === 0 ? ' selected' : '') + '>' + label + '</option>';
-      }
-      monthSel.innerHTML = opts;
+      // ตั้งค่าเริ่มต้น: วันที่ 1 ของเดือนนี้ → วันนี้
+      const now = new Date();
+      const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      document.getElementById('expDateFrom').value = firstOfMonth.toISOString().slice(0, 10);
+      document.getElementById('expDateTo').value = now.toISOString().slice(0, 10);
 
-      // เติม dropdown บริษัท (ใช้ลำดับเดียวกับ filter หลัก)
+      // เติม dropdown บริษัท
       const compSel = document.getElementById('expCompany');
       const standardOrder = ['3E Empire', '3E Trading', '3E Innovation', 'AE&T', 'Eita & Paul', 'Hikari Denki', 'Chavest'];
       const fromData = Array.from(new Set(allData.map(r => (r.company || '').trim()).filter(n => n)));
@@ -1658,26 +1626,35 @@
       document.getElementById('exportModal').classList.add('show');
     }
 
+    function clearExportDates() {
+      document.getElementById('expDateFrom').value = '';
+      document.getElementById('expDateTo').value = '';
+      updateExportCount();
+    }
+
     function closeExportModal() {
       document.getElementById('exportModal').classList.remove('show');
     }
 
     // กรองข้อมูลตามตัวเลือกใน export modal
     function getExportFiltered() {
-      const monthVal = document.getElementById('expMonth').value;
+      const fromVal = document.getElementById('expDateFrom').value;
+      const toVal = document.getElementById('expDateTo').value;
       const compVal = document.getElementById('expCompany').value;
       const statusVal = document.getElementById('expStatus').value;
 
-      let range = null;
-      if (monthVal !== 'all') range = getCycleRange(parseInt(monthVal, 10));
+      let fromTs = null, toTs = null;
+      if (fromVal) fromTs = new Date(fromVal + 'T00:00:00').getTime();
+      if (toVal) toTs = new Date(toVal + 'T23:59:59.999').getTime();
 
       return allData.filter(r => {
         if (compVal && (r.company || '').trim() !== compVal) return false;
         if (statusVal && r.status !== statusVal) return false;
-        if (range) {
+        if (fromTs || toTs) {
           const d = parseDDMMYYYY(r.otDate);
           if (!d) return false;
-          if (d < range.start.getTime() || d > range.end.getTime()) return false;
+          if (fromTs && d < fromTs) return false;
+          if (toTs && d > toTs) return false;
         }
         return true;
       });
@@ -1709,13 +1686,13 @@
       const url = URL.createObjectURL(blob);
 
       // ตั้งชื่อไฟล์ตามตัวเลือก
-      const monthVal = document.getElementById('expMonth').value;
+      const fromVal = document.getElementById('expDateFrom').value;
+      const toVal = document.getElementById('expDateTo').value;
       const compVal = document.getElementById('expCompany').value;
       let fname = 'ot';
       if (compVal) fname += '_' + compVal.replace(/[^\w]/g, '');
-      if (monthVal !== 'all') {
-        const range = getCycleRange(parseInt(monthVal, 10));
-        fname += '_' + range.start.toISOString().slice(0,10) + '_ถึง_' + range.end.toISOString().slice(0,10);
+      if (fromVal || toVal) {
+        fname += '_' + (fromVal || 'start') + '_ถึง_' + (toVal || 'end');
       } else {
         fname += '_ทั้งหมด';
       }
