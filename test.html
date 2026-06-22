@@ -1,2228 +1,1393 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-// ============================================================
-// บันทึก OT — Flutter v6 "ThaID Style"  (+ หน้าเข้าสู่ระบบ)
-// ธีมน้ำเงินกรมท่าแบบแอป ThaID: gradient header โค้ง,
-// การ์ดขาวลอย, ไอคอนวงกลมฟ้าอ่อน, ปุ่มน้ำเงินไล่เฉด, accent ทอง
-// Responsive: มือถือ 1 คอลัมน์ / จอกว้าง ≥900px 2 คอลัมน์
-// วางทับ lib/OT.dart — dependencies: image_picker, geolocator
-// ============================================================
-import 'dart:convert';
-import 'dart:typed_data';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter/services.dart'
-    show rootBundle, TextInputFormatter, TextEditingValue;
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart' show Icons;
-import 'package:image_picker/image_picker.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http;
+<!-- ═══ PWA Core ═══ -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2D4F7C">
 
-const bool demoMode = false;
+<!-- ═══ iOS PWA ═══ -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="บันทึก OT">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="512x512" href="icons/icon-512.png">
 
-const String _demoPhoto =
-    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
-const String allowanceCompany = '3E Innovation';
-const List<String> companies = [
-  '3E Empire',
-  '3E Trading',
-  '3E Innovation',
-  'AE&T',
-  'Eita & Paul',
-  'Hikari Denki',
-  'Chavest',
-];
+<!-- ═══ General ═══ -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="บันทึก OT">
+<meta name="description" content="ระบบบันทึกเวลาทำงานล่วงเวลา">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 
-// ---------- โทนสี ----------
-const tDark = Color(0xFF2D4F7C);
-const tOrange = Color(0xFF3E6CA0);
-const tOrangeLight = Color(0xFF7BA3C9);
-const tOrangeSoft = Color(0xFFF6F0E1);
-const tGold = Color(0xFFEE8B33);
-const tBg = Color(0xFFFEFEFC);
-const tField = Color(0xFFFFFFFF);
-const tText = Color(0xFF1F2D3D);
-const tText2 = Color(0xFF8E99A8);
-const tSage = Color(0xFF3E6CA0);
-const tSageSoft = Color(0xFFF6F0E1);
-const tBlueG = Color(0xFF3E6CA0);
-const tRed = Color(0xFFD9534F);
-const tGreen = Color(0xFF3E6CA0);
-const tCreamLine = Color(0xFFEBE2D0);
+<title>บันทึก OT</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ══ Reset ══ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
 
-const double kWide = 900;
+/* ══ Tokens ══ */
+:root{
+  --dark:#2D4F7C;
+  --blue:#3E6CA0;
+  --blue-lt:#7BA3C9;
+  --blue-soft:#F6F0E1;
+  --gold:#EE8B33;
+  --bg:#FEFEFC;
+  --white:#FFFFFF;
+  --text:#1F2D3D;
+  --text2:#8E99A8;
+  --red:#D9534F;
+  --cream:#EBE2D0;
+  --field:#FFFFFF;
+  --head:linear-gradient(135deg,#2D4F7C 0%,#3E6CA0 55%,#7BA3C9 100%);
+  --btn:linear-gradient(90deg,#2D4F7C,#3E6CA0);
+  --btn-g:linear-gradient(90deg,#D9731F,#EE8B33);
+}
 
-const _headGrad = LinearGradient(
-  begin: Alignment.topLeft,
-  end: Alignment.bottomRight,
-  colors: [tDark, tOrange, tOrangeLight],
-);
-const _btnGrad = LinearGradient(
-  begin: Alignment.centerLeft,
-  end: Alignment.centerRight,
-  colors: [tDark, tOrange],
-);
-const _btnGradSage = LinearGradient(
-  begin: Alignment.centerLeft,
-  end: Alignment.centerRight,
-  colors: [Color(0xFFD9731F), tGold],
-);
-
-const Curve kSmooth = Cubic(0.4, 0.0, 0.2, 1.0);
-
-// แปลงตัวอักษรที่พิมพ์ให้เป็นตัวใหญ่อัตโนมัติ (รหัสพนักงาน)
-class _UpperCaseFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue, TextEditingValue newValue) {
-    return newValue.copyWith(text: newValue.text.toUpperCase());
+/* ══ App shell ══ */
+body{
+  font-family:'Sarabun',-apple-system,'Noto Sans Thai',BlinkMacSystemFont,sans-serif;
+  background:#E4E8EF;
+  display:flex;justify-content:center;align-items:flex-start;
+  min-height:100vh;
+}
+.shell{
+  width:100%;max-width:430px;min-height:100vh;height:100vh;
+  background:var(--bg);position:relative;overflow:hidden;
+  display:flex;flex-direction:column;
+}
+@media(min-width:500px){
+  body{align-items:center;padding:16px}
+  .shell{
+    min-height:0;height:920px;max-height:920px;
+    border-radius:36px;
+    box-shadow:0 18px 48px rgba(0,0,0,.22);
+    overflow:hidden;
   }
 }
 
-void main() => runApp(const OtApp());
+/* ══ Page system ══ */
+.pg{display:none;flex-direction:column;height:100%;overflow:hidden;position:absolute;inset:0}
+.pg.on{display:flex}
 
-// ── API บันทึก OT (Apps Script — OT_Records) ──
-// 👉 วาง URL /exec ของสคริปต์ OT_Records ที่ deploy แล้วตรงนี้
-const String OT_API = 'https://script.google.com/macros/s/AKfycby_qTVYsGJx8zlNgK_u1L9AnGzDAlrbUUKPtUY846HgPZS2dCgHZKmqJcTKmFNvuhe5GA/exec';
+/* ══════════════════════════════════════
+   LOGIN
+══════════════════════════════════════ */
+#pg-login{background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.lg-bg{
+  position:absolute;top:0;left:0;right:0;height:82%;
+  background:var(--head);border-radius:0 0 36px 36px;z-index:0;
+}
+.lg-inner{position:relative;z-index:1;display:flex;flex-direction:column;min-height:100%;padding-bottom:16px}
+.lg-hero{
+  padding:52px 24px 22px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.logo-ring{
+  width:104px;height:104px;border-radius:50%;
+  background:rgba(255,255,255,.15);
+  border:1.5px solid rgba(255,255,255,.3);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:18px;font-size:46px;color:#fff;
+}
+.lg-ttl{font-size:26px;font-weight:700;color:#fff;margin-bottom:10px}
+.gold-bar{width:48px;height:3px;background:var(--gold);border-radius:2px;margin-bottom:12px}
+.lg-sub{font-size:13px;color:rgba(255,255,255,.8)}
 
-// POST แล้วตาม redirect ของ Apps Script เอง (มือถือบางเครื่องไม่ตามให้)
-Future<String> _apiPostFollow(String url, Map<String, dynamic> body) async {
-  var current = url;
-  http.Response res = await http
-      .post(Uri.parse(current),
-          headers: {'Content-Type': 'text/plain;charset=utf-8'},
-          body: jsonEncode(body))
-      .timeout(const Duration(seconds: 60));
-  var hop = 0;
-  while (!kIsWeb &&
-      (res.statusCode == 301 ||
-          res.statusCode == 302 ||
-          res.statusCode == 303 ||
-          res.statusCode == 307) &&
-      res.headers['location'] != null &&
-      hop < 5) {
-    current = res.headers['location']!;
-    res = await http.get(Uri.parse(current));
-    hop++;
-  }
-  return res.body;
+.lg-card-wrap{padding:0 24px 8px;margin-top:2px}
+.lg-card{
+  background:#fff;border-radius:18px;border:1px solid var(--cream);
+  padding:22px;box-shadow:0 10px 28px rgba(15,23,42,.12);
 }
 
-Future<Map<String, dynamic>> apiCall(
-    String action, Map<String, dynamic> payload) async {
-  if (OT_API == 'PASTE_OT_RECORDS_URL_HERE') {
-    return {'success': false, 'message': 'ยังไม่ได้ตั้งค่า OT_API'};
-  }
-  try {
-    final body = await _apiPostFollow(OT_API, {'action': action, ...payload});
-    final j = jsonDecode(body);
-    return Map<String, dynamic>.from(j);
-  } catch (e) {
-    return {'success': false, 'message': 'เชื่อมต่อไม่ได้: $e'};
-  }
+/* Steps */
+.stp{display:none}.stp.on{display:block}
+
+/* Field box */
+.fbox{
+  display:flex;align-items:center;gap:10px;
+  background:var(--field);border:1px solid #E9EEF5;
+  border-radius:12px;padding:8px 14px;margin-bottom:10px;
+}
+.fbox-icon{font-size:20px;color:var(--text2);flex-shrink:0}
+.fbox-inner{flex:1}
+.flabel{font-size:11.5px;color:var(--text2);display:block;margin-bottom:2px}
+.fbox input{
+  border:none;outline:none;font-size:16px;font-weight:600;
+  color:var(--text);font-family:inherit;width:100%;background:transparent;padding:0;
+}
+.fbox input::placeholder{color:#AEB6C6;font-weight:400}
+
+/* Error row */
+.err-row{
+  display:none;align-items:center;gap:6px;
+  margin-bottom:10px;color:var(--red);font-size:13px;
+}
+.err-row.on{display:flex}
+
+/* Primary button */
+.btn-p{
+  width:100%;padding:15px;background:var(--btn);color:#fff;
+  border:none;border-radius:14px;font-size:17px;font-weight:700;
+  font-family:inherit;cursor:pointer;
+  box-shadow:0 6px 16px rgba(62,108,160,.35);
+  transition:opacity .15s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-p:active{opacity:.84}.btn-p:disabled{opacity:.65;cursor:not-allowed}
+.btn-p.gold{background:var(--btn-g);box-shadow:0 6px 16px rgba(238,139,51,.35)}
+
+/* PIN step */
+.pin-name{text-align:center;font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px}
+.pin-hint{text-align:center;font-size:12.5px;color:var(--text2);margin-bottom:20px}
+.pin-dots{display:flex;justify-content:center;gap:20px;margin-bottom:4px}
+.pin-dot{
+  width:16px;height:16px;border-radius:50%;
+  border:1.6px solid #C7D0DD;background:transparent;transition:all .15s;
+}
+.pin-dot.filled{background:var(--blue);border-color:var(--blue)}
+.pin-st{
+  height:22px;display:flex;align-items:center;justify-content:center;
+  margin-bottom:8px;font-size:13px;
+}
+.keypad{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:10px;margin-bottom:6px;
+}
+.key{
+  aspect-ratio:1.6;background:#F4F6FA;border:none;border-radius:14px;
+  font-size:24px;font-weight:600;color:var(--text);font-family:inherit;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  user-select:none;-webkit-user-select:none;transition:background .1s;
+}
+.key:active{background:#E2E6EE}.key.del{font-size:20px;color:var(--text2)}
+.key.ph{visibility:hidden;pointer-events:none}
+.btn-lk{
+  background:none;border:none;color:var(--blue);font-size:13px;
+  font-family:inherit;cursor:pointer;padding:8px;display:block;margin:0 auto;
 }
 
-class OtApp extends StatelessWidget {
-  const OtApp({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return CupertinoApp(
-      title: 'บันทึก OT',
-      debugShowCheckedModeBanner: false,
-      theme: const CupertinoThemeData(
-        brightness: Brightness.light,
-        primaryColor: tOrange,
-        scaffoldBackgroundColor: tBg,
-        textTheme: CupertinoTextThemeData(
-          textStyle: TextStyle(fontSize: 16, color: tText),
-          actionTextStyle: TextStyle(fontSize: 16, color: tOrange),
-          navTitleTextStyle: TextStyle(
-              fontSize: 17, fontWeight: FontWeight.w600, color: tText),
-          pickerTextStyle: TextStyle(fontSize: 21, color: tText),
-          dateTimePickerTextStyle: TextStyle(fontSize: 21, color: tText),
-        ),
-      ),
-      builder: (context, child) {
-        if (!kIsWeb) return child!;
-        // บนเว็บ: ถ้าจอแคบ (มือถือ/PWA) ให้เต็มจอเหมือนแอปจริง
-        // ถ้าจอกว้าง (คอม) ค่อยโชว์กรอบมือถือลอยกลางจอไว้ดูเฉย ๆ
-        final w = MediaQuery.of(context).size.width;
-        if (w < 500) return child!;
-        return ColoredBox(
-          color: const Color(0xFFE7EAF0),
-          child: Center(
-            child: Container(
-              width: 430,
-              constraints: const BoxConstraints(maxHeight: 920),
-              margin: const EdgeInsets.symmetric(vertical: 16),
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
-                color: tBg,
-                borderRadius: BorderRadius.circular(36),
-                boxShadow: const [
-                  BoxShadow(
-                      color: Color(0x33000000),
-                      blurRadius: 40,
-                      offset: Offset(0, 18)),
-                ],
-              ),
-              child: child,
-            ),
-          ),
-        );
-      },
-      home: const LoginPage(),
-    );
-  }
+/* ══════════════════════════════════════
+   HOME
+══════════════════════════════════════ */
+#pg-home{background:var(--bg);flex-direction:column}
+.home-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.home-hd{
+  background:var(--head);border-radius:0 0 32px 32px;
+  padding-bottom:20px;
+}
+.home-top{
+  padding:52px 20px 14px;
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+}
+.home-ttl{font-size:22px;font-weight:700;color:#fff}
+.home-sub{font-size:12.5px;color:rgba(255,255,255,.8);margin-top:2px}
+.lo-btn{
+  background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);
+  border-radius:99px;padding:7px 12px;
+  display:flex;align-items:center;gap:5px;cursor:pointer;
+  font-size:12.5px;font-weight:600;color:#fff;font-family:inherit;
+  white-space:nowrap;flex-shrink:0;
+}
+.lo-btn:active{opacity:.8}
+
+/* Clock card */
+.clock-card{
+  margin:0 20px;background:#fff;border-radius:18px;
+  border:1px solid var(--cream);padding:20px 24px;
+  box-shadow:0 8px 24px rgba(15,23,42,.08);text-align:center;
+}
+.clock-time{
+  font-size:42px;font-weight:700;color:var(--dark);
+  letter-spacing:-1px;font-variant-numeric:tabular-nums;
+  font-feature-settings:'tnum';
+}
+.clock-date{font-size:13.5px;color:var(--text2);margin-top:2px}
+
+/* Home content */
+.home-body{padding:18px 20px 24px;display:flex;flex-direction:column;gap:12px}
+
+.menu-card{
+  background:#fff;border-radius:16px;border:1px solid var(--cream);
+  padding:18px;box-shadow:0 4px 14px rgba(15,23,42,.06);
+  display:flex;align-items:center;gap:16px;cursor:pointer;
+  transition:transform .1s,box-shadow .1s;
+}
+.menu-card:active{transform:scale(.98);box-shadow:0 2px 8px rgba(15,23,42,.04)}
+.menu-ico{
+  width:52px;height:52px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;
+}
+.menu-ico.b{background:#F6F0E1;color:var(--blue)}
+.menu-ico.g{background:#FDF3E3;color:var(--gold)}
+.menu-info{flex:1}
+.menu-ttl{font-size:17px;font-weight:700;color:var(--text)}
+.menu-desc{font-size:13px;color:var(--text2)}
+.menu-chev{color:#C9C2AF;font-size:20px}
+
+.sec-card{
+  background:#fff;border-radius:16px;
+  border:1px solid #F8F5EF;padding:18px 18px 4px;
+}
+.card-hd{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.gold-acc{width:3.5px;height:16px;background:var(--gold);border-radius:2px;flex-shrink:0}
+.card-ttl{font-size:15.5px;font-weight:700;color:var(--dark)}
+.step-row{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}
+.step-num{
+  width:28px;height:28px;border-radius:50%;background:var(--blue);
+  color:#fff;font-size:13.5px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.step-t{font-size:14.5px;font-weight:700;color:var(--text)}
+.step-d{font-size:12.5px;color:var(--text2)}
+
+.notice{
+  background:#F6F0E1;border-radius:14px;padding:14px;
+  display:flex;align-items:center;gap:12px;
+}
+.notice-ico{font-size:26px;flex-shrink:0}
+.notice-txt{font-size:12.5px;color:var(--text);line-height:1.4}
+
+.home-ft{
+  padding:8px 20px 16px;text-align:center;
+  font-size:12.5px;color:var(--text2);flex-shrink:0;
 }
 
-// ============================================================
-// หน้าเข้าสู่ระบบ
-// ============================================================
+/* ══════════════════════════════════════
+   FORM
+══════════════════════════════════════ */
+#pg-form{background:var(--bg)}
+.form-hd{
+  background:var(--head);border-radius:0 0 24px 24px;
+  padding:50px 16px 16px;flex-shrink:0;
+}
+.form-top{display:flex;align-items:center;gap:8px}
+.back-btn{
+  background:none;border:none;color:#fff;font-size:28px;
+  cursor:pointer;padding:6px;line-height:1;
+  display:flex;align-items:center;justify-content:center;
+}
+.form-ttl{font-size:19px;font-weight:700;color:#fff;flex:1;text-align:center}
+.gps-pill{
+  background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);
+  border-radius:99px;padding:6px 12px;cursor:pointer;
+  display:flex;align-items:center;gap:5px;white-space:nowrap;
+}
+.gps-dot{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;
+  background:#FFD56A;transition:background .3s;
+}
+.gps-dot.ok{background:#8EF0B0}
+.gps-txt{font-size:12px;color:#FFD56A;transition:color .3s}
+.gps-txt.ok{color:#8EF0B0}
 
-// ── API พนักงาน (Apps Script) ──
-const String USER_API =
-    'https://script.google.com/macros/s/AKfycbxsiLedShdopEiWpgx7nKqfM5PK4KS2NM3JlekAKFIybs2uG3Ktv0xAu1yeRYTYeDKmyQ/exec';
-
-// เก็บข้อมูลพนักงานที่ล็อกอินไว้ใช้ทั้งแอป (ชื่อ/แผนก/ตำแหน่ง ฯลฯ)
-Map<String, dynamic>? currentUser;
-
-// ตรวจรหัสกับ API จริง → คืน {ok, message}
-Future<Map<String, dynamic>> _checkLogin(String empId, String pass) async {
-  try {
-    final payload = jsonEncode({
-      'action': 'login',
-      'employeeId': empId.trim(),
-      'password': pass,
-    });
-    // POST แล้วตาม redirect ของ Apps Script เอง (มือถือบางเครื่องไม่ตามให้)
-    var url = USER_API;
-    http.Response res = await http
-        .post(Uri.parse(url),
-            headers: {'Content-Type': 'text/plain;charset=utf-8'},
-            body: payload)
-        .timeout(const Duration(seconds: 30));
-    // บนเว็บ เบราว์เซอร์ตาม redirect ให้เอง — ห้ามตามเอง(CORS อ่าน location ไม่ได้)
-    var hop = 0;
-    while (!kIsWeb &&
-        (res.statusCode == 301 ||
-            res.statusCode == 302 ||
-            res.statusCode == 303 ||
-            res.statusCode == 307) &&
-        res.headers['location'] != null &&
-        hop < 5) {
-      url = res.headers['location']!;
-      res = await http.get(Uri.parse(url));
-      hop++;
-    }
-    final j = jsonDecode(res.body);
-    if (j['success'] == true) {
-      currentUser = (j['user'] is Map)
-          ? Map<String, dynamic>.from(j['user'])
-          : null;
-      return {'ok': true};
-    }
-    return {'ok': false, 'message': j['message'] ?? 'เข้าสู่ระบบไม่สำเร็จ'};
-  } catch (e) {
-    return {'ok': false, 'message': 'เชื่อมต่อไม่ได้: $e'};
-  }
+.form-scrl{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px 20px 32px}
+.f-card{
+  background:#fff;border-radius:16px;border:1px solid var(--cream);
+  box-shadow:0 4px 12px rgba(15,23,42,.05);padding:18px;margin-bottom:16px;
 }
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
-  @override
-  State<LoginPage> createState() => _LoginPageState();
+/* Form field */
+.ff{
+  background:var(--field);border-radius:12px;border:1px solid #F8F5EF;
+  padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;
+}
+.ff.tap{cursor:pointer}
+.ff .fi{flex:1}
+.ff .fl{font-size:12px;color:var(--text2);display:block;margin-bottom:2px}
+.ff .fv{
+  font-size:16px;font-weight:600;color:var(--text);
+  display:block;background:none;border:none;outline:none;
+  font-family:inherit;width:100%;padding:0;
+}
+.ff .fv::placeholder{color:#AEB6C6;font-weight:400}
+.ff .fv.ph{color:#AEB6C6;font-weight:400}
+.ff .fv.blu{color:var(--blue)}
+.ff .fv.gld{color:var(--gold)}
+.ff .fv.grn{color:#3D9970}
+.ff .chv{font-size:16px;color:var(--text2);margin-left:4px}
+.ff textarea.fv{resize:none;min-height:68px}
+
+/* Chips */
+.chip-row{display:flex;gap:10px}
+.chip{
+  flex:1;padding:12px;text-align:center;border-radius:12px;
+  font-size:14.5px;font-family:inherit;cursor:pointer;
+  border:1px solid #F8F5EF;background:var(--field);
+  color:var(--text);font-weight:400;transition:all .15s;
+}
+.chip.on{font-weight:700;color:#fff}
+.chip.n.on{background:var(--blue);border-color:var(--blue)}
+.chip.f.on{background:var(--gold);border-color:var(--gold)}
+
+/* Photo */
+.photo-ph{
+  width:100%;padding:28px;background:#F6F0E1;
+  border-radius:14px;border:1px solid #E4D9BD;
+  display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;
+}
+.photo-circ{
+  width:60px;height:60px;border-radius:50%;background:var(--blue);
+  display:flex;align-items:center;justify-content:center;font-size:28px;
+}
+.photo-circ.g{background:var(--gold)}
+.photo-lbl{font-size:15.5px;font-weight:700;color:var(--blue)}
+.photo-lbl.g{color:var(--gold)}
+.photo-sm{font-size:12.5px;color:var(--text2)}
+
+.photo-prev{border-radius:12px;overflow:hidden;margin-bottom:8px;display:none}
+.photo-prev img{width:100%;height:280px;object-fit:cover;display:block}
+.photo-rt-row{text-align:center;display:none}
+.photo-ts{font-size:12px;color:var(--text2);margin-bottom:4px}
+.btn-rt{background:none;border:none;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;padding:6px;color:var(--blue)}
+.btn-rt.g{color:var(--gold)}
+
+/* Submit */
+.sub-btn{
+  width:100%;padding:15px;color:#fff;border:none;border-radius:14px;
+  font-size:17px;font-weight:700;font-family:inherit;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:opacity .15s;
+}
+.sub-btn:active{opacity:.84}.sub-btn:disabled{opacity:.65;cursor:not-allowed}
+.sub-btn.ci{background:var(--btn);box-shadow:0 6px 16px rgba(62,108,160,.35)}
+.sub-btn.co{background:var(--btn-g);box-shadow:0 6px 16px rgba(238,139,51,.35)}
+
+/* ══════════════════════════════════════
+   INSTALL BANNER (Android Chrome)
+══════════════════════════════════════ */
+.install-bar{
+  position:absolute;bottom:0;left:0;right:0;z-index:300;
+  background:#fff;border-top:1px solid var(--cream);
+  padding:14px 20px 20px;
+  display:flex;align-items:center;gap:14px;
+  box-shadow:0 -4px 20px rgba(15,23,42,.10);
+  transform:translateY(100%);
+  transition:transform .35s cubic-bezier(.4,0,.2,1);
+}
+.install-bar.show{transform:translateY(0)}
+.install-bar-icon{
+  width:48px;height:48px;border-radius:12px;overflow:hidden;flex-shrink:0;
+}
+.install-bar-icon img{width:100%;height:100%;object-fit:cover}
+.install-bar-text{flex:1}
+.install-bar-ttl{font-size:15px;font-weight:700;color:var(--text)}
+.install-bar-sub{font-size:12px;color:var(--text2);margin-top:2px}
+.install-bar-btn{
+  background:var(--btn);color:#fff;border:none;border-radius:10px;
+  padding:9px 18px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;
+  white-space:nowrap;
+}
+.install-bar-close{
+  background:none;border:none;font-size:20px;color:var(--text2);
+  cursor:pointer;padding:4px;flex-shrink:0;
 }
 
-class _LoginPageState extends State<LoginPage> {
-  final userCtrl = TextEditingController();
-  bool busy = false;
-  String error = '';
-  Uint8List? _logoBytes; // รูปโลโก้ (ถ้าโหลดได้)
-  int step = 0; // 0 = ใส่รหัสพนักงาน, 1 = ใส่ PIN
-  String pin = ''; // รหัสผ่านที่กดอยู่
-  String empId = ''; // รหัสพนักงานที่ยืนยันแล้ว
-  String empName = ''; // ชื่อพนักงาน (โชว์ตอนใส่ PIN)
+/* ══════════════════════════════════════
+   CAMERA MODAL
+══════════════════════════════════════ */
+.cam-modal{
+  position:absolute;inset:0;background:#000;z-index:100;
+  display:none;flex-direction:column;
+}
+.cam-modal.on{display:flex}
+.cam-vid{flex:1;object-fit:cover;width:100%;transform:scaleX(-1)}
+canvas#cap-cnv{display:none}
+.cam-close{
+  position:absolute;top:50px;right:16px;
+  background:rgba(0,0,0,.55);border:none;border-radius:50%;
+  width:40px;height:40px;color:#fff;font-size:20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.cam-ctrl{
+  padding:20px 20px 32px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.6);
+}
+.cap-btn{
+  width:72px;height:72px;border-radius:50%;
+  background:#fff;border:4px solid rgba(255,255,255,.45);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:30px;transition:transform .1s;
+}
+.cap-btn:active{transform:scale(.91)}
 
-  @override
-  void initState() {
-    super.initState();
-    _loadLogo();
-  }
+/* ══════════════════════════════════════
+   BOTTOM SHEET
+══════════════════════════════════════ */
+.backdrop{
+  position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:50;
+  display:none;align-items:flex-end;
+}
+.backdrop.on{display:flex}
+.bsheet{
+  width:100%;background:#fff;border-radius:20px 20px 0 0;
+  max-height:70%;display:flex;flex-direction:column;
+  animation:slideup .25s ease;
+}
+@keyframes slideup{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.bsheet-bar{
+  display:flex;justify-content:flex-end;
+  border-bottom:.5px solid #E5E9F2;
+}
+.bsheet-ok{
+  background:none;border:none;color:var(--blue);
+  font-size:16px;font-weight:600;font-family:inherit;
+  padding:10px 16px;cursor:pointer;
+}
+.bsheet-list{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+.bsheet-item{
+  padding:16px 20px;font-size:17px;color:var(--text);
+  border-bottom:.5px solid #F0F0F0;cursor:pointer;transition:background .1s;
+}
+.bsheet-item:active{background:#F8F8F8}
+.bsheet-item.sel{color:var(--blue);font-weight:700}
+.bsheet-item.ph{color:#AEB6C6}
 
-  Future<void> _loadLogo() async {
-    const candidates = [
-      'assets/icon/logoOT.png',
-      'assets/icon/OT.png',
-      'assets/logoOT.png',
-    ];
-    for (final path in candidates) {
-      try {
-        final data = await rootBundle.load(path);
-        if (mounted) setState(() => _logoBytes = data.buffer.asUint8List());
-        return;
-      } catch (_) {}
-    }
-  }
-
-  // ดึงรายชื่อพนักงาน (GET) เพื่อตรวจว่ามีรหัสนี้ไหม + ได้ชื่อมาโชว์
-  Future<Map<String, dynamic>?> _findUser(String id) async {
-    final body = await _httpGetFollow(USER_API);
-    final j = jsonDecode(body);
-    if (j['status'] != 'ok' || j['data'] is! List) return null;
-    final target = id.trim().toUpperCase();
-    for (final u in (j['data'] as List)) {
-      if (u is Map &&
-          u['employee_id'].toString().trim().toUpperCase() == target) {
-        return Map<String, dynamic>.from(u);
-      }
-    }
-    return null;
-  }
-
-  // GET ที่ตาม redirect ของ Apps Script เอง (มือถือบางเครื่องไม่ตามให้)
-  // บนเว็บ: ใช้ http.get ปกติ (เบราว์เซอร์ตาม redirect ให้เอง — อ่าน location header ไม่ได้เพราะ CORS)
-  Future<String> _httpGetFollow(String url) async {
-    if (kIsWeb) {
-      final res = await http.get(Uri.parse(url));
-      return res.body;
-    }
-    var current = url;
-    for (var i = 0; i < 5; i++) {
-      final req = http.Request('GET', Uri.parse(current))
-        ..followRedirects = false;
-      final streamed = await req.send();
-      final res = await http.Response.fromStream(streamed);
-      if (res.statusCode == 301 ||
-          res.statusCode == 302 ||
-          res.statusCode == 303 ||
-          res.statusCode == 307) {
-        final loc = res.headers['location'];
-        if (loc == null) break;
-        current = loc;
-        continue;
-      }
-      return res.body;
-    }
-    throw Exception('redirect เยอะเกินไป');
-  }
-
-  // สเต็ป 1 → ยืนยันรหัสพนักงาน ถ้ามี เด้งแป้น PIN
-  Future<void> _next() async {
-    FocusScope.of(context).unfocus(); // ปิดแป้นพิมพ์ กันข้อมูลเบียดล้น
-    final id = userCtrl.text.trim().toUpperCase();
-    setState(() => error = '');
-    if (id.isEmpty) {
-      setState(() => error = 'กรุณากรอกรหัสพนักงาน');
-      return;
-    }
-    setState(() => busy = true);
-    try {
-      final u = await _findUser(id);
-      setState(() => busy = false);
-      if (u != null) {
-        setState(() {
-          empId = id;
-          empName = (u['full_name'] ?? '').toString();
-          pin = '';
-          step = 1;
-        });
-      } else {
-        setState(() => error = 'ไม่พบรหัสพนักงานนี้');
-      }
-    } catch (e) {
-      setState(() {
-        busy = false;
-        error = 'เชื่อมต่อไม่ได้: $e';
-      });
-    }
-  }
-
-  void _onKey(String d) {
-    if (busy || pin.length >= 4) return;
-    setState(() {
-      pin += d;
-      error = '';
-    });
-    if (pin.length == 4) _verifyPin();
-  }
-
-  void _del() {
-    if (pin.isEmpty) return;
-    setState(() => pin = pin.substring(0, pin.length - 1));
-  }
-
-  void _backToId() {
-    setState(() {
-      step = 0;
-      pin = '';
-      error = '';
-    });
-  }
-
-  // สเต็ป 2 → ตรวจ PIN กับ API
-  Future<void> _verifyPin() async {
-    setState(() => busy = true);
-    try {
-      final res = await _checkLogin(empId, pin);
-      setState(() => busy = false);
-      if (res['ok'] == true) {
-        if (!mounted) return;
-        _goHome();
-      } else {
-        setState(() {
-          pin = '';
-          error = res['message'] ?? 'รหัสผ่านไม่ถูกต้อง';
-        });
-      }
-    } catch (e) {
-      setState(() {
-        busy = false;
-        pin = '';
-        error = 'เข้าสู่ระบบไม่สำเร็จ: $e';
-      });
-    }
-  }
-
-  void _goHome() {
-    Navigator.pushReplacement(
-      context,
-      PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 300),
-        pageBuilder: (_, __, ___) => const HomePage(),
-        transitionsBuilder: (_, animation, __, child) {
-          final curved = CurvedAnimation(parent: animation, curve: kSmooth);
-          return FadeTransition(
-            opacity: curved,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0.12),
-                end: Offset.zero,
-              ).animate(curved),
-              child: child,
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  // ── เนื้อหาในการ์ดตามสเต็ป ──
-  List<Widget> _stepContent() => step == 0 ? _idStep() : _pinStep();
-
-  List<Widget> _idStep() => [
-        _loginField(
-          label: 'รหัสพนักงาน',
-          ctrl: userCtrl,
-          placeholder: 'กรอกรหัสพนักงาน',
-          icon: Icons.badge_rounded,
-        ),
-        if (error.isNotEmpty) _errorRow(),
-        const SizedBox(height: 18),
-        _bigButton(busy ? null : _next, busy, 'ถัดไป'),
-        const SizedBox(height: 4),
-      ];
-
-  List<Widget> _pinStep() => [
-        Center(
-          child: Text(empName.isEmpty ? 'ใส่รหัสผ่าน' : empName,
-              style: const TextStyle(
-                  fontSize: 17, fontWeight: FontWeight.w700, color: tText)),
-        ),
-        const SizedBox(height: 4),
-        const Center(
-          child: Text('ใส่รหัสผ่าน 4 หลัก',
-              style: TextStyle(fontSize: 12.5, color: tText2)),
-        ),
-        const SizedBox(height: 20),
-        _pinDots(),
-        SizedBox(
-          height: 22,
-          child: error.isNotEmpty
-              ? Center(
-                  child: Text(error,
-                      style: const TextStyle(color: tRed, fontSize: 13)))
-              : (busy
-                  ? const Center(child: CupertinoActivityIndicator(radius: 8))
-                  : null),
-        ),
-        const SizedBox(height: 8),
-        _keypad(),
-        const SizedBox(height: 6),
-        Center(
-          child: CupertinoButton(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            onPressed: _backToId,
-            child: const Text('เปลี่ยนรหัสพนักงาน',
-                style: TextStyle(fontSize: 13, color: tOrange)),
-          ),
-        ),
-      ];
-
-  Widget _errorRow() => Padding(
-        padding: const EdgeInsets.only(top: 12),
-        child: Row(
-          children: [
-            const Icon(Icons.error_rounded, size: 16, color: tRed),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Text(error,
-                  style: const TextStyle(color: tRed, fontSize: 13)),
-            ),
-          ],
-        ),
-      );
-
-  Widget _bigButton(VoidCallback? onTap, bool loading, String label) =>
-      GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 15),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            gradient: _btnGrad,
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: [
-              BoxShadow(
-                  color: tOrange.withOpacity(0.35),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6)),
-            ],
-          ),
-          child: loading
-              ? const CupertinoActivityIndicator(color: CupertinoColors.white)
-              : Text(label,
-                  style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      color: CupertinoColors.white)),
-        ),
-      );
-
-  Widget _pinDots() => Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(4, (i) {
-          final filled = i < pin.length;
-          return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 10),
-            width: 16,
-            height: 16,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: filled ? tOrange : const Color(0x00000000),
-              border: Border.all(
-                  color: filled ? tOrange : const Color(0xFFC7D0DD),
-                  width: 1.6),
-            ),
-          );
-        }),
-      );
-
-  Widget _keypad() {
-    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'del'];
-    return GridView.count(
-      crossAxisCount: 3,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 10,
-      crossAxisSpacing: 10,
-      childAspectRatio: 1.6,
-      children: keys.map((k) {
-        if (k == '') return const SizedBox();
-        if (k == 'del') {
-          return _keyBtn(
-            onTap: _del,
-            child: const Icon(Icons.backspace_rounded,
-                size: 22, color: tText2),
-          );
-        }
-        return _keyBtn(
-          onTap: () => _onKey(k),
-          child: Text(k,
-              style: const TextStyle(
-                  fontSize: 24, fontWeight: FontWeight.w600, color: tText)),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _keyBtn({required Widget child, required VoidCallback onTap}) =>
-      GestureDetector(
-        onTap: busy ? null : onTap,
-        child: Container(
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: const Color(0xFFF4F6FA),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: child,
-        ),
-      );
-
-  @override
-  Widget build(BuildContext context) {
-    return CupertinoPageScaffold(
-      child: LayoutBuilder(builder: (context, c) {
-        final h = c.maxHeight;
-        return SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: h),
-            child: Stack(
-              children: [
-                // ── พื้นหลังน้ำเงินยาวลงไป (อยู่หลังการ์ด) ──
-                Container(
-                  width: double.infinity,
-                  height: h * 0.85,
-                  decoration: const BoxDecoration(
-                    gradient: _headGrad,
-                    borderRadius:
-                        BorderRadius.vertical(bottom: Radius.circular(36)),
-                  ),
-                ),
-                // ── เนื้อหา: หัว + การ์ด ──
-                Column(
-                  children: [
-                    SizedBox(
-                      height: h * (step == 0 ? 0.44 : 0.35),
-                      child: SafeArea(
-                        bottom: false,
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                        Container(
-                          width: 104,
-                          height: 104,
-                          decoration: BoxDecoration(
-                            color: _logoBytes != null
-                                ? CupertinoColors.white
-                                : const Color(0x26FFFFFF),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                                color: const Color(0x4DFFFFFF), width: 1.5),
-                            boxShadow: _logoBytes != null
-                                ? const [
-                                    BoxShadow(
-                                        color: Color(0x22000000),
-                                        blurRadius: 16,
-                                        offset: Offset(0, 6)),
-                                  ]
-                                : null,
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: _logoBytes != null
-                              ? Image.memory(_logoBytes!, fit: BoxFit.cover)
-                              : const Icon(Icons.access_time_filled_rounded,
-                                  color: CupertinoColors.white, size: 46),
-                        ),
-                        const SizedBox(height: 18),
-                        const Text('บันทึก OT',
-                            style: TextStyle(
-                                fontSize: 26,
-                                fontWeight: FontWeight.w700,
-                                color: CupertinoColors.white)),
-                        const SizedBox(height: 8),
-                        Container(
-                            height: 3,
-                            width: 48,
-                            decoration: BoxDecoration(
-                                color: tGold,
-                                borderRadius: BorderRadius.circular(2))),
-                        const SizedBox(height: 12),
-                        const Text('เข้าสู่ระบบเพื่อเริ่มใช้งาน',
-                            style: TextStyle(
-                                fontSize: 13, color: Color(0xCCFFFFFF))),
-                      ],
-                    ),
-                    ),
-                  ),
-                ),
-                    // ── การ์ด login ลอยทับน้ำเงิน ──
-                    Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 420),
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-                        child: Container(
-                          padding: const EdgeInsets.all(22),
-                          decoration: BoxDecoration(
-                            color: CupertinoColors.white,
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(color: tCreamLine),
-                            boxShadow: const [
-                              BoxShadow(
-                                  color: Color(0x1F0F172A),
-                                  blurRadius: 28,
-                                  offset: Offset(0, 10)),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: _stepContent(),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      }),
-    );
-  }
-
-  Widget _loginField({
-    required String label,
-    required TextEditingController ctrl,
-    required String placeholder,
-    required IconData icon,
-    bool obscure = false,
-    Widget? trailing,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      decoration: BoxDecoration(
-        color: tField,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE9EEF5)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: tText2),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label,
-                    style: const TextStyle(fontSize: 11.5, color: tText2)),
-                CupertinoTextField(
-                  controller: ctrl,
-                  placeholder: placeholder,
-                  obscureText: obscure,
-                  textCapitalization: TextCapitalization.characters,
-                  inputFormatters: [_UpperCaseFormatter()],
-                  padding: const EdgeInsets.only(top: 2, bottom: 4),
-                  style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: tText),
-                  placeholderStyle: const TextStyle(
-                      fontSize: 15, color: Color(0xFFAEB6C6)),
-                  decoration: const BoxDecoration(color: Color(0x00000000)),
-                  onSubmitted: (_) => _next(),
-                ),
-              ],
-            ),
-          ),
-          if (trailing != null) trailing,
-        ],
-      ),
-    );
-  }
+/* Date/Time sheet */
+.dt-wrap{padding:20px}
+.dt-wrap input[type=date],.dt-wrap input[type=time]{
+  width:100%;font-size:28px;font-weight:600;color:var(--text);
+  font-family:inherit;border:none;outline:none;
+  text-align:center;padding:16px;background:var(--bg);border-radius:12px;
 }
 
-// ============================================================
-// หน้าแรก
-// ============================================================
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
-
-  void _open(BuildContext context, bool isClockOut) => Navigator.push(
-        context,
-        PageRouteBuilder(
-          transitionDuration: const Duration(milliseconds: 300),
-          reverseTransitionDuration: const Duration(milliseconds: 300),
-          pageBuilder: (_, __, ___) => FormPage(isClockOut: isClockOut),
-          transitionsBuilder: (_, animation, __, child) {
-            final curved = CurvedAnimation(
-              parent: animation,
-              curve: kSmooth,
-              reverseCurve: kSmooth,
-            );
-            return FadeTransition(
-              opacity: curved,
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, 0.12),
-                  end: Offset.zero,
-                ).animate(curved),
-                child: child,
-              ),
-            );
-          },
-        ),
-      );
-
-  void _logout(BuildContext context) {
-    showCupertinoDialog(
-      context: context,
-      builder: (_) => CupertinoAlertDialog(
-        title: const Text('ออกจากระบบ'),
-        content: const Padding(
-          padding: EdgeInsets.only(top: 6),
-          child: Text('ต้องการออกจากระบบใช่ไหม?'),
-        ),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('ยกเลิก'),
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pushReplacement(
-                context,
-                CupertinoPageRoute(builder: (_) => const LoginPage()),
-              );
-            },
-            child: const Text('ออกจากระบบ'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final secondary =
-        ModalRoute.of(context)?.secondaryAnimation ?? kAlwaysDismissedAnimation;
-    return CupertinoPageScaffold(
-      child: AnimatedBuilder(
-        animation: secondary,
-        builder: (context, child) {
-          final s = kSmooth.transform(secondary.value.clamp(0.0, 1.0));
-          return FractionalTranslation(
-            translation: Offset(0.22 * s, 0),
-            child: child,
-          );
-        },
-        child: LayoutBuilder(builder: (context, c) {
-          final wide = c.maxWidth >= kWide;
-          return wide ? _buildWide(context) : _buildNarrow(context);
-        }),
-      ),
-    );
-  }
-
-  Widget _buildNarrow(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-        children: [
-          Stack(
-            children: [
-              const Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: SizedBox(
-                  height: 380,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: _headGrad,
-                      borderRadius:
-                          BorderRadius.vertical(bottom: Radius.circular(32)),
-                    ),
-                  ),
-                ),
-              ),
-              Column(
-                children: [
-                  SafeArea(
-                    bottom: false,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 14, 8, 8),
-                      child: Row(
-                        children: [
-                          const Expanded(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('บันทึก OT',
-                                    style: TextStyle(
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.w700,
-                                        color: CupertinoColors.white)),
-                                Text('ระบบบันทึกเวลาทำงานล่วงเวลา',
-                                    style: TextStyle(
-                                        fontSize: 12.5,
-                                        color: Color(0xCCFFFFFF))),
-                              ],
-                            ),
-                          ),
-                          _logoutBtn(context),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
-                    child: _ClockCard(),
-                  ),
-                  const SizedBox(height: 18),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _menuCard(context,
-                            icon: Icons.play_circle_rounded,
-                            title: 'เริ่มงาน',
-                            subtitle: 'บันทึกเวลาเข้าเริ่ม OT',
-                            isClockOut: false,
-                            iconColor: tSage,
-                            iconBg: tSageSoft),
-                        const SizedBox(height: 12),
-                        _menuCard(context,
-                            icon: Icons.flag_circle_rounded,
-                            title: 'เลิกงาน',
-                            subtitle: 'เลือกชื่อ + บันทึกเวลาเลิก',
-                            isClockOut: true),
-                        const SizedBox(height: 18),
-                        _stepsCard(),
-                        const SizedBox(height: 12),
-                        _noticeCard(),
-                        const SizedBox(height: 24),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-            ),
-          ),
-        ),
-        const SafeArea(
-          top: false,
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(20, 8, 20, 14),
-            child: Text(
-              'กด "เริ่มงาน" ก่อนเริ่มทำ OT แล้วกลับมากด "เลิกงาน" เมื่อทำเสร็จ',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12.5, color: tText2),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildWide(BuildContext context) {
-    return SafeArea(
-      child: Column(
-        children: [
-          Align(
-            alignment: Alignment.centerRight,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(0, 8, 20, 0),
-              child: _logoutBtn(context, dark: true),
-            ),
-          ),
-          Expanded(
-            child: Center(
-              child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1000),
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 11,
-                  child: Container(
-                    padding: const EdgeInsets.all(36),
-                    decoration: BoxDecoration(
-                      gradient: _headGrad,
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: const [
-                        BoxShadow(
-                            color: Color(0x333E6CA0),
-                            blurRadius: 32,
-                            offset: Offset(0, 14)),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text('บันทึก OT',
-                            style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w700,
-                                color: CupertinoColors.white)),
-                        const SizedBox(height: 8),
-                        Container(
-                            height: 3,
-                            width: 56,
-                            decoration: BoxDecoration(
-                                color: tGold,
-                                borderRadius: BorderRadius.circular(2))),
-                        const SizedBox(height: 28),
-                        const _LiveTime(
-                            align: CrossAxisAlignment.center,
-                            timeStyle: TextStyle(
-                                fontSize: 72,
-                                fontWeight: FontWeight.w700,
-                                color: CupertinoColors.white,
-                                letterSpacing: -2,
-                                fontFeatures: [FontFeature.tabularFigures()]),
-                            dateStyle: TextStyle(
-                                fontSize: 16, color: Color(0xCCFFFFFF))),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 28),
-                Expanded(
-                  flex: 9,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _menuCard(context,
-                          icon: Icons.play_circle_rounded,
-                          title: 'เริ่มงาน',
-                          subtitle: 'บันทึกเวลาเข้าเริ่ม OT',
-                          isClockOut: false,
-                          iconColor: tSage,
-                          iconBg: tSageSoft),
-                      const SizedBox(height: 14),
-                      _menuCard(context,
-                          icon: Icons.flag_circle_rounded,
-                          title: 'เลิกงาน',
-                          subtitle: 'เลือกชื่อ + บันทึกเวลาเลิก',
-                          isClockOut: true),
-                      const SizedBox(height: 16),
-                      _stepsCard(),
-                      const SizedBox(height: 12),
-                      _noticeCard(),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-          ),
-          const Padding(
-            padding: EdgeInsets.only(bottom: 16, left: 20, right: 20),
-            child: Text(
-              'กด "เริ่มงาน" ก่อนเริ่มทำ OT แล้วกลับมากด "เลิกงาน" เมื่อทำเสร็จ',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12.5, color: tText2),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _logoutBtn(BuildContext context, {bool dark = false}) {
-    return GestureDetector(
-      onTap: () => _logout(context),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: dark ? const Color(0x14000000) : const Color(0x2EFFFFFF),
-          borderRadius: BorderRadius.circular(99),
-          border: Border.all(
-              color: dark ? const Color(0x22000000) : const Color(0x4DFFFFFF)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.logout_rounded,
-                size: 14, color: dark ? tText2 : CupertinoColors.white),
-            const SizedBox(width: 5),
-            Text('ออกจากระบบ',
-                style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
-                    color: dark ? tText2 : CupertinoColors.white)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _stepsCard() {
-    Widget step(String n, String title, String desc) => Padding(
-          padding: const EdgeInsets.only(bottom: 14),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                alignment: Alignment.center,
-                decoration: const BoxDecoration(
-                    color: tOrange, shape: BoxShape.circle),
-                child: Text(n,
-                    style: const TextStyle(
-                        color: CupertinoColors.white,
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w700)),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title,
-                        style: const TextStyle(
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.w700,
-                            color: tText)),
-                    Text(desc,
-                        style: const TextStyle(
-                            fontSize: 12.5, color: tText2)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 4),
-      decoration: BoxDecoration(
-        color: CupertinoColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF8F5EF)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                  width: 3.5,
-                  height: 16,
-                  decoration: BoxDecoration(
-                      color: tGold,
-                      borderRadius: BorderRadius.circular(2))),
-              const SizedBox(width: 8),
-              const Text('ขั้นตอนการใช้งาน',
-                  style: TextStyle(
-                      fontSize: 15.5,
-                      fontWeight: FontWeight.w700,
-                      color: tDark)),
-            ],
-          ),
-          const SizedBox(height: 14),
-          step('1', 'กด "เริ่มงาน"', 'กรอกชื่อ เลือกบริษัท แล้วถ่ายรูปยืนยัน'),
-          step('2', 'ทำงาน OT ตามปกติ', 'ระบบบันทึกเวลาเริ่มไว้ให้เรียบร้อย'),
-          step('3', 'กลับมากด "เลิกงาน"',
-              'เลือกชื่อตัวเอง ระบบคำนวณชั่วโมงให้อัตโนมัติ'),
-        ],
-      ),
-    );
-  }
-
-  Widget _noticeCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: tOrangeSoft,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.verified_user_rounded, color: tGold, size: 26),
-          SizedBox(width: 12),
-          Expanded(
-            child: Text(
-                'ทุกการบันทึกจะแนบรูปถ่ายสดและพิกัด GPS เพื่อยืนยันตัวตนโดยอัตโนมัติ',
-                style:
-                    TextStyle(fontSize: 12.5, color: tText, height: 1.4)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _menuCard(BuildContext context,
-      {required IconData icon,
-      required String title,
-      required String subtitle,
-      required bool isClockOut,
-      Color iconColor = tGold,
-      Color iconBg = tOrangeSoft}) {
-    return GestureDetector(
-      onTap: () => _open(context, isClockOut),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: CupertinoColors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: tCreamLine),
-          boxShadow: const [
-            BoxShadow(
-                color: Color(0x100F172A),
-                blurRadius: 14,
-                offset: Offset(0, 4)),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: iconBg,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: iconColor, size: 28),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title,
-                      style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                          color: tText)),
-                  Text(subtitle,
-                      style:
-                          const TextStyle(fontSize: 13, color: tText2)),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded,
-                size: 18, color: Color(0xFFC9C2AF)),
-          ],
-        ),
-      ),
-    );
-  }
+/* ══════════════════════════════════════
+   DIALOG
+══════════════════════════════════════ */
+.dlg-bd{
+  position:absolute;inset:0;background:rgba(0,0,0,.4);
+  z-index:150;display:none;align-items:center;justify-content:center;padding:24px;
 }
+.dlg-bd.on{display:flex}
+.dlg{
+  background:#fff;border-radius:14px;padding:20px;
+  width:100%;max-width:300px;text-align:center;
+  box-shadow:0 16px 40px rgba(0,0,0,.18);
+}
+.dlg-ttl{font-size:17px;font-weight:700;color:var(--text);margin-bottom:8px}
+.dlg-msg{font-size:14px;color:var(--text2);margin-bottom:20px;line-height:1.55;white-space:pre-line}
+.dlg-acts{display:flex;gap:10px}
+.dlg-btn{
+  flex:1;padding:12px;border:none;border-radius:10px;
+  font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;
+}
+.dlg-btn.cancel{background:#F4F6FA;color:var(--text2)}
+.dlg-btn.ok{background:var(--btn);color:#fff}
+.dlg-btn.danger{background:var(--red);color:#fff}
 
-// ---------- นาฬิกาสด ----------
-class _LiveTime extends StatelessWidget {
-  final TextStyle timeStyle;
-  final TextStyle dateStyle;
-  final CrossAxisAlignment align;
-  const _LiveTime({
-    required this.timeStyle,
-    required this.dateStyle,
-    this.align = CrossAxisAlignment.start,
+/* ══ Spinner ══ */
+.sp{
+  width:16px;height:16px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.3);border-top-color:#fff;
+  animation:spin .7s linear infinite;flex-shrink:0;
+}
+.sp.dk{border-color:rgba(62,108,160,.2);border-top-color:var(--blue)}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ══ Toast ══ */
+.toast{
+  position:absolute;bottom:90px;left:50%;transform:translateX(-50%);
+  background:rgba(15,23,42,.88);color:#fff;padding:12px 20px;
+  border-radius:12px;font-size:14px;white-space:nowrap;z-index:200;
+  opacity:0;transition:opacity .3s;pointer-events:none;
+}
+.toast.on{opacity:1}
+
+/* ══ Offline banner ══ */
+.offline-bar{
+  position:absolute;top:0;left:0;right:0;z-index:400;
+  background:#D9534F;color:#fff;
+  font-size:13px;font-weight:600;text-align:center;
+  padding:8px;
+  transform:translateY(-100%);transition:transform .3s;
+}
+.offline-bar.show{transform:translateY(0)}
+
+/* Scrollbar hide */
+.home-scroll::-webkit-scrollbar,
+.form-scrl::-webkit-scrollbar,
+.bsheet-list::-webkit-scrollbar{width:0}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- Offline indicator -->
+<div id="offline-bar" class="offline-bar">⚠️ ไม่มีอินเทอร์เน็ต — บันทึก API ต้องใช้เน็ต</div>
+
+<!-- ═══════════════════════════════════
+     LOGIN PAGE
+═══════════════════════════════════ -->
+<div id="pg-login" class="pg on">
+  <div class="lg-bg"></div>
+  <div class="lg-inner">
+    <div class="lg-hero">
+      <div class="logo-ring">⏰</div>
+      <div class="lg-ttl">บันทึก OT</div>
+      <div class="gold-bar"></div>
+      <div class="lg-sub">เข้าสู่ระบบเพื่อเริ่มใช้งาน</div>
+    </div>
+
+    <div class="lg-card-wrap">
+      <div class="lg-card">
+
+        <!-- Step 0: Employee ID -->
+        <div id="stp-id" class="stp on">
+          <div class="fbox">
+            <span class="fbox-icon">🪪</span>
+            <div class="fbox-inner">
+              <span class="flabel">รหัสพนักงาน</span>
+              <input id="emp-inp" type="text" placeholder="กรอกรหัสพนักงาน"
+                autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+            </div>
+          </div>
+          <div id="lg-err" class="err-row">
+            <span>⚠️</span><span id="lg-err-msg"></span>
+          </div>
+          <button id="btn-next" class="btn-p" onclick="handleNext()">ถัดไป</button>
+        </div>
+
+        <!-- Step 1: PIN pad -->
+        <div id="stp-pin" class="stp">
+          <div id="pin-name" class="pin-name"></div>
+          <div class="pin-hint">ใส่รหัสผ่าน 4 หลัก</div>
+          <div class="pin-dots">
+            <div class="pin-dot" id="pd0"></div>
+            <div class="pin-dot" id="pd1"></div>
+            <div class="pin-dot" id="pd2"></div>
+            <div class="pin-dot" id="pd3"></div>
+          </div>
+          <div id="pin-st" class="pin-st"></div>
+          <div class="keypad">
+            <button class="key" onclick="kp('1')">1</button>
+            <button class="key" onclick="kp('2')">2</button>
+            <button class="key" onclick="kp('3')">3</button>
+            <button class="key" onclick="kp('4')">4</button>
+            <button class="key" onclick="kp('5')">5</button>
+            <button class="key" onclick="kp('6')">6</button>
+            <button class="key" onclick="kp('7')">7</button>
+            <button class="key" onclick="kp('8')">8</button>
+            <button class="key" onclick="kp('9')">9</button>
+            <div class="key ph"></div>
+            <button class="key" onclick="kp('0')">0</button>
+            <button class="key del" onclick="kd()">⌫</button>
+          </div>
+          <button class="btn-lk" onclick="backToId()">เปลี่ยนรหัสพนักงาน</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     HOME PAGE
+═══════════════════════════════════ -->
+<div id="pg-home" class="pg">
+  <div class="home-scroll">
+    <div class="home-hd">
+      <div class="home-top">
+        <div>
+          <div class="home-ttl">บันทึก OT</div>
+          <div class="home-sub">ระบบบันทึกเวลาทำงานล่วงเวลา</div>
+        </div>
+        <button class="lo-btn" onclick="confirmLogout()">↩ ออกจากระบบ</button>
+      </div>
+      <div class="clock-card">
+        <div class="clock-time" id="clk-t">00:00:00</div>
+        <div class="clock-date" id="clk-d"></div>
+      </div>
+    </div>
+
+    <div class="home-body">
+      <div class="menu-card" onclick="openForm(false)">
+        <div class="menu-ico b">▶️</div>
+        <div class="menu-info">
+          <div class="menu-ttl">เริ่มงาน</div>
+          <div class="menu-desc">บันทึกเวลาเข้าเริ่ม OT</div>
+        </div>
+        <span class="menu-chev">›</span>
+      </div>
+
+      <div class="menu-card" onclick="openForm(true)">
+        <div class="menu-ico g">🏁</div>
+        <div class="menu-info">
+          <div class="menu-ttl">เลิกงาน</div>
+          <div class="menu-desc">เลือกชื่อ + บันทึกเวลาเลิก</div>
+        </div>
+        <span class="menu-chev">›</span>
+      </div>
+
+      <div class="sec-card">
+        <div class="card-hd"><div class="gold-acc"></div><span class="card-ttl">ขั้นตอนการใช้งาน</span></div>
+        <div class="step-row">
+          <div class="step-num">1</div>
+          <div><div class="step-t">กด "เริ่มงาน"</div><div class="step-d">กรอกชื่อ เลือกบริษัท แล้วถ่ายรูปยืนยัน</div></div>
+        </div>
+        <div class="step-row">
+          <div class="step-num">2</div>
+          <div><div class="step-t">ทำงาน OT ตามปกติ</div><div class="step-d">ระบบบันทึกเวลาเริ่มไว้ให้เรียบร้อย</div></div>
+        </div>
+        <div class="step-row">
+          <div class="step-num">3</div>
+          <div><div class="step-t">กลับมากด "เลิกงาน"</div><div class="step-d">เลือกชื่อตัวเอง ระบบคำนวณชั่วโมงให้อัตโนมัติ</div></div>
+        </div>
+      </div>
+
+      <div class="notice">
+        <span class="notice-ico">🛡️</span>
+        <div class="notice-txt">ทุกการบันทึกจะแนบรูปถ่ายสดและพิกัด GPS เพื่อยืนยันตัวตนโดยอัตโนมัติ</div>
+      </div>
+    </div>
+  </div>
+  <div class="home-ft">กด "เริ่มงาน" ก่อนเริ่มทำ OT แล้วกลับมากด "เลิกงาน" เมื่อทำเสร็จ</div>
+</div>
+
+<!-- ═══════════════════════════════════
+     FORM PAGE
+═══════════════════════════════════ -->
+<div id="pg-form" class="pg">
+  <div class="form-hd">
+    <div class="form-top">
+      <button class="back-btn" onclick="goBack()">‹</button>
+      <div id="form-ttl" class="form-ttl">เริ่มงาน OT</div>
+      <div class="gps-pill" onclick="retryGps()">
+        <div id="gps-dot" class="gps-dot"></div>
+        <span id="gps-txt" class="gps-txt">กำลังหา GPS...</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="form-scrl" class="form-scrl">
+
+    <!-- Info Card -->
+    <div class="f-card">
+      <div class="card-hd"><div class="gold-acc"></div><span class="card-ttl">ข้อมูลพนักงาน</span></div>
+
+      <!-- Date -->
+      <div class="ff tap" onclick="openDateSheet()">
+        <div class="fi">
+          <span class="fl">วันที่</span>
+          <span id="disp-date" class="fv">-</span>
+        </div>
+        <span class="chv">⌄</span>
+      </div>
+
+      <!-- Clock-in fields -->
+      <div id="ci-flds">
+        <div class="ff">
+          <div class="fi">
+            <span class="fl">ชื่อพนักงาน</span>
+            <input id="inp-name" type="text" class="fv" placeholder="ชื่อ - นามสกุล">
+          </div>
+        </div>
+        <div class="ff">
+          <div class="fi">
+            <span class="fl">หัวหน้า</span>
+            <input id="inp-sup" type="text" class="fv" placeholder="ชื่อหัวหน้า">
+          </div>
+        </div>
+        <div class="ff tap" onclick="openCompanySheet()">
+          <div class="fi">
+            <span class="fl">บริษัท</span>
+            <span id="disp-co" class="fv ph">แตะเพื่อเลือก</span>
+          </div>
+          <span class="chv">⌄</span>
+        </div>
+      </div>
+
+      <!-- Clock-out fields -->
+      <div id="co-flds" style="display:none">
+        <div class="ff tap" onclick="openEmpSheet()">
+          <div class="fi">
+            <span class="fl">พนักงาน</span>
+            <span id="disp-emp" class="fv ph">แตะเพื่อเลือก</span>
+          </div>
+          <span class="chv">⌄</span>
+        </div>
+        <div id="st-fld" class="ff" style="display:none">
+          <div class="fi">
+            <span class="fl">เริ่มงานไว้เมื่อ</span>
+            <span id="disp-st" class="fv grn">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Time -->
+      <div class="ff tap" onclick="openTimeSheet()">
+        <div class="fi">
+          <span id="tlabel" class="fl">เวลาเริ่มงาน</span>
+          <span id="disp-time" class="fv blu">-</span>
+        </div>
+        <span class="chv">⌄</span>
+      </div>
+
+      <!-- Hours total -->
+      <div id="hrs-fld" class="ff" style="display:none">
+        <div class="fi">
+          <span class="fl">เวลารวม</span>
+          <span id="disp-hrs" class="fv gld">-</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Allowance Card -->
+    <div id="allw-card" class="f-card" style="display:none">
+      <div class="card-hd"><div class="gold-acc"></div><span class="card-ttl">ประเภทเบี้ยเลี้ยง</span></div>
+      <div class="chip-row">
+        <button id="chip-n" class="chip n" onclick="selWT('normal')">💵 รับเบี้ยเลี้ยง</button>
+        <button id="chip-f" class="chip f" onclick="selWT('field')">🚗 ออกหน้างาน</button>
+      </div>
+    </div>
+
+    <!-- Detail Card (clock-in only) -->
+    <div id="dtl-card" class="f-card">
+      <div class="card-hd"><div class="gold-acc"></div><span class="card-ttl">รายละเอียดงาน</span></div>
+      <div class="ff">
+        <div class="fi">
+          <span class="fl">งานที่ทำในช่วง OT</span>
+          <textarea id="inp-dtl" class="fv" placeholder="อธิบายงานที่ทำ..." rows="3"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Photo Card -->
+    <div class="f-card">
+      <div class="card-hd"><div class="gold-acc"></div><span class="card-ttl">ยืนยันตัวตน</span></div>
+      <div id="ph-placeholder" class="photo-ph" onclick="openCamera()">
+        <div id="ph-circ" class="photo-circ">📷</div>
+        <div id="ph-lbl" class="photo-lbl">ถ่ายรูปยืนยันตัวตน</div>
+        <div class="photo-sm">ต้องถ่ายรูปสดเท่านั้น</div>
+      </div>
+      <div id="ph-prev" class="photo-prev"><img id="ph-img" src="" alt=""></div>
+      <div id="ph-rt-row" class="photo-rt-row">
+        <div id="ph-ts" class="photo-ts"></div>
+        <button id="btn-rt" class="btn-rt" onclick="retakePhoto()">ถ่ายใหม่</button>
+      </div>
+    </div>
+
+    <!-- Form error -->
+    <div id="f-err" class="err-row" style="margin-bottom:10px">
+      <span>⚠️</span><span id="f-err-msg"></span>
+    </div>
+
+    <!-- Submit -->
+    <button id="sub-btn" class="sub-btn ci" onclick="submitForm()">เริ่มงาน OT</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     CAMERA MODAL
+═══════════════════════════════════ -->
+<div id="cam-modal" class="cam-modal">
+  <video id="cam-vid" class="cam-vid" autoplay playsinline muted></video>
+  <canvas id="cap-cnv"></canvas>
+  <button class="cam-close" onclick="closeCamera()">✕</button>
+  <div class="cam-ctrl">
+    <button class="cap-btn" onclick="capturePhoto()">📸</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     BOTTOM SHEETS
+═══════════════════════════════════ -->
+<!-- Generic list sheet -->
+<div id="bs-bd" class="backdrop" onclick="closeBs(event)">
+  <div class="bsheet">
+    <div class="bsheet-bar"><button class="bsheet-ok" onclick="closeBs()">เสร็จสิ้น</button></div>
+    <div id="bs-list" class="bsheet-list"></div>
+  </div>
+</div>
+
+<!-- Date sheet -->
+<div id="dt-bd" class="backdrop" onclick="closeDt(event)">
+  <div class="bsheet">
+    <div class="bsheet-bar"><button class="bsheet-ok" onclick="closeDt()">เสร็จสิ้น</button></div>
+    <div class="dt-wrap"><input id="dt-inp" type="date"></div>
+  </div>
+</div>
+
+<!-- Time sheet -->
+<div id="tm-bd" class="backdrop" onclick="closeTm(event)">
+  <div class="bsheet">
+    <div class="bsheet-bar"><button class="bsheet-ok" onclick="closeTm()">เสร็จสิ้น</button></div>
+    <div class="dt-wrap"><input id="tm-inp" type="time"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     DIALOG
+═══════════════════════════════════ -->
+<div id="dlg-bd" class="dlg-bd">
+  <div class="dlg">
+    <div id="dlg-ttl" class="dlg-ttl">ยืนยัน</div>
+    <div id="dlg-msg" class="dlg-msg"></div>
+    <div class="dlg-acts">
+      <button id="dlg-cancel" class="dlg-btn cancel" onclick="closeDlg()">ยกเลิก</button>
+      <button id="dlg-ok" class="dlg-btn ok">ตกลง</button>
+    </div>
+  </div>
+</div>
+
+<!-- Install bar (Android) -->
+<div id="install-bar" class="install-bar">
+  <div class="install-bar-icon"><img src="icons/icon-192.png" alt=""></div>
+  <div class="install-bar-text">
+    <div class="install-bar-ttl">เพิ่มไปหน้าจอหลัก</div>
+    <div class="install-bar-sub">ใช้งานได้เหมือนแอปจริง ไม่ผ่านเบราว์เซอร์</div>
+  </div>
+  <button class="install-bar-btn" onclick="doInstall()">ติดตั้ง</button>
+  <button class="install-bar-close" onclick="hideInstall()">✕</button>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
+<!-- ═══════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════ -->
+<script>
+/* ══ Constants ══ */
+const USER_API = 'https://script.google.com/macros/s/AKfycbxsiLedShdopEiWpgx7nKqfM5PK4KS2NM3JlekAKFIybs2uG3Ktv0xAu1yeRYTYeDKmyQ/exec';
+const OT_API   = 'https://script.google.com/macros/s/AKfycby_qTVYsGJx8zlNgK_u1L9AnGzDAlrbUUKPtUY846HgPZS2dCgHZKmqJcTKmFNvuhe5GA/exec';
+const ALLOW_CO = '3E Innovation';
+const COMPANIES= ['3E Empire','3E Trading','3E Innovation','AE&T','Eita & Paul','Hikari Denki','Chavest'];
+const TH_DAYS  = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+const TH_MON   = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+/* ══ State ══ */
+let currentUser=null, pin='', empId='', empName='', lgBusy=false;
+let isClockOut=false, otDate=new Date(), otTime=new Date();
+let company='', worktype='', department='';
+let photoB64=null, photoTs='';
+let gps=null, gpsOk=false;
+let activeList=[], selIdx=-1;
+let fmBusy=false, camStream=null, clkIv=null;
+let deferredInstall=null;
+
+/* ══ Utils ══ */
+const pad = n => String(n).padStart(2,'0');
+const el  = id => document.getElementById(id);
+const dateStr  = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const timeStr  = t => `${pad(t.getHours())}:${pad(t.getMinutes())}`;
+const dateThai = d => `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()+543}`;
+function showPg(id){ document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on')); el(id).classList.add('on'); }
+
+/* ══════════════════════════════════════
+   SERVICE WORKER REGISTRATION
+══════════════════════════════════════ */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js', { scope: './' })
+      .then(reg => {
+        console.log('[OT-PWA] SW registered, scope:', reg.scope);
+        // Check for updates every 30 min
+        setInterval(() => reg.update(), 30 * 60 * 1000);
+      })
+      .catch(err => console.warn('[OT-PWA] SW failed:', err));
   });
-
-  static const _days = [
-    'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์', 'อาทิตย์'
-  ];
-  static const _months = [
-    'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
-    'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final ta = align == CrossAxisAlignment.center
-        ? TextAlign.center
-        : TextAlign.start;
-    return StreamBuilder(
-      stream: Stream.periodic(const Duration(seconds: 1)),
-      builder: (context, _) {
-        final now = DateTime.now();
-        final t =
-            '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
-        final d =
-            'วัน${_days[now.weekday - 1]}ที่ ${now.day} ${_months[now.month - 1]} ${now.year + 543}';
-        return Column(
-          crossAxisAlignment: align,
-          children: [
-            Text(t, textAlign: ta, style: timeStyle),
-            const SizedBox(height: 2),
-            Text(d, textAlign: ta, style: dateStyle),
-          ],
-        );
-      },
-    );
-  }
 }
 
-class _ClockCard extends StatelessWidget {
-  const _ClockCard();
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
-      decoration: BoxDecoration(
-        color: CupertinoColors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: tCreamLine),
-        boxShadow: const [
-          BoxShadow(
-              color: Color(0x140F172A), blurRadius: 24, offset: Offset(0, 8)),
-        ],
-      ),
-      child: const Center(
-        child: _LiveTime(
-          align: CrossAxisAlignment.center,
-          timeStyle: TextStyle(
-              fontSize: 42,
-              fontWeight: FontWeight.w700,
-              color: tDark,
-              letterSpacing: -1,
-              fontFeatures: [FontFeature.tabularFigures()]),
-          dateStyle: TextStyle(fontSize: 13.5, color: tText2),
-        ),
-      ),
-    );
-  }
-}
-
-// ============================================================
-// หน้าฟอร์ม
-// ============================================================
-class FormPage extends StatefulWidget {
-  final bool isClockOut;
-  const FormPage({super.key, required this.isClockOut});
-  @override
-  State<FormPage> createState() => _FormPageState();
-}
-
-class _FormPageState extends State<FormPage> {
-  DateTime otDate = DateTime.now();
-  DateTime time = DateTime.now();
-  final nameCtrl = TextEditingController();
-  final supervisorCtrl = TextEditingController();
-  final detailCtrl = TextEditingController();
-  String company = '';
-  String worktype = '';
-  String department = ''; // แผนก (ดึงจากข้อมูลล็อกอิน)
-
-  String? photoBase64;
-  String photoSource = '';
-  String photoTimestamp = '';
-
-  Position? gps;
-  String gpsStatus = 'กำลังหา GPS...';
-  bool gpsOk = false;
-
-  List<Map<String, dynamic>> activeList = [];
-  int selectedIdx = -1;
-  bool loadingActive = false;
-
-  bool busy = false;
-  String error = '';
-
-  bool get isClockOut => widget.isClockOut;
-  Map<String, dynamic>? get picked =>
-      (selectedIdx >= 0 && selectedIdx < activeList.length)
-          ? activeList[selectedIdx]
-          : null;
-  String get selectedCompany =>
-      isClockOut ? (picked?['company'] ?? '') : company;
-  bool get showWorktype => selectedCompany == allowanceCompany;
-  Color get accent => isClockOut ? tGold : tOrange;
-  LinearGradient get btnGrad => isClockOut ? _btnGradSage : _btnGrad;
-
-  @override
-  void initState() {
-    super.initState();
-    // เติมชื่อ-สกุล + แผนก(เอาจากตำแหน่ง คอลัมน์ D) จากข้อมูลที่ล็อกอิน
-    if (!isClockOut && currentUser != null) {
-      nameCtrl.text = (currentUser!['full_name'] ?? '').toString();
-      department = (currentUser!['position'] ?? '').toString();
+/* ══════════════════════════════════════
+   PWA INSTALL PROMPT (Android Chrome)
+══════════════════════════════════════ */
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstall = e;
+  // Show install bar after 2 s, but only if not already installed
+  setTimeout(() => {
+    if (!window.matchMedia('(display-mode: standalone)').matches) {
+      el('install-bar').classList.add('show');
     }
-    _startGps();
-    if (isClockOut) _loadActive();
-  }
+  }, 2000);
+});
 
-  String _dateStr(DateTime d) =>
-      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-  String _timeStr(DateTime t) =>
-      '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
-  String _dateThai(DateTime d) => '${d.day}/${d.month}/${d.year + 543}';
+window.addEventListener('appinstalled', () => {
+  deferredInstall = null;
+  hideInstall();
+  toast('✅ เพิ่มแอปไปหน้าจอหลักแล้ว');
+});
 
-  Future<void> _startGps() async {
-    setState(() {
-      gpsStatus = 'กำลังหา GPS...';
-      gpsOk = false;
+function doInstall(){
+  if (!deferredInstall) return;
+  deferredInstall.prompt();
+  deferredInstall.userChoice.then(r => {
+    if (r.outcome === 'accepted') hideInstall();
+    deferredInstall = null;
+  });
+}
+function hideInstall(){ el('install-bar').classList.remove('show'); }
+
+/* ══════════════════════════════════════
+   OFFLINE DETECTION
+══════════════════════════════════════ */
+function syncOnlineStatus(){
+  const bar = el('offline-bar');
+  if (!navigator.onLine) bar.classList.add('show');
+  else bar.classList.remove('show');
+}
+window.addEventListener('online',  syncOnlineStatus);
+window.addEventListener('offline', syncOnlineStatus);
+syncOnlineStatus();
+
+/* ══════════════════════════════════════
+   LOGIN
+══════════════════════════════════════ */
+const empInp = el('emp-inp');
+empInp.addEventListener('input',  ()=>{ empInp.value=empInp.value.toUpperCase(); hideErr(); });
+empInp.addEventListener('keydown', e=>{ if(e.key==='Enter') handleNext(); });
+
+function hideErr(){ el('lg-err').classList.remove('on'); }
+function showErr(m){ el('lg-err-msg').textContent=m; el('lg-err').classList.add('on'); }
+function setBusy(b){
+  lgBusy=b; el('btn-next').disabled=b;
+  el('btn-next').innerHTML=b?'<div class="sp"></div>':'ถัดไป';
+}
+
+async function handleNext(){
+  if(lgBusy) return;
+  const id=empInp.value.trim().toUpperCase();
+  hideErr();
+  if(!id){ showErr('กรุณากรอกรหัสพนักงาน'); return; }
+  setBusy(true);
+  try{
+    const u=await findUser(id);
+    setBusy(false);
+    if(u){
+      empId=id; empName=u.full_name||'';
+      pin=''; el('pin-name').textContent=empName||'ใส่รหัสผ่าน';
+      updDots(); el('pin-st').innerHTML='';
+      el('stp-id').classList.remove('on');
+      el('stp-pin').classList.add('on');
+    }else{ showErr('ไม่พบรหัสพนักงานนี้'); }
+  }catch(e){ setBusy(false); showErr('เชื่อมต่อไม่ได้: '+e.message); }
+}
+
+async function findUser(id){
+  const res=await fetch(USER_API,{redirect:'follow'});
+  const j=await res.json();
+  if(j.status!=='ok'||!Array.isArray(j.data)) return null;
+  return j.data.find(u=>u.employee_id?.toString().trim().toUpperCase()===id)||null;
+}
+
+/* ── PIN pad ── */
+function updDots(){ for(let i=0;i<4;i++) el('pd'+i).classList.toggle('filled',i<pin.length); }
+function setPinSt(h){ el('pin-st').innerHTML=h; }
+function kp(d){
+  if(lgBusy||pin.length>=4) return;
+  pin+=d; updDots(); setPinSt('');
+  if(pin.length===4) verifyPin();
+}
+function kd(){ if(pin.length>0){ pin=pin.slice(0,-1); updDots(); } }
+function backToId(){
+  pin=''; el('stp-pin').classList.remove('on'); el('stp-id').classList.add('on');
+  hideErr(); setPinSt('');
+}
+
+async function verifyPin(){
+  lgBusy=true;
+  setPinSt('<div class="sp dk"></div>');
+  try{
+    const res=await fetch(USER_API,{
+      method:'POST',redirect:'follow',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'login',employeeId:empId,password:pin})
     });
-    if (demoMode) {
-      await Future.delayed(const Duration(milliseconds: 400));
-      setState(() {
-        gps = Position(
-          latitude: 13.7563,
-          longitude: 100.5018,
-          timestamp: DateTime.now(),
-          accuracy: 8,
-          altitude: 0,
-          altitudeAccuracy: 0,
-          heading: 0,
-          headingAccuracy: 0,
-          speed: 0,
-          speedAccuracy: 0,
-        );
-        gpsOk = true;
-        gpsStatus = '±8 ม. (จำลอง)';
-      });
-      return;
+    const j=await res.json();
+    lgBusy=false;
+    if(j.success===true){
+      currentUser=(j.user&&typeof j.user==='object')?j.user:null;
+      goHome();
+    }else{
+      pin=''; updDots();
+      setPinSt(`<span style="color:var(--red);font-size:13px">${j.message||'รหัสผ่านไม่ถูกต้อง'}</span>`);
     }
-    try {
-      if (!await Geolocator.isLocationServiceEnabled()) {
-        setState(() => gpsStatus = 'เปิด GPS ในมือถือก่อน');
-        return;
-      }
-      var perm = await Geolocator.checkPermission();
-      if (perm == LocationPermission.denied) {
-        perm = await Geolocator.requestPermission();
-      }
-      if (perm == LocationPermission.deniedForever) {
-        setState(() => gpsStatus = 'ปิดสิทธิ์ถาวร — แตะเพื่อตั้งค่า');
-        await Geolocator.openAppSettings();
-        return;
-      }
-      if (perm == LocationPermission.denied) {
-        setState(() => gpsStatus = 'ไม่ได้รับอนุญาต');
-        return;
-      }
-      setState(() => gpsStatus = 'กำลังหา GPS...');
-      Position? pos;
-      for (final acc in [
-        LocationAccuracy.high,
-        LocationAccuracy.medium,
-        LocationAccuracy.low,
-      ]) {
-        try {
-          pos = await Geolocator.getCurrentPosition(
-            locationSettings: LocationSettings(
-              accuracy: acc,
-              timeLimit: const Duration(seconds: 12),
-            ),
-          );
-          if (pos != null) break;
-        } catch (_) {}
-      }
-      pos ??= await Geolocator.getLastKnownPosition();
-      if (pos == null) {
-        setState(() => gpsStatus = 'หาตำแหน่งไม่ได้ — แตะลองใหม่');
-        return;
-      }
-      final p = pos;
-      setState(() {
-        gps = p;
-        gpsOk = true;
-        gpsStatus = '±${p.accuracy.round()} ม.';
-      });
-    } catch (e) {
-      setState(() => gpsStatus = 'หาตำแหน่งไม่ได้ — แตะลองใหม่');
-    }
+  }catch(e){
+    lgBusy=false; pin=''; updDots();
+    setPinSt('<span style="color:var(--red);font-size:13px">เชื่อมต่อไม่ได้</span>');
   }
-
-  Future<void> _loadActive() async {
-    setState(() {
-      loadingActive = true;
-      selectedIdx = -1;
-    });
-    try {
-      final res = await apiCall('getActiveClockIns', {
-        'otDate': _dateStr(otDate),
-        'recorderId': (currentUser?['employee_id'] ?? '').toString(),
-      });
-      final data = (res['data'] as List? ?? [])
-          .map((e) => Map<String, dynamic>.from(e))
-          .toList();
-      setState(() {
-        activeList = data;
-        loadingActive = false;
-      });
-    } catch (e) {
-      setState(() {
-        activeList = [];
-        loadingActive = false;
-        error = 'โหลดรายชื่อไม่สำเร็จ: $e';
-      });
-    }
-  }
-
-  Future<void> _pickPhoto() async {
-    final now = DateTime.now();
-    if (demoMode) {
-      setState(() {
-        photoBase64 = _demoPhoto;
-        photoSource = 'demo';
-        photoTimestamp =
-            '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year} '
-            '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
-        error = '';
-      });
-      return;
-    }
-
-    final picker = ImagePicker();
-    // เว็บไม่รองรับบังคับกล้องหน้า — ใส่ option นี้เฉพาะตอนเป็นแอปมือถือ
-    final file = kIsWeb
-        ? await picker.pickImage(
-            source: ImageSource.camera,
-            maxWidth: 1280,
-            imageQuality: 85)
-        : await picker.pickImage(
-            source: ImageSource.camera,
-            preferredCameraDevice: CameraDevice.front,
-            maxWidth: 1280,
-            imageQuality: 85);
-    if (file == null) return;
-
-    final bytes = await file.readAsBytes();
-    final t = DateTime.now();
-    setState(() {
-      photoBase64 = 'data:image/jpeg;base64,${base64Encode(bytes)}';
-      photoSource = 'camera';
-      photoTimestamp =
-          '${t.day.toString().padLeft(2, '0')}/${t.month.toString().padLeft(2, '0')}/${t.year} '
-          '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}:${t.second.toString().padLeft(2, '0')}';
-      error = '';
-    });
-    if (gps == null) _startGps();
-  }
-
-  // จำนวนนาทีที่ทำงาน (ใช้คำนวณทั้ง hoursText และเบี้ยเลี้ยง)
-  int? get totalMinutes {
-    final p = picked;
-    if (p == null) return null;
-    final parts = (p['startTime'] as String).split(':');
-    var startMin = int.parse(parts[0]) * 60 + int.parse(parts[1]);
-    var endMin = time.hour * 60 + time.minute;
-    if (endMin <= startMin) endMin += 24 * 60;
-    return endMin - startMin;
-  }
-
-  String? get hoursText {
-    final total = totalMinutes;
-    if (total == null) return null;
-    final h = total ~/ 60, m = total % 60;
-    if (h == 0) return '$m นาที';
-    if (m == 0) return '$h ชม.';
-    return '$h ชม. $m นาที';
-  }
-
-  // ── เงื่อนไขเบี้ยเลี้ยง (เฉพาะบริษัท 3E Innovation) ──
-  //   ออกหน้างาน (field)   → ได้ 80 บาทเสมอ ไม่กำหนดเวลา
-  //   รับเบี้ยเลี้ยง (normal) → ต้องทำงาน ≥ 3 ชม. ถึงได้ 80 บาท
-  static const int allowanceBaht = 80;
-  static const int allowanceMinHours = 3;
-
-  bool get allowanceEligible {
-    if (!showWorktype || worktype.isEmpty) return false;
-    if (worktype == 'field') return true; // ออกหน้างาน — ได้เลย
-    return (totalMinutes ?? 0) >= allowanceMinHours * 60; // รับเบี้ยเลี้ยง ≥3ชม.
-  }
-
-  int get allowanceAmount => allowanceEligible ? allowanceBaht : 0;
-
-  // ข้อความที่จะบันทึกลงชีต (คอลัมน์เบี้ยเลี้ยง)
-  String _allowanceLabel() {
-    if (!showWorktype || worktype.isEmpty) return '';
-    if (worktype == 'field') {
-      return 'เบี้ยเลี้ยงออกหน้างาน $allowanceBaht บาท';
-    }
-    return allowanceEligible
-        ? 'รับเบี้ยเลี้ยง $allowanceBaht บาท'
-        : 'ไม่ได้รับเบี้ยเลี้ยง';
-  }
-
-  Future<void> _submit() async {
-    setState(() => error = '');
-    if (photoBase64 == null) {
-      setState(() => error = 'กรุณาถ่ายรูปยืนยันก่อน');
-      return;
-    }
-    if (gps == null) {
-      setState(() => error = 'ยังไม่มีพิกัด GPS — แตะป้าย GPS เพื่อลองใหม่');
-      return;
-    }
-    final gpsCoords =
-        '${gps!.latitude.toStringAsFixed(6)}, ${gps!.longitude.toStringAsFixed(6)}';
-    final mapsUrl =
-        'https://maps.google.com/?q=${gps!.latitude},${gps!.longitude}';
-
-    Map<String, dynamic> data;
-    String action;
-    if (isClockOut) {
-      final p = picked;
-      if (p == null) {
-        setState(() => error = 'กรุณาเลือกชื่อพนักงาน');
-        return;
-      }
-      if (showWorktype && worktype.isEmpty) {
-        setState(() => error = 'กรุณาเลือกประเภทเบี้ยเลี้ยง');
-        return;
-      }
-      action = 'clockOut';
-      data = {
-        'id': p['id'],
-        'employeeName': p['employeeName'],
-        'otDate': p['otDate'],
-        'endTime': _timeStr(time),
-        'recorderId': (currentUser?['employee_id'] ?? '').toString(),
-        'workDetail': '',
-        'allowance': _allowanceLabel(),
-        'gpsCoords': gpsCoords,
-        'address': mapsUrl,
-        'selfieBase64': photoBase64,
-        'photoTimestamp': photoTimestamp,
-        'photoSource': photoSource,
-      };
-    } else {
-      if (nameCtrl.text.trim().isEmpty) {
-        setState(() => error = 'กรุณากรอกชื่อพนักงาน');
-        return;
-      }
-      if (supervisorCtrl.text.trim().isEmpty) {
-        setState(() => error = 'กรุณากรอกชื่อหัวหน้า');
-        return;
-      }
-      if (company.isEmpty) {
-        setState(() => error = 'กรุณาเลือกบริษัท');
-        return;
-      }
-      action = 'clockIn';
-      data = {
-        'otDate': _dateStr(otDate),
-        'employeeName': nameCtrl.text.trim(),
-        'supervisorName': supervisorCtrl.text.trim(),
-        'company': company,
-        'department': department,
-        'recorderId': (currentUser?['employee_id'] ?? '').toString(),
-        'startTime': _timeStr(time),
-        'workDetail': detailCtrl.text.trim(),
-        'allowance': '',
-        'gpsCoords': gpsCoords,
-        'address': mapsUrl,
-        'selfieBase64': photoBase64,
-        'photoTimestamp': photoTimestamp,
-        'photoSource': photoSource,
-      };
-    }
-
-    setState(() => busy = true);
-    try {
-      final res = await apiCall(action, data);
-      setState(() => busy = false);
-      if (res['success'] == true) {
-        if (!mounted) return;
-        await showCupertinoDialog(
-          context: context,
-          builder: (_) => CupertinoAlertDialog(
-            title: Text(isClockOut ? 'เลิกงานสำเร็จ' : 'เริ่มงานแล้ว'),
-            content: Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Text(isClockOut
-                  ? 'บันทึกเรียบร้อย\nรวมเวลา ${res['hours'] ?? hoursText ?? ''}'
-                  : 'บันทึกเรียบร้อย\nกลับมากด "เลิกงาน" เมื่อทำเสร็จ'),
-            ),
-            actions: [
-              CupertinoDialogAction(
-                isDefaultAction: true,
-                onPressed: () => Navigator.pop(context),
-                child: const Text('ตกลง'),
-              ),
-            ],
-          ),
-        );
-        if (mounted) Navigator.pop(context);
-      } else {
-        setState(
-            () => error = 'บันทึกไม่สำเร็จ: ${res['message'] ?? 'ลองใหม่'}');
-      }
-    } catch (e) {
-      setState(() {
-        busy = false;
-        error = 'บันทึกไม่สำเร็จ: $e';
-      });
-    }
-  }
-
-  void _showSheet(Widget child, {double height = 300}) {
-    showCupertinoModalPopup(
-      context: context,
-      builder: (_) => Container(
-        height: height,
-        decoration: const BoxDecoration(
-          color: CupertinoColors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            children: [
-              Container(
-                decoration: const BoxDecoration(
-                  border: Border(
-                      bottom:
-                          BorderSide(color: Color(0xFFE5E9F2), width: 0.5)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    CupertinoButton(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 10),
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('เสร็จสิ้น',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w600, color: tOrange)),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(child: child),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _pickDate() => _showSheet(CupertinoDatePicker(
-        mode: CupertinoDatePickerMode.date,
-        initialDateTime: otDate,
-        minimumDate: DateTime(2024),
-        maximumDate: DateTime(2030),
-        onDateTimeChanged: (d) {
-          setState(() => otDate = d);
-          if (isClockOut) _loadActive();
-        },
-      ));
-
-  void _pickTime() => _showSheet(CupertinoDatePicker(
-        mode: CupertinoDatePickerMode.time,
-        use24hFormat: true,
-        initialDateTime: time,
-        onDateTimeChanged: (t) => setState(() => time = t),
-      ));
-
-  void _pickCompany() {
-    const placeholder = 'เลือกบริษัท';
-    final items = [placeholder, ...companies];
-    _showSheet(CupertinoPicker(
-      itemExtent: 38,
-      scrollController: FixedExtentScrollController(
-          initialItem: company.isEmpty ? 0 : companies.indexOf(company) + 1),
-      onSelectedItemChanged: (i) => setState(() {
-        company = i == 0 ? '' : companies[i - 1];
-        worktype = '';
-      }),
-      children: items
-          .map((c) => Center(
-              child: Text(c,
-                  style: TextStyle(
-                      fontSize: 19,
-                      color: c == placeholder
-                          ? const Color(0xFFAEB6C6)
-                          : tText))))
-          .toList(),
-    ));
-  }
-
-  void _pickEmployee() {
-    if (activeList.isEmpty) return;
-    _showSheet(CupertinoPicker(
-      itemExtent: 38,
-      scrollController: FixedExtentScrollController(
-          initialItem: selectedIdx < 0 ? 0 : selectedIdx),
-      onSelectedItemChanged: (i) => setState(() {
-        selectedIdx = i;
-        worktype = '';
-      }),
-      children: activeList
-          .map((p) => Center(
-              child: Text('${p['employeeName']} · ${p['startTime']}',
-                  style: const TextStyle(fontSize: 17))))
-          .toList(),
-    ));
-    if (selectedIdx < 0) setState(() => selectedIdx = 0);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final routeAnim =
-        ModalRoute.of(context)?.animation ?? kAlwaysCompleteAnimation;
-    return CupertinoPageScaffold(
-      child: Column(
-        children: [
-          _header(context, routeAnim),
-          Expanded(
-            child: AnimatedBuilder(
-              animation: routeAnim,
-              builder: (context, child) {
-                final popping = routeAnim.status == AnimationStatus.reverse;
-                final t = popping
-                    ? 1.0
-                    : const Interval(0.12, 1.0, curve: kSmooth)
-                        .transform(routeAnim.value.clamp(0.0, 1.0));
-                return Opacity(
-                  opacity: t,
-                  child: Transform.translate(
-                    offset: Offset(0, (1 - t) * 26),
-                    child: child,
-                  ),
-                );
-              },
-              child: LayoutBuilder(builder: (context, c) {
-              final wide = c.maxWidth >= kWide;
-              if (!wide) {
-                return ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-                  children: [..._infoCards(), ..._photoAndSubmit()],
-                );
-              }
-              return SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1000),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                              flex: 11,
-                              child: Column(children: _infoCards())),
-                          const SizedBox(width: 24),
-                          Expanded(
-                              flex: 9,
-                              child: Column(children: _photoAndSubmit())),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _header(BuildContext context, Animation<double> routeAnim) {
-    return AnimatedBuilder(
-      animation: routeAnim,
-      builder: (context, child) {
-        final popping = routeAnim.status == AnimationStatus.reverse;
-        final t = popping ? 1.0 : kSmooth.transform(routeAnim.value.clamp(0.0, 1.0));
-        final extra = 300.0 * (1 - t);
-        final radius = 24.0 + 8.0 * (1 - t);
-        return Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            gradient: _headGrad,
-            borderRadius:
-                BorderRadius.vertical(bottom: Radius.circular(radius)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [child!, SizedBox(height: extra)],
-          ),
-        );
-      },
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 6, 16, 16),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Align(
-                alignment: Alignment.center,
-                child: Text(
-                  isClockOut ? 'เลิกงาน OT' : 'เริ่มงาน OT',
-                  style: const TextStyle(
-                      fontSize: 19,
-                      fontWeight: FontWeight.w700,
-                      color: CupertinoColors.white),
-                ),
-              ),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: CupertinoButton(
-                  padding: const EdgeInsets.all(8),
-                  onPressed: () => Navigator.pop(context),
-                  child: const Icon(Icons.arrow_back_ios_new_rounded,
-                      color: CupertinoColors.white, size: 26),
-                ),
-              ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: GestureDetector(
-                  onTap: _startGps,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0x2EFFFFFF),
-                      borderRadius: BorderRadius.circular(99),
-                      border: Border.all(color: const Color(0x4DFFFFFF)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                            gpsOk
-                                ? Icons.my_location_rounded
-                                : Icons.location_searching_rounded,
-                            size: 13,
-                            color: gpsOk
-                                ? const Color(0xFF8EF0B0)
-                                : const Color(0xFFFFD56A)),
-                        const SizedBox(width: 5),
-                        Text(gpsStatus,
-                            style: TextStyle(
-                                fontSize: 12,
-                                color: gpsOk
-                                    ? const Color(0xFF8EF0B0)
-                                    : const Color(0xFFFFD56A))),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _card({required String title, required List<Widget> children}) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: CupertinoColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: tCreamLine),
-        boxShadow: const [
-          BoxShadow(
-              color: Color(0x0D0F172A), blurRadius: 12, offset: Offset(0, 4)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                  width: 3.5,
-                  height: 16,
-                  decoration: BoxDecoration(
-                      color: tGold,
-                      borderRadius: BorderRadius.circular(2))),
-              const SizedBox(width: 8),
-              Text(title,
-                  style: const TextStyle(
-                      fontSize: 15.5,
-                      fontWeight: FontWeight.w700,
-                      color: tDark)),
-            ],
-          ),
-          const SizedBox(height: 14),
-          ...children,
-        ],
-      ),
-    );
-  }
-
-  Widget _fieldBox({
-    required String label,
-    required Widget child,
-    VoidCallback? onTap,
-    bool chevron = false,
-  }) {
-    final box = Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: tField,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFF8F5EF)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label,
-                    style: const TextStyle(fontSize: 12, color: tText2)),
-                const SizedBox(height: 2),
-                child,
-              ],
-            ),
-          ),
-          if (chevron)
-            const Icon(Icons.keyboard_arrow_down_rounded,
-                size: 15, color: tText2),
-        ],
-      ),
-    );
-    return onTap == null ? box : GestureDetector(onTap: onTap, child: box);
-  }
-
-  Widget _valueText(String v, {Color color = tText, FontWeight w = FontWeight.w600}) =>
-      Text(v, style: TextStyle(fontSize: 16, fontWeight: w, color: color));
-
-  Widget _textField(TextEditingController ctrl, String placeholder,
-      {int maxLines = 1}) {
-    return CupertinoTextField(
-      controller: ctrl,
-      placeholder: placeholder,
-      maxLines: maxLines,
-      padding: EdgeInsets.zero,
-      style: const TextStyle(
-          fontSize: 16, fontWeight: FontWeight.w600, color: tText),
-      placeholderStyle: const TextStyle(
-          fontSize: 16, color: Color(0xFFAEB6C6), fontWeight: FontWeight.w400),
-      decoration: const BoxDecoration(color: Color(0x00000000)),
-    );
-  }
-
-  List<Widget> _infoCards() => [
-        _card(
-          title: 'ข้อมูลพนักงาน',
-          children: [
-            _fieldBox(
-              label: 'วันที่',
-              chevron: true,
-              onTap: _pickDate,
-              child: _valueText(_dateThai(otDate)),
-            ),
-            if (!isClockOut) ...[
-              _fieldBox(
-                  label: 'ชื่อพนักงาน',
-                  child: _textField(nameCtrl, 'ชื่อ - นามสกุล')),
-              _fieldBox(
-                  label: 'หัวหน้า',
-                  child: _textField(supervisorCtrl, 'ชื่อหัวหน้า')),
-              _fieldBox(
-                label: 'บริษัท',
-                chevron: true,
-                onTap: _pickCompany,
-                child: _valueText(company.isEmpty ? 'แตะเพื่อเลือก' : company,
-                    color: company.isEmpty ? const Color(0xFFAEB6C6) : tText,
-                    w: company.isEmpty ? FontWeight.w400 : FontWeight.w600),
-              ),
-            ] else ...[
-              _fieldBox(
-                label: 'พนักงาน',
-                chevron: true,
-                onTap: _pickEmployee,
-                child: loadingActive
-                    ? const CupertinoActivityIndicator()
-                    : _valueText(
-                        activeList.isEmpty
-                            ? 'ไม่มีคนเริ่มงาน'
-                            : (picked == null
-                                ? 'แตะเพื่อเลือก'
-                                : '${picked!['employeeName']}'),
-                        color: picked == null
-                            ? const Color(0xFFAEB6C6)
-                            : tText,
-                        w: picked == null
-                            ? FontWeight.w400
-                            : FontWeight.w600),
-              ),
-              if (picked != null)
-                _fieldBox(
-                  label: 'เริ่มงานไว้เมื่อ',
-                  child: _valueText('${picked!['startTime']} น.',
-                      color: tSage, w: FontWeight.w700),
-                ),
-            ],
-            _fieldBox(
-              label: isClockOut ? 'เวลาเลิกงาน' : 'เวลาเริ่มงาน',
-              chevron: true,
-              onTap: _pickTime,
-              child: _valueText('${_timeStr(time)} น.',
-                  color: tBlueG, w: FontWeight.w700),
-            ),
-            if (isClockOut && hoursText != null)
-              _fieldBox(
-                label: 'เวลารวม',
-                child: _valueText(hoursText!,
-                    color: tGold, w: FontWeight.w700),
-              ),
-          ],
-        ),
-        if (isClockOut && showWorktype)
-          _card(
-            title: 'ประเภทเบี้ยเลี้ยง',
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                      child: _chip('💵 รับเบี้ยเลี้ยง', 'normal')),
-                  const SizedBox(width: 10),
-                  Expanded(child: _chip('🚗 ออกหน้างาน', 'field')),
-                ],
-              ),
-            ],
-          ),
-        if (!isClockOut)
-          _card(
-            title: 'รายละเอียดงาน',
-            children: [
-              _fieldBox(
-                label: 'งานที่ทำในช่วง OT',
-                child: _textField(detailCtrl, 'อธิบายงานที่ทำ...',
-                    maxLines: 3),
-              ),
-            ],
-          ),
-      ];
-
-  Widget _chip(String text, String value) {
-    final on = worktype == value;
-    return GestureDetector(
-      onTap: () => setState(() => worktype = value),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: on ? accent : tField,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: on ? accent : const Color(0xFFF8F5EF)),
-        ),
-        child: Text(text,
-            style: TextStyle(
-                fontSize: 14.5,
-                fontWeight: on ? FontWeight.w700 : FontWeight.w400,
-                color: on ? CupertinoColors.white : tText)),
-      ),
-    );
-  }
-
-  List<Widget> _photoAndSubmit() => [
-        _card(
-          title: 'ยืนยันตัวตน',
-          children: [
-            if (photoBase64 == null)
-              GestureDetector(
-                onTap: _pickPhoto,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 28),
-                  decoration: BoxDecoration(
-                    color: tOrangeSoft,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFFE4D9BD)),
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 60,
-                        height: 60,
-                        decoration: BoxDecoration(
-                            color: accent, shape: BoxShape.circle),
-                        child: const Icon(Icons.photo_camera_rounded,
-                            color: CupertinoColors.white, size: 28),
-                      ),
-                      const SizedBox(height: 10),
-                      Text('ถ่ายรูปยืนยันตัวตน',
-                          style: TextStyle(
-                              fontSize: 15.5,
-                              fontWeight: FontWeight.w700,
-                              color: accent)),
-                      const Text('ต้องถ่ายรูปสดเท่านั้น',
-                          style:
-                              TextStyle(fontSize: 12.5, color: tText2)),
-                    ],
-                  ),
-                ),
-              )
-            else
-              Column(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.memory(
-                      base64Decode(photoBase64!.split(',').last),
-                      height: 280,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text('📸 ถ่ายสด · $photoTimestamp',
-                      style:
-                          const TextStyle(fontSize: 12, color: tText2)),
-                  CupertinoButton(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    onPressed: () {
-                      setState(() => photoBase64 = null);
-                      _pickPhoto();
-                    },
-                    child: Text('ถ่ายใหม่',
-                        style: TextStyle(
-                            color: accent, fontWeight: FontWeight.w600)),
-                  ),
-                ],
-              ),
-          ],
-        ),
-        if (error.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: Row(
-              children: [
-                const Icon(Icons.error_rounded,
-                    size: 16, color: tRed),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(error,
-                      style:
-                          const TextStyle(color: tRed, fontSize: 13)),
-                ),
-              ],
-            ),
-          ),
-        GestureDetector(
-          onTap: busy ? null : _submit,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 15),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              gradient: btnGrad,
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                    color: accent.withOpacity(0.35),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6)),
-              ],
-            ),
-            child: busy
-                ? const CupertinoActivityIndicator(
-                    color: CupertinoColors.white)
-                : Text(isClockOut ? 'บันทึกเลิกงาน' : 'เริ่มงาน OT',
-                    style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: CupertinoColors.white)),
-          ),
-        ),
-      ];
 }
+
+function goHome(){
+  showPg('pg-home');
+  tickClock();
+  if(!clkIv) clkIv=setInterval(tickClock,1000);
+}
+
+/* ══════════════════════════════════════
+   CLOCK
+══════════════════════════════════════ */
+function tickClock(){
+  const n=new Date();
+  el('clk-t').textContent=pad(n.getHours())+':'+pad(n.getMinutes())+':'+pad(n.getSeconds());
+  el('clk-d').textContent='วัน'+TH_DAYS[n.getDay()]+'ที่ '+n.getDate()+' '+TH_MON[n.getMonth()]+' '+(n.getFullYear()+543);
+}
+
+/* ══════════════════════════════════════
+   LOGOUT
+══════════════════════════════════════ */
+function confirmLogout(){
+  showDlg('ออกจากระบบ','ต้องการออกจากระบบใช่ไหม?','ออกจากระบบ','danger',()=>{
+    currentUser=null; pin=''; empId=''; empName=''; empInp.value='';
+    el('stp-pin').classList.remove('on'); el('stp-id').classList.add('on');
+    hideErr(); if(clkIv){ clearInterval(clkIv); clkIv=null; }
+    showPg('pg-login');
+  },true);
+}
+
+/* ══════════════════════════════════════
+   FORM
+══════════════════════════════════════ */
+function openForm(co){
+  isClockOut=co;
+  otDate=new Date(); otTime=new Date();
+  company=''; worktype=''; photoB64=null; photoTs='';
+  activeList=[]; selIdx=-1; fmBusy=false;
+
+  department='';
+  if(!isClockOut&&currentUser){
+    el('inp-name').value=currentUser.full_name||'';
+    department=currentUser.position||'';
+  }else{ el('inp-name').value=''; }
+  el('inp-sup').value=''; el('inp-dtl').value='';
+
+  el('form-ttl').textContent=isClockOut?'เลิกงาน OT':'เริ่มงาน OT';
+  el('tlabel').textContent=isClockOut?'เวลาเลิกงาน':'เวลาเริ่มงาน';
+  const sb=el('sub-btn');
+  sb.textContent=isClockOut?'บันทึกเลิกงาน':'เริ่มงาน OT';
+  sb.className='sub-btn '+(isClockOut?'co':'ci');
+
+  el('ph-circ').className='photo-circ'+(isClockOut?' g':'');
+  el('ph-lbl').className='photo-lbl'+(isClockOut?' g':'');
+  el('btn-rt').className='btn-rt'+(isClockOut?' g':'');
+
+  el('ci-flds').style.display=isClockOut?'none':'block';
+  el('co-flds').style.display=isClockOut?'block':'none';
+  el('dtl-card').style.display=isClockOut?'none':'block';
+  el('allw-card').style.display='none';
+  el('hrs-fld').style.display='none';
+  el('st-fld').style.display='none';
+
+  updDateDisp(); updTimeDisp(); updCoDisp(); updEmpDisp();
+  resetPhoto(); setFmErr('');
+  setGpsUI(gps,gpsOk,gps?`±${Math.round(gps.coords.accuracy)} ม.`:'กำลังหา GPS...');
+
+  showPg('pg-form');
+  startGps();
+  if(isClockOut) loadActive();
+}
+
+function goBack(){ stopCamera(); showPg('pg-home'); }
+
+/* ── GPS ── */
+function setGpsUI(pos,ok,msg){
+  gps=pos; gpsOk=ok;
+  el('gps-dot').className='gps-dot'+(ok?' ok':'');
+  el('gps-txt').className='gps-txt'+(ok?' ok':'');
+  el('gps-txt').textContent=msg;
+}
+function startGps(){
+  if(!navigator.geolocation){ setGpsUI(null,false,'ไม่รองรับ GPS'); return; }
+  setGpsUI(null,false,'กำลังหา GPS...');
+  navigator.geolocation.getCurrentPosition(
+    p=>setGpsUI(p,true,`±${Math.round(p.coords.accuracy)} ม.`),
+    e=>setGpsUI(null,false,e.code===1?'ไม่ได้รับอนุญาต':'หาไม่พบ — แตะลองใหม่'),
+    {enableHighAccuracy:true,timeout:12000,maximumAge:0}
+  );
+}
+function retryGps(){ startGps(); }
+
+/* ── Active list (clock-out) ── */
+async function loadActive(){
+  el('disp-emp').textContent='กำลังโหลด...';
+  el('disp-emp').className='fv ph';
+  try{
+    const res=await fetch(OT_API,{
+      method:'POST',redirect:'follow',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'getActiveClockIns',otDate:dateStr(otDate),recorderId:(currentUser?.employee_id||'').toString()})
+    });
+    const j=await res.json();
+    activeList=(j.data||[]).map(e=>({...e}));
+    selIdx=activeList.length>0?0:-1;
+    updEmpDisp();
+  }catch(e){ activeList=[]; selIdx=-1; updEmpDisp(); }
+}
+
+/* ── Displays ── */
+function updDateDisp(){ el('disp-date').textContent=dateThai(otDate); el('disp-date').className='fv'; }
+function updTimeDisp(){
+  el('disp-time').textContent=timeStr(otTime)+' น.';
+  el('disp-time').className='fv blu';
+  if(isClockOut) updHours();
+}
+function updHours(){
+  const p=activeList[selIdx];
+  if(!p){ el('hrs-fld').style.display='none'; return; }
+  const[h,m]=p.startTime.split(':').map(Number);
+  let sm=h*60+m, em=otTime.getHours()*60+otTime.getMinutes();
+  if(em<=sm) em+=1440;
+  const tot=em-sm, hh=Math.floor(tot/60), mm=tot%60;
+  el('disp-hrs').textContent=hh===0?`${mm} นาที`:mm===0?`${hh} ชม.`:`${hh} ชม. ${mm} นาที`;
+  el('hrs-fld').style.display='block';
+  updAllowCard();
+}
+function updCoDisp(){
+  el('disp-co').textContent=company||'แตะเพื่อเลือก';
+  el('disp-co').className='fv'+(company?'':' ph');
+  updAllowCard();
+}
+function updEmpDisp(){
+  const p=activeList[selIdx];
+  if(!activeList.length){ el('disp-emp').textContent='ไม่มีคนเริ่มงาน'; el('disp-emp').className='fv ph'; }
+  else if(!p){ el('disp-emp').textContent='แตะเพื่อเลือก'; el('disp-emp').className='fv ph'; }
+  else{ el('disp-emp').textContent=p.employeeName; el('disp-emp').className='fv'; }
+  if(p){ el('disp-st').textContent=p.startTime+' น.'; el('st-fld').style.display='block'; updHours(); }
+  else{ el('st-fld').style.display='none'; el('hrs-fld').style.display='none'; el('allw-card').style.display='none'; }
+}
+function updAllowCard(){
+  const selCo=isClockOut?(activeList[selIdx]?.company||''):company;
+  el('allw-card').style.display=(isClockOut&&selCo===ALLOW_CO)?'block':'none';
+}
+function selWT(w){
+  worktype=w;
+  el('chip-n').classList.toggle('on',w==='normal');
+  el('chip-f').classList.toggle('on',w==='field');
+}
+
+/* ── Photo ── */
+function resetPhoto(){
+  photoB64=null; photoTs='';
+  el('ph-placeholder').style.display='';
+  el('ph-prev').style.display='none';
+  el('ph-rt-row').style.display='none';
+}
+function showPhoto(b64,ts){
+  photoB64=b64; photoTs=ts;
+  el('ph-placeholder').style.display='none';
+  el('ph-img').src=b64;
+  el('ph-prev').style.display='block';
+  el('ph-ts').textContent='📸 ถ่ายสด · '+ts;
+  el('ph-rt-row').style.display='block';
+}
+function retakePhoto(){ resetPhoto(); openCamera(); }
+function nowTs(){
+  const n=new Date();
+  return pad(n.getDate())+'/'+pad(n.getMonth()+1)+'/'+n.getFullYear()+' '+pad(n.getHours())+':'+pad(n.getMinutes())+':'+pad(n.getSeconds());
+}
+
+/* ── Camera ── */
+async function openCamera(){
+  el('cam-modal').classList.add('on');
+  try{
+    camStream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:'user',width:{ideal:1280},height:{ideal:720}},audio:false
+    });
+    el('cam-vid').srcObject=camStream;
+    await el('cam-vid').play();
+  }catch(e){
+    el('cam-modal').classList.remove('on');
+    const inp=document.createElement('input');
+    inp.type='file'; inp.accept='image/*'; inp.capture='user';
+    inp.onchange=()=>{
+      if(!inp.files[0]) return;
+      const r=new FileReader();
+      r.onload=()=>showPhoto(r.result,nowTs());
+      r.readAsDataURL(inp.files[0]);
+    };
+    inp.click();
+  }
+}
+function capturePhoto(){
+  const vid=el('cam-vid'), cnv=el('cap-cnv');
+  cnv.width=vid.videoWidth||640; cnv.height=vid.videoHeight||480;
+  cnv.getContext('2d').drawImage(vid,0,0,cnv.width,cnv.height);
+  closeCamera();
+  showPhoto(cnv.toDataURL('image/jpeg',.85),nowTs());
+}
+function stopCamera(){ if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; } }
+function closeCamera(){ stopCamera(); el('cam-modal').classList.remove('on'); }
+
+/* ── Pickers ── */
+function openDateSheet(){
+  const inp=el('dt-inp');
+  inp.value=dateStr(otDate);
+  inp.onchange=()=>{
+    if(!inp.value) return;
+    const[y,m,d]=inp.value.split('-').map(Number);
+    otDate=new Date(y,m-1,d); updDateDisp();
+    if(isClockOut) loadActive();
+  };
+  el('dt-bd').classList.add('on');
+}
+function closeDt(e){ if(e&&e.target!==el('dt-bd')) return; el('dt-bd').classList.remove('on'); }
+
+function openTimeSheet(){
+  const inp=el('tm-inp');
+  inp.value=timeStr(otTime);
+  inp.onchange=()=>{
+    if(!inp.value) return;
+    const[h,m]=inp.value.split(':').map(Number);
+    otTime=new Date(); otTime.setHours(h,m,0,0); updTimeDisp();
+  };
+  el('tm-bd').classList.add('on');
+}
+function closeTm(e){ if(e&&e.target!==el('tm-bd')) return; el('tm-bd').classList.remove('on'); }
+
+function buildBsList(items){
+  const lst=el('bs-list'); lst.innerHTML='';
+  items.forEach(it=>{
+    const div=document.createElement('div');
+    div.className='bsheet-item'+(it.sel?' sel':'')+(it.ph?' ph':'');
+    div.textContent=it.label;
+    div.onclick=()=>{ it.cb&&it.cb(); closeBs(); };
+    lst.appendChild(div);
+  });
+  el('bs-bd').classList.add('on');
+}
+function openCompanySheet(){
+  buildBsList([
+    {label:'(เลือกบริษัท)',sel:!company,ph:true,cb:()=>{ company=''; worktype=''; updCoDisp(); }},
+    ...COMPANIES.map(c=>({label:c,sel:c===company,cb:()=>{ company=c; worktype=''; updCoDisp(); }}))
+  ]);
+}
+function openEmpSheet(){
+  if(!activeList.length) return;
+  buildBsList(activeList.map((e,i)=>({
+    label:`${e.employeeName} · ${e.startTime}`,sel:i===selIdx,
+    cb:()=>{ selIdx=i; worktype=''; updEmpDisp(); updAllowCard(); }
+  })));
+}
+function closeBs(e){ if(e&&e.target!==el('bs-bd')) return; el('bs-bd').classList.remove('on'); }
+
+/* ── Allowance ── */
+function getAllowLabel(){
+  if(!isClockOut) return '';
+  const p=activeList[selIdx]; if(!p) return '';
+  if((p.company||'')!==ALLOW_CO) return '';
+  if(worktype==='field') return 'เบี้ยเลี้ยงออกหน้างาน 80 บาท';
+  if(worktype==='normal'){
+    const[h,m]=p.startTime.split(':').map(Number);
+    let sm=h*60+m, em=otTime.getHours()*60+otTime.getMinutes();
+    if(em<=sm) em+=1440;
+    return (em-sm)>=180?'รับเบี้ยเลี้ยง 80 บาท':'ไม่ได้รับเบี้ยเลี้ยง';
+  }
+  return '';
+}
+
+/* ── Form Error ── */
+function setFmErr(m){
+  el('f-err-msg').textContent=m;
+  el('f-err').style.display=m?'flex':'none';
+}
+
+/* ── Submit ── */
+async function submitForm(){
+  if(fmBusy) return;
+  setFmErr('');
+  if(!photoB64){ setFmErr('กรุณาถ่ายรูปยืนยันก่อน'); return; }
+  if(!gps){ setFmErr('ยังไม่มีพิกัด GPS — แตะป้าย GPS เพื่อลองใหม่'); return; }
+
+  const lat=gps.coords.latitude.toFixed(6), lon=gps.coords.longitude.toFixed(6);
+  const gpsCoords=`${lat}, ${lon}`;
+  const mapsUrl=`https://maps.google.com/?q=${lat},${lon}`;
+
+  let action,data;
+  if(isClockOut){
+    const p=activeList[selIdx];
+    if(!p){ setFmErr('กรุณาเลือกชื่อพนักงาน'); return; }
+    if((p.company||'')===ALLOW_CO&&!worktype){ setFmErr('กรุณาเลือกประเภทเบี้ยเลี้ยง'); return; }
+    action='clockOut';
+    data={
+      id:p.id,employeeName:p.employeeName,otDate:p.otDate,
+      endTime:timeStr(otTime),recorderId:(currentUser?.employee_id||'').toString(),
+      workDetail:'',allowance:getAllowLabel(),gpsCoords,address:mapsUrl,
+      selfieBase64:photoB64,photoTimestamp:photoTs,photoSource:'camera'
+    };
+  }else{
+    const name=el('inp-name').value.trim(), sup=el('inp-sup').value.trim();
+    if(!name){ setFmErr('กรุณากรอกชื่อพนักงาน'); return; }
+    if(!sup){ setFmErr('กรุณากรอกชื่อหัวหน้า'); return; }
+    if(!company){ setFmErr('กรุณาเลือกบริษัท'); return; }
+    action='clockIn';
+    data={
+      otDate:dateStr(otDate),employeeName:name,supervisorName:sup,
+      company,department,recorderId:(currentUser?.employee_id||'').toString(),
+      startTime:timeStr(otTime),workDetail:el('inp-dtl').value.trim(),
+      allowance:'',gpsCoords,address:mapsUrl,
+      selfieBase64:photoB64,photoTimestamp:photoTs,photoSource:'camera'
+    };
+  }
+
+  fmBusy=true;
+  const sb=el('sub-btn'); sb.disabled=true;
+  sb.innerHTML='<div class="sp"></div>';
+
+  try{
+    const res=await fetch(OT_API,{
+      method:'POST',redirect:'follow',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action,...data})
+    });
+    const j=await res.json();
+    fmBusy=false; sb.disabled=false;
+    sb.textContent=isClockOut?'บันทึกเลิกงาน':'เริ่มงาน OT';
+    if(j.success===true){
+      const msg=isClockOut
+        ?`บันทึกเรียบร้อย\nรวมเวลา ${j.hours||el('disp-hrs').textContent}`
+        :'บันทึกเรียบร้อย\nกลับมากด "เลิกงาน" เมื่อทำเสร็จ';
+      showDlg(isClockOut?'เลิกงานสำเร็จ':'เริ่มงานแล้ว',msg,'ตกลง','ok',()=>goBack(),false);
+    }else{
+      setFmErr('บันทึกไม่สำเร็จ: '+(j.message||'ลองใหม่'));
+    }
+  }catch(e){
+    fmBusy=false; sb.disabled=false;
+    sb.textContent=isClockOut?'บันทึกเลิกงาน':'เริ่มงาน OT';
+    setFmErr('บันทึกไม่สำเร็จ: '+e.message);
+  }
+}
+
+/* ══════════════════════════════════════
+   DIALOG
+══════════════════════════════════════ */
+function showDlg(ttl,msg,okTxt,type,onOk,cancel=true){
+  el('dlg-ttl').textContent=ttl;
+  el('dlg-msg').textContent=msg;
+  const okBtn=el('dlg-ok'), canBtn=el('dlg-cancel');
+  okBtn.textContent=okTxt; okBtn.className='dlg-btn '+type;
+  canBtn.style.display=cancel?'':'none';
+  okBtn.onclick=()=>{ closeDlg(); onOk&&onOk(); };
+  el('dlg-bd').classList.add('on');
+}
+function closeDlg(){ el('dlg-bd').classList.remove('on'); }
+
+/* ══════════════════════════════════════
+   TOAST
+══════════════════════════════════════ */
+let toastTm;
+function toast(m){
+  const t=el('toast'); t.textContent=m; t.classList.add('on');
+  clearTimeout(toastTm); toastTm=setTimeout(()=>t.classList.remove('on'),3000);
+}
+
+/* ══════════════════════════════════════
+   INIT
+══════════════════════════════════════ */
+['inp-name','inp-sup','inp-dtl'].forEach(id=>{
+  const e=el(id);
+  if(e) e.addEventListener('focus',()=>setTimeout(()=>e.scrollIntoView({behavior:'smooth',block:'center'}),300));
+});
+
+// If already in standalone mode (installed), hide install bar permanently
+if(window.matchMedia('(display-mode: standalone)').matches){
+  el('install-bar').style.display='none';
+}
+
+tickClock();
+</script>
+</body>
+</html>
