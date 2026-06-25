@@ -789,6 +789,82 @@
     }
     .toast.success { background: var(--green); }
     .toast.error { background: var(--red); }
+
+    /* ===== Employee Picker in Export Modal ===== */
+    .emp-picker {
+      border: 1px solid var(--line-2);
+      border-radius: var(--radius);
+      background: white;
+      max-height: 220px;
+      overflow-y: auto;
+      margin-bottom: 14px;
+    }
+    .emp-picker-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--line);
+      background: #fafafa;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    .emp-picker-header .ep-count {
+      font-size: 12px;
+      color: var(--ink-3);
+      font-weight: 400;
+    }
+    .emp-picker-header .ep-links {
+      display: flex;
+      gap: 10px;
+      font-size: 12px;
+    }
+    .emp-picker-header .ep-links a {
+      color: var(--link);
+      text-decoration: none;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .emp-picker-header .ep-links a:hover { text-decoration: underline; }
+    .emp-picker-search {
+      width: 100%;
+      padding: 7px 10px;
+      border: none;
+      border-bottom: 1px solid var(--line);
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+      background: white;
+    }
+    .emp-picker-search::placeholder { color: var(--ink-4); }
+    .emp-picker-search:focus { background: #fafafa; }
+    .emp-picker-list { padding: 2px 0; }
+    .emp-picker-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background 80ms;
+      user-select: none;
+    }
+    .emp-picker-item:hover { background: var(--hover); }
+    .emp-picker-item input[type=checkbox] {
+      accent-color: var(--ink);
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .emp-picker-item span { cursor: pointer; flex: 1; }
+    .emp-picker-empty {
+      padding: 20px 10px;
+      text-align: center;
+      color: var(--ink-4);
+      font-size: 13px;
+    }
   </style>
 </head>
 <body>
@@ -942,7 +1018,7 @@
     </div>
   </div>
 
-  <!-- Export Modal — เปลี่ยนจากรอบเดือนล็อกเป็นเลือกวันอิสระ -->
+  <!-- Export Modal -->
   <div class="modal-overlay" id="exportModal" onclick="if(event.target===this) closeExportModal()">
     <div class="modal">
       <div class="modal-header">
@@ -961,9 +1037,26 @@
         </div>
 
         <label for="expCompany">บริษัท</label>
-        <select id="expCompany" class="select" style="width:100%; height:38px; margin-bottom:14px;" onchange="updateExportCount()">
+        <select id="expCompany" class="select" style="width:100%; height:38px; margin-bottom:14px;" onchange="onExpCompanyChange()">
           <option value="">ทุกบริษัท</option>
         </select>
+
+        <div id="empPickerWrap" style="display:none;">
+        <label>พนักงาน</label>
+        <div class="emp-picker" id="empPicker">
+          <div class="emp-picker-header">
+            <span class="ep-count" id="epCount">ทั้งหมด</span>
+            <div class="ep-links">
+              <a onclick="selectAllEmployees()">เลือกทั้งหมด</a>
+              <a onclick="deselectAllEmployees()">ไม่เลือกทั้งหมด</a>
+            </div>
+          </div>
+          <input type="text" class="emp-picker-search" id="epSearch" placeholder="ค้นหาชื่อพนักงาน…" oninput="filterExpEmployees()">
+          <div class="emp-picker-list" id="epList">
+            <div class="emp-picker-empty">เลือกบริษัทก่อน หรือจะดาวน์โหลดทุกคน</div>
+          </div>
+        </div>
+        </div>
 
         <label for="expStatus">สถานะ</label>
         <select id="expStatus" class="select" style="width:100%; height:38px; margin-bottom:6px;" onchange="updateExportCount()">
@@ -1003,6 +1096,7 @@
 
     let allData = [];
     let currentAction = null;
+    let expSelectedEmployees = new Set(); // track selected employees for export
 
     function onStatusFilterChange() {
       updateStatusFilterStyle();
@@ -1060,6 +1154,7 @@
         const cached = readCache();
         if (cached && cached.data && cached.data.length) {
           allData = cached.data;
+          normalizeAllNames(allData);
           populateSupervisorFilter();
           populateCompanyFilter();
           renderTable();
@@ -1070,19 +1165,14 @@
       }
 
       if (!showedCache) {
-        body.innerHTML = `<tr><td colspan="13"><div class="empty"><div class="spinner"></div><div class="empty-desc">กำลังโหลดข้อมูล…</div></div></td></tr>`;
+        body.innerHTML = '<tr><td colspan="13"><div class="empty"><div class="spinner"></div><div class="empty-desc">กำลังโหลดข้อมูล…</div></div></td></tr>';
       }
 
       let timedOut = false;
       const t = setTimeout(() => {
         timedOut = true;
         if (!showedCache) {
-          body.innerHTML = `<tr><td colspan="13"><div class="empty">
-            <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-            <div class="empty-title">หมดเวลารอ</div>
-            <div class="empty-desc">เซิร์ฟเวอร์ไม่ตอบกลับภายใน 60 วินาที</div>
-            <button class="btn" onclick="loadData()">ลองใหม่</button>
-          </div></td></tr>`;
+          body.innerHTML = '<tr><td colspan="13"><div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="empty-title">หมดเวลารอ</div><div class="empty-desc">เซิร์ฟเวอร์ไม่ตอบกลับภายใน 60 วินาที</div><button class="btn" onclick="loadData()">ลองใหม่</button></div></td></tr>';
         }
         showRefreshing(false);
       }, 60000);
@@ -1093,17 +1183,13 @@
         clearTimeout(t);
         if (res.success) {
           allData = res.data;
-          saveCache(res.data);
+          normalizeAllNames(allData);
+          saveCache(allData);
           populateSupervisorFilter();
           populateCompanyFilter();
           renderTable();
         } else if (!showedCache) {
-          body.innerHTML = `<tr><td colspan="13"><div class="empty">
-            <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
-            <div class="empty-title">เซิร์ฟเวอร์แจ้ง error</div>
-            <div class="empty-desc">${escapeHtml(res.message || 'ไม่ทราบสาเหตุ')}</div>
-            <button class="btn" onclick="loadData()">ลองใหม่</button>
-          </div></td></tr>`;
+          body.innerHTML = '<tr><td colspan="13"><div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="empty-title">เซิร์ฟเวอร์แจ้ง error</div><div class="empty-desc">' + escapeHtml(res.message || 'ไม่ทราบสาเหตุ') + '</div><button class="btn" onclick="loadData()">ลองใหม่</button></div></td></tr>';
         } else {
           showToast(res.message || 'อัปเดตข้อมูลไม่สำเร็จ', 'error');
         }
@@ -1111,12 +1197,7 @@
         if (timedOut) return;
         clearTimeout(t);
         if (!showedCache) {
-          body.innerHTML = `<tr><td colspan="13"><div class="empty">
-            <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
-            <div class="empty-title">โหลดไม่สำเร็จ</div>
-            <div class="empty-desc">${escapeHtml(err.message || err)}</div>
-            <button class="btn" onclick="loadData()">ลองใหม่</button>
-          </div></td></tr>`;
+          body.innerHTML = '<tr><td colspan="13"><div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div><div class="empty-title">โหลดไม่สำเร็จ</div><div class="empty-desc">' + escapeHtml(err.message || err) + '</div><button class="btn" onclick="loadData()">ลองใหม่</button></div></td></tr>';
         } else {
           showToast('อัปเดตไม่สำเร็จ — แสดงข้อมูลล่าสุดที่บันทึกไว้', 'error');
         }
@@ -1168,7 +1249,7 @@
         const mins = minutesBetween(r.startTime, r.endTime);
         if (r.status === 'กำลังทำงาน') working++;
         else if (r.status === 'อนุมัติ') { approved++; approvedMin += mins; }
-        else if (r.status === 'ไม่อนุมัติ') { /* ไม่รวมชั่วโมง */ }
+        else if (r.status === 'ไม่อนุมัติ') { }
         else { pending++; pendingMin += mins; }
       });
       document.getElementById('sumTotal').innerHTML = total + ' <span class="stat-sub">คำขอ</span>';
@@ -1185,7 +1266,7 @@
         allData.map(r => (r.supervisor || '').trim()).filter(n => n.length > 0)
       )).sort((a, b) => a.localeCompare(b, 'th'));
       sel.innerHTML = '<option value="">ทุกหัวหน้า</option>' +
-        names.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+        names.map(n => '<option value="' + escapeHtml(n) + '">' + escapeHtml(n) + '</option>').join('');
       if (current && names.indexOf(current) !== -1) sel.value = current;
     }
 
@@ -1200,7 +1281,7 @@
       standardOrder.forEach(c => { if (fromData.indexOf(c) !== -1) ordered.push(c); });
       fromData.forEach(c => { if (ordered.indexOf(c) === -1) ordered.push(c); });
       sel.innerHTML = '<option value="">ทุกบริษัท</option>' +
-        ordered.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+        ordered.map(n => '<option value="' + escapeHtml(n) + '">' + escapeHtml(n) + '</option>').join('');
       if (current && ordered.indexOf(current) !== -1) sel.value = current;
     }
 
@@ -1255,18 +1336,9 @@
 
       if (filtered.length === 0) {
         if (statusF === '__open__') {
-          body.innerHTML = `<tr><td colspan="13"><div class="empty">
-            <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-            <div class="empty-title">ไม่มีงานค้างอยู่</div>
-            <div class="empty-desc">ทุกคำขอได้รับการดำเนินการแล้ว</div>
-            <a href="#" onclick="document.getElementById('statusFilter').value=''; onStatusFilterChange(); return false;">ดูทั้งหมด →</a>
-          </div></td></tr>`;
+          body.innerHTML = '<tr><td colspan="13"><div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><div class="empty-title">ไม่มีงานค้างอยู่</div><div class="empty-desc">ทุกคำขอได้รับการดำเนินการแล้ว</div><a href="#" onclick="document.getElementById(\'statusFilter\').value=\'\'; onStatusFilterChange(); return false;">ดูทั้งหมด →</a></div></td></tr>';
         } else {
-          body.innerHTML = `<tr><td colspan="13"><div class="empty">
-            <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div>
-            <div class="empty-title">ไม่พบข้อมูล</div>
-            <div class="empty-desc">ลองปรับตัวกรอง หรือล้างคำค้นหา</div>
-          </div></td></tr>`;
+          body.innerHTML = '<tr><td colspan="13"><div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div><div class="empty-title">ไม่พบข้อมูล</div><div class="empty-desc">ลองปรับตัวกรอง หรือล้างคำค้นหา</div></div></td></tr>';
         }
         return;
       }
@@ -1287,11 +1359,9 @@
         } else {
           const dots = (hasIn ? '<span class="dot dot-in"></span>' : '') +
                        (hasOut ? '<span class="dot dot-out"></span>' : '');
-          viewBtn = `<button class="btn-view" onclick="openPhotoModalById('${rid}')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><polyline points="21 15 16 10 5 21"/></svg>
-            <span>ดูรูป</span>
-            <span class="view-dots">${dots}</span>
-          </button>`;
+          viewBtn = '<button class="btn-view" onclick="openPhotoModalById(\'' + rid + '\')">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><polyline points="21 15 16 10 5 21"/></svg>' +
+            '<span>ดูรูป</span><span class="view-dots">' + dots + '</span></button>';
         }
 
         const isPending = r.status === 'รออนุมัติ';
@@ -1299,61 +1369,56 @@
 
         let timeRange;
         if (isWorking) {
-          timeRange = `<b>${escapeHtml(r.startTime)}</b><span class="arr">→</span><span style="color:#0369a1;">●</span>`;
+          timeRange = '<b>' + escapeHtml(r.startTime) + '</b><span class="arr">→</span><span style="color:#0369a1;">●</span>';
         } else if (r.startTime && r.endTime) {
-          timeRange = `<b>${escapeHtml(r.startTime)}</b><span class="arr">→</span><b>${escapeHtml(r.endTime)}</b>`;
+          timeRange = '<b>' + escapeHtml(r.startTime) + '</b><span class="arr">→</span><b>' + escapeHtml(r.endTime) + '</b>';
         } else {
           timeRange = '<span class="dim">—</span>';
         }
 
         let actions = '';
         if (isPending) {
-          actions = `
-            <button class="icon-btn approve" title="อนุมัติ" onclick="openActionById('${rid}', 'อนุมัติ')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            </button>
-            <button class="icon-btn reject" title="ไม่อนุมัติ" onclick="openActionById('${rid}', 'ไม่อนุมัติ')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>`;
+          actions = '<button class="icon-btn approve" title="อนุมัติ" onclick="openActionById(\'' + rid + '\', \'อนุมัติ\')">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>' +
+            '<button class="icon-btn reject" title="ไม่อนุมัติ" onclick="openActionById(\'' + rid + '\', \'ไม่อนุมัติ\')">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
         } else if (!isWorking) {
-          actions = `<button class="icon-btn" title="เปลี่ยนสถานะ" onclick="openActionById('${rid}', 'เปลี่ยน')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          </button>`;
+          actions = '<button class="icon-btn" title="เปลี่ยนสถานะ" onclick="openActionById(\'' + rid + '\', \'เปลี่ยน\')">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>';
         }
-        actions += `<button class="icon-btn delete" title="ลบ" onclick="deleteRow(${r.rowIndex}, '${rid}')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
-        </button>`;
+        actions += '<button class="icon-btn delete" title="ลบ" onclick="deleteRow(' + r.rowIndex + ', \'' + rid + '\')">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>';
 
         const supCell = r.supervisor ? escapeHtml(r.supervisor) : '<span class="dim">—</span>';
-        const compCell = r.company ? `<span class="company-tag">${escapeHtml(r.company)}</span>` : '<span class="dim">—</span>';
+        const compCell = r.company ? '<span class="company-tag">' + escapeHtml(r.company) + '</span>' : '<span class="dim">—</span>';
         let allowCell;
         if (hasAllowance(r)) {
           const amt = allowanceAmount(r);
           if (amt > 0) {
             const label = isFieldAllowance(r) ? '💰 +80 · ออกหน้างาน' : '💰 +80';
-            allowCell = `<span class="allowance-tag">${label}</span>`;
+            allowCell = '<span class="allowance-tag">' + label + '</span>';
           } else {
-            allowCell = `<span class="allowance-tag zero">+0</span>`;
+            allowCell = '<span class="allowance-tag zero">+0</span>';
           }
         } else {
           allowCell = '<span class="dim">—</span>';
         }
 
-        return `<tr>
-          <td class="mono hide-md">${escapeHtml(r.submittedAt)}</td>
-          <td>${escapeHtml(r.otDate)}</td>
-          <td class="col-name">${escapeHtml(r.employeeName || '—')}</td>
-          <td class="col-sup hide-sm">${supCell}</td>
-          <td>${compCell}</td>
-          <td class="col-time">${timeRange}</td>
-          <td class="col-hours">${escapeHtml(r.hours || (isWorking ? '—' : '—'))}</td>
-          <td class="col-detail hide-sm"><div class="clip" title="${escapeHtml(r.workDetail || '')}">${escapeHtml(r.workDetail || '—')}</div></td>
-          <td>${allowCell}</td>
-          <td>${viewBtn}</td>
-          <td><span class="badge ${badgeClass}">${escapeHtml(r.status)}</span></td>
-          <td class="hide-md" style="color:var(--ink-2);font-size: clamp(14px, 0.5vw + 10.5px, 14px);max-width:160px;">${escapeHtml(r.note || '—')}</td>
-          <td><div class="row-actions">${actions}</div></td>
-        </tr>`;
+        return '<tr>' +
+          '<td class="mono hide-md">' + escapeHtml(r.submittedAt) + '</td>' +
+          '<td>' + escapeHtml(r.otDate) + '</td>' +
+          '<td class="col-name">' + escapeHtml(r.employeeName || '—') + '</td>' +
+          '<td class="col-sup hide-sm">' + supCell + '</td>' +
+          '<td>' + compCell + '</td>' +
+          '<td class="col-time">' + timeRange + '</td>' +
+          '<td class="col-hours">' + escapeHtml(r.hours || '—') + '</td>' +
+          '<td class="col-detail hide-sm"><div class="clip" title="' + escapeHtml(r.workDetail || '') + '">' + escapeHtml(r.workDetail || '—') + '</div></td>' +
+          '<td>' + allowCell + '</td>' +
+          '<td>' + viewBtn + '</td>' +
+          '<td><span class="badge ' + badgeClass + '">' + escapeHtml(r.status) + '</span></td>' +
+          '<td class="hide-md" style="color:var(--ink-2);font-size:clamp(14px,0.5vw+10.5px,14px);max-width:160px;">' + escapeHtml(r.note || '—') + '</td>' +
+          '<td><div class="row-actions">' + actions + '</div></td>' +
+          '</tr>';
       }).join('');
     }
 
@@ -1525,17 +1590,9 @@
         }
 
         const photoHtml = selfieEmbed
-          ? `<img class="photo-block-img" src="${escapeHtml(selfieEmbed)}"
-                  onclick="showImage('${escapeJs(largeUrl)}')"
-                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" alt="${escapeHtml(label)}">
-             <div class="photo-block-empty" style="display:none;">
-               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><polyline points="21 15 16 10 5 21"/></svg>
-               <div>โหลดรูปไม่ได้</div>
-             </div>`
-          : `<div class="photo-block-empty">
-               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><polyline points="21 15 16 10 5 21"/></svg>
-               <div>ยังไม่มีรูป</div>
-             </div>`;
+          ? '<img class="photo-block-img" src="' + escapeHtml(selfieEmbed) + '" onclick="showImage(\'' + escapeJs(largeUrl) + '\')" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';" alt="' + escapeHtml(label) + '">' +
+            '<div class="photo-block-empty" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><polyline points="21 15 16 10 5 21"/></svg><div>โหลดรูปไม่ได้</div></div>'
+          : '<div class="photo-block-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><polyline points="21 15 16 10 5 21"/></svg><div>ยังไม่มีรูป</div></div>';
 
         let coords = '';
         if (gps && /^-?\d+\.?\d*\s*,\s*-?\d+\.?\d*$/.test(gps.trim())) {
@@ -1547,39 +1604,21 @@
 
         let mapHtml;
         if (coords) {
-          const embedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(coords)}&z=17&output=embed`;
-          const openUrl = mapUrl || `https://maps.google.com/?q=${encodeURIComponent(coords)}`;
-          mapHtml = `<div class="map-embed">
-            <iframe
-              src="${embedSrc}"
-              loading="lazy"
-              referrerpolicy="no-referrer-when-downgrade"
-              allowfullscreen></iframe>
-            <a class="map-open-btn" href="${escapeHtml(openUrl)}" target="_blank" rel="noopener" title="เปิดใน Google Maps">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-              <span>เปิดแผนที่</span>
-            </a>
-          </div>`;
+          const embedSrc = 'https://maps.google.com/maps?q=' + encodeURIComponent(coords) + '&z=17&output=embed';
+          const openUrl = mapUrl || 'https://maps.google.com/?q=' + encodeURIComponent(coords);
+          mapHtml = '<div class="map-embed"><iframe src="' + embedSrc + '" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>' +
+            '<a class="map-open-btn" href="' + escapeHtml(openUrl) + '" target="_blank" rel="noopener" title="เปิดใน Google Maps"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg><span>เปิดแผนที่</span></a></div>';
         } else {
-          mapHtml = `<div class="map-embed-empty">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <div>ไม่มีตำแหน่ง</div>
-          </div>`;
+          mapHtml = '<div class="map-embed-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><div>ไม่มีตำแหน่ง</div></div>';
         }
 
-        const timeRow = photoTime
-          ? `<div class="row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>${escapeHtml(photoTime)}</span></div>` : '';
+        const timeRow = photoTime ? '<div class="row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>' + escapeHtml(photoTime) + '</span></div>' : '';
+        const gpsRow = coords ? '<div class="row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span class="gps">' + escapeHtml(coords) + '</span></div>' : '';
 
-        const gpsRow = coords
-          ? `<div class="row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span class="gps">${escapeHtml(coords)}</span></div>`
-          : '';
-
-        return `<div class="photo-block ${kind}">
-          <div class="photo-block-header"><span class="marker"></span>${label}</div>
-          ${photoHtml}
-          ${mapHtml}
-          <div class="photo-block-footer">${timeRow}${gpsRow}</div>
-        </div>`;
+        return '<div class="photo-block ' + kind + '">' +
+          '<div class="photo-block-header"><span class="marker"></span>' + label + '</div>' +
+          photoHtml + mapHtml +
+          '<div class="photo-block-footer">' + timeRow + gpsRow + '</div></div>';
       }
 
       grid.innerHTML =
@@ -1600,18 +1639,197 @@
       setTimeout(() => t.className = 'toast ' + (type || ''), 2500);
     }
 
-    // ===== Export: เลือกวันอิสระ =====
+    // ===== Export with Employee Picker =====
+
+    // ===== Normalize: จับชื่อซ้ำ (เว้นวรรค, จุด, วงเล็บ, ตัวสะกดใกล้เคียง) =====
+
+    function normalizeName(s) {
+      // ตัดทุกอย่างที่ไม่ใช่ตัวอักษรไทย/อังกฤษ/ตัวเลข
+      return (s || '').replace(/[^\u0E01-\u0E59a-zA-Z0-9]/g, '').toLowerCase();
+    }
+
+    function levenshtein(a, b) {
+      if (a === b) return 0;
+      if (!a.length) return b.length;
+      if (!b.length) return a.length;
+      const m = a.length, n = b.length;
+      let prev = Array.from({length: n + 1}, (_, i) => i);
+      let curr = new Array(n + 1);
+      for (let i = 1; i <= m; i++) {
+        curr[0] = i;
+        for (let j = 1; j <= n; j++) {
+          curr[j] = a[i-1] === b[j-1]
+            ? prev[j-1]
+            : 1 + Math.min(prev[j-1], prev[j], curr[j-1]);
+        }
+        [prev, curr] = [curr, prev];
+      }
+      return prev[n];
+    }
+
+    function normalizeAllNames(data) {
+      function buildCanonicalMap(data, field) {
+        const freq = {};
+        data.forEach(r => {
+          const raw = (r[field] || '').trim();
+          if (!raw) return;
+          freq[raw] = (freq[raw] || 0) + 1;
+        });
+        const rawNames = Object.keys(freq);
+        if (!rawNames.length) return {};
+
+        // Step 1: จับกลุ่มด้วย normalizeName (ตัดเว้นวรรค/จุด/วงเล็บ)
+        const groups = {};
+        rawNames.forEach(name => {
+          const key = normalizeName(name);
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(name);
+        });
+
+        // Step 2: รวมกลุ่มที่ normKey ใกล้เคียงกัน (Levenshtein ≤ 2)
+        const gk = Object.keys(groups);
+        const par = new Int32Array(gk.length).fill(-1);
+        function find(i) { return par[i] < 0 ? i : (par[i] = find(par[i])); }
+        function union(a, b) { a = find(a); b = find(b); if (a !== b) par[b] = a; }
+
+        for (let i = 0; i < gk.length; i++) {
+          for (let j = i + 1; j < gk.length; j++) {
+            const a = gk[i], b = gk[j];
+            const mx = Math.max(a.length, b.length);
+            if (mx < 3) continue;
+            if (Math.abs(a.length - b.length) > 2) continue;
+            const d = levenshtein(a, b);
+            if (d <= 2 && d / mx < 0.25) union(i, j);
+          }
+        }
+
+        const finals = {};
+        gk.forEach((key, i) => {
+          const root = find(i);
+          if (!finals[root]) finals[root] = [];
+          finals[root].push(...groups[key]);
+        });
+
+        const canonMap = {};
+        Object.values(finals).forEach(members => {
+          let best = '', bestCount = 0;
+          members.forEach(name => {
+            if (freq[name] > bestCount) { best = name; bestCount = freq[name]; }
+          });
+          members.forEach(name => { canonMap[name] = best; });
+        });
+        return canonMap;
+      }
+
+      const empMap = buildCanonicalMap(data, 'employeeName');
+      const supMap = buildCanonicalMap(data, 'supervisor');
+      data.forEach(r => {
+        const en = (r.employeeName || '').trim();
+        if (en && empMap[en]) r.employeeName = empMap[en];
+        const sn = (r.supervisor || '').trim();
+        if (sn && supMap[sn]) r.supervisor = supMap[sn];
+      });
+    }
+
+    let expNameMap = {};
+
+    function getExpEmployeeNames(companyVal) {
+      let subset = allData;
+      if (companyVal) {
+        subset = allData.filter(r => (r.company || '').trim() === companyVal);
+      }
+      // ชื่อถูก normalize แล้วตอนโหลด ใช้ Set ธรรมดาได้เลย
+      const names = Array.from(new Set(
+        subset.map(r => (r.employeeName || '').trim()).filter(n => n.length > 0)
+      )).sort((a, b) => a.localeCompare(b, 'th'));
+      return names;
+    }
+
+    function onExpCompanyChange() {
+      const compVal = document.getElementById('expCompany').value;
+      const wrap = document.getElementById('empPickerWrap');
+      if (!compVal) {
+        wrap.style.display = 'none';
+        expSelectedEmployees = new Set();
+      } else {
+        wrap.style.display = '';
+        const names = getExpEmployeeNames(compVal);
+        // เลือกทั้งหมดโดย default (เก็บ normalized key)
+        expSelectedEmployees = new Set(names.map(n => normalizeName(n)));
+        document.getElementById('epSearch').value = '';
+        renderExpEmployees();
+      }
+      updateExportCount();
+    }
+
+    function renderExpEmployees() {
+      const compVal = document.getElementById('expCompany').value;
+      const names = getExpEmployeeNames(compVal);
+      const search = (document.getElementById('epSearch').value || '').toLowerCase().trim();
+      const list = document.getElementById('epList');
+
+      if (names.length === 0) {
+        list.innerHTML = '<div class="emp-picker-empty">ไม่พบพนักงาน</div>';
+        document.getElementById('epCount').textContent = '0 คน';
+        return;
+      }
+
+      const filtered = search ? names.filter(n => n.toLowerCase().includes(search)) : names;
+      const selectedCount = names.filter(n => expSelectedEmployees.has(normalizeName(n))).length;
+      document.getElementById('epCount').textContent = selectedCount + '/' + names.length + ' คน';
+
+      if (filtered.length === 0) {
+        list.innerHTML = '<div class="emp-picker-empty">ไม่พบ "' + escapeHtml(search) + '"</div>';
+        return;
+      }
+
+      list.innerHTML = filtered.map(name => {
+        const nk = normalizeName(name);
+        const checked = expSelectedEmployees.has(nk) ? 'checked' : '';
+        return '<div class="emp-picker-item" onclick="toggleExpEmployee(\'' + escapeJs(nk) + '\')">' +
+          '<input type="checkbox" ' + checked + ' tabindex="-1">' +
+          '<span>' + escapeHtml(name) + '</span></div>';
+      }).join('');
+    }
+
+    function toggleExpEmployee(normKey) {
+      if (expSelectedEmployees.has(normKey)) {
+        expSelectedEmployees.delete(normKey);
+      } else {
+        expSelectedEmployees.add(normKey);
+      }
+      renderExpEmployees();
+      updateExportCount();
+    }
+
+    function selectAllEmployees() {
+      const compVal = document.getElementById('expCompany').value;
+      const names = getExpEmployeeNames(compVal);
+      names.forEach(n => expSelectedEmployees.add(normalizeName(n)));
+      renderExpEmployees();
+      updateExportCount();
+    }
+
+    function deselectAllEmployees() {
+      const compVal = document.getElementById('expCompany').value;
+      const names = getExpEmployeeNames(compVal);
+      names.forEach(n => expSelectedEmployees.delete(normalizeName(n)));
+      renderExpEmployees();
+      updateExportCount();
+    }
+
+    function filterExpEmployees() {
+      renderExpEmployees();
+    }
 
     function exportCSV() {
       if (!allData.length) { showToast('ไม่มีข้อมูล', 'error'); return; }
 
-      // ตั้งค่าเริ่มต้น: วันที่ 1 ของเดือนนี้ → วันนี้
       const now = new Date();
       const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       document.getElementById('expDateFrom').value = firstOfMonth.toISOString().slice(0, 10);
       document.getElementById('expDateTo').value = now.toISOString().slice(0, 10);
 
-      // เติม dropdown บริษัท
       const compSel = document.getElementById('expCompany');
       const standardOrder = ['3E Empire', '3E Trading', '3E Innovation', 'AE&T', 'Eita & Paul', 'Hikari Denki', 'Chavest'];
       const fromData = Array.from(new Set(allData.map(r => (r.company || '').trim()).filter(n => n)));
@@ -1622,6 +1840,11 @@
         ordered.map(n => '<option value="' + escapeHtml(n) + '">' + escapeHtml(n) + '</option>').join('');
 
       document.getElementById('expStatus').value = '';
+      document.getElementById('epSearch').value = '';
+
+      // ทุกบริษัท → ซ่อนตัวเลือกพนักงาน
+      document.getElementById('empPickerWrap').style.display = 'none';
+      expSelectedEmployees = new Set();
       updateExportCount();
       document.getElementById('exportModal').classList.add('show');
     }
@@ -1636,7 +1859,6 @@
       document.getElementById('exportModal').classList.remove('show');
     }
 
-    // กรองข้อมูลตามตัวเลือกใน export modal
     function getExportFiltered() {
       const fromVal = document.getElementById('expDateFrom').value;
       const toVal = document.getElementById('expDateTo').value;
@@ -1650,6 +1872,9 @@
       return allData.filter(r => {
         if (compVal && (r.company || '').trim() !== compVal) return false;
         if (statusVal && r.status !== statusVal) return false;
+        // Employee filter (normalized)
+        const empKey = normalizeName(r.employeeName);
+        if (expSelectedEmployees.size > 0 && !expSelectedEmployees.has(empKey)) return false;
         if (fromTs || toTs) {
           const d = parseDDMMYYYY(r.otDate);
           if (!d) return false;
@@ -1685,7 +1910,6 @@
       const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
 
-      // ตั้งชื่อไฟล์ตามตัวเลือก
       const fromVal = document.getElementById('expDateFrom').value;
       const toVal = document.getElementById('expDateTo').value;
       const compVal = document.getElementById('expCompany').value;
