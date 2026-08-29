@@ -190,6 +190,16 @@
     textarea.field-input { min-height: 100px; resize: none; line-height: 1.5; font-size: 17px; }
     input[type="date"].field-input, input[type="time"].field-input { font-size: 18px; font-weight: 500; }
 
+    #otDate {
+      background: #ececef;
+      color: var(--text-secondary);
+      cursor: default;
+      pointer-events: none;
+    }
+    #otDate::-webkit-calendar-picker-indicator {
+      display: none;
+    }
+
     .clock-in-info {
       background: linear-gradient(135deg, rgba(52, 199, 89, 0.12), rgba(52, 199, 89, 0.05));
       border: 1.5px solid rgba(52, 199, 89, 0.3);
@@ -533,8 +543,8 @@
         </div>
         <div class="field-group">
           <div class="field">
-            <label class="field-label" for="otDate">วันที่ <span class="required">*</span></label>
-            <input type="date" id="otDate" class="field-input" required onchange="onDateChange()">
+            <label class="field-label" for="otDate">วันที่ <span class="required">*</span> <span style="font-weight:400; color:var(--text-tertiary); font-size:12px;">(ล็อกวันปัจจุบัน ไม่สามารถแก้ไขได้)</span></label>
+            <input type="date" id="otDate" class="field-input" required readonly onkeydown="return false" onchange="onDateChange()">
           </div>
           <div class="field" id="nameInputField">
             <label class="field-label" for="employeeName">ชื่อ - นามสกุล <span class="required">*</span></label>
