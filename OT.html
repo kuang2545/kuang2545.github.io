@@ -190,13 +190,13 @@
     textarea.field-input { min-height: 100px; resize: none; line-height: 1.5; font-size: 17px; }
     input[type="date"].field-input, input[type="time"].field-input { font-size: 18px; font-weight: 500; }
 
-    #otDate {
+    .field-locked {
       background: #ececef;
       color: var(--text-secondary);
       cursor: default;
       pointer-events: none;
     }
-    #otDate::-webkit-calendar-picker-indicator {
+    .field-locked::-webkit-calendar-picker-indicator {
       display: none;
     }
 
@@ -543,8 +543,8 @@
         </div>
         <div class="field-group">
           <div class="field">
-            <label class="field-label" for="otDate">วันที่ <span class="required">*</span> <span style="font-weight:400; color:var(--text-tertiary); font-size:12px;">(ล็อกวันปัจจุบัน ไม่สามารถแก้ไขได้)</span></label>
-            <input type="date" id="otDate" class="field-input" required readonly onkeydown="return false" onchange="onDateChange()">
+            <label class="field-label" for="otDate"><span id="otDateLabelText">วันที่</span> <span class="required">*</span> <span style="font-weight:400; color:var(--text-tertiary); font-size:12px;" id="otDateHint">(ล็อกวันปัจจุบัน ไม่สามารถแก้ไขได้)</span></label>
+            <input type="date" id="otDate" class="field-input field-locked" required readonly onchange="onDateChange()">
           </div>
           <div class="field" id="nameInputField">
             <label class="field-label" for="employeeName">ชื่อ - นามสกุล <span class="required">*</span></label>
@@ -555,6 +555,7 @@
             <select id="employeeSelect" class="field-input" onchange="onEmployeeSelected()">
               <option value="">-- เลือกชื่อ --</option>
             </select>
+            <div id="dateFilterToggle" style="margin-top:8px; font-size:12.5px; color:var(--accent); cursor:pointer; user-select:none;" onclick="toggleShowAllDates()"></div>
           </div>
           <div class="field" id="supervisorField">
             <label class="field-label" for="supervisorName">ชื่อหัวหน้า <span class="required">*</span></label>
@@ -574,8 +575,8 @@
             </select>
           </div>
           <div class="field">
-            <label class="field-label" id="timeLabel">เวลาเริ่มงาน <span class="required">*</span></label>
-            <input type="time" id="timeInput" class="field-input" required>
+            <label class="field-label" id="timeLabel">เวลาเริ่มงาน <span class="required">*</span> <span style="font-weight:400; color:var(--text-tertiary); font-size:12px;">(เวลาปัจจุบัน อัปเดตอัตโนมัติ ไม่สามารถแก้ไขได้)</span></label>
+            <input type="time" id="timeInput" class="field-input field-locked" required readonly onkeydown="return false">
             <div class="hours-summary" id="hoursSummary" style="display:none;">
               <span class="hours-summary-label">เวลารวม</span>
               <span class="hours-summary-value" id="hoursValue">0</span>
@@ -722,13 +723,7 @@
       } else {
         setTimeout(function() {
           try { startGpsLookup(); } catch (e) {}
-          try {
-            const today = new Date();
-            const d = today.getFullYear() + '-' +
-              String(today.getMonth() + 1).padStart(2, '0') + '-' +
-              String(today.getDate()).padStart(2, '0');
-            fetchActiveClockIns(d).catch(function() {});
-          } catch (e) {}
+          try { fetchActiveClockIns().catch(function() {}); } catch (e) {}
         }, 300);
       }
     })();
@@ -828,9 +823,36 @@
       }
     }
 
+    // ============================================================
+    // ★ FIX: ล็อกเวลาเริ่มงาน/เลิกงานให้เป็น "เวลาปัจจุบันจริง" เสมอ ทั้ง 2 โหมด
+    // ห้ามให้ผู้ใช้พิมพ์/เลือกเวลาเอง (กันโกงเวลา) — ค่าจะรันตามนาฬิกาเครื่องจริง
+    // และรีเฟรชเป็นระยะขณะฟอร์มเปิดอยู่ เพื่อไม่ให้ค่าเก่าค้างถ้าผู้ใช้กรอกฟอร์มนาน
+    // ============================================================
+    let liveTimeIntervalId = null;
+
+    function updateLiveTime() {
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('timeInput').value = hh + ':' + mm;
+      // โหมดเลิกงาน + เลือกพนักงานแล้ว → คำนวณชั่วโมงรวมใหม่ให้สดตามเวลาที่เดินอยู่
+      if (currentMode === 'clock_out' && existingClockIn) calcHoursListener();
+    }
+
+    function startLiveTime() {
+      updateLiveTime();
+      stopLiveTime();
+      liveTimeIntervalId = setInterval(updateLiveTime, 15000);
+    }
+
+    function stopLiveTime() {
+      if (liveTimeIntervalId) { clearInterval(liveTimeIntervalId); liveTimeIntervalId = null; }
+    }
+
     function goToFormView(mode) {
       currentMode = mode;
       existingClockIn = null;
+      showAllActiveDates = false;
 
       document.getElementById('otForm').reset();
       document.getElementById('otDate').valueAsDate = new Date();
@@ -847,10 +869,7 @@
       resetWorktype();
       applyModeUI(mode);
 
-      const now = new Date();
-      const hh = String(now.getHours()).padStart(2, '0');
-      const mm = String(now.getMinutes()).padStart(2, '0');
-      document.getElementById('timeInput').value = hh + ':' + mm;
+      startLiveTime();
 
       startGpsLookup();
       if (gpsResult) updateGpsPill('ready', '±' + gpsResult.acc + ' ม.');
@@ -875,8 +894,15 @@
       document.getElementById('formView').classList.remove('active');
       document.getElementById('selectView').classList.add('active');
       document.getElementById('backBtn').classList.remove('show');
+      stopLiveTime();
       if (!gpsResult) stopGpsWatch();
       window.scrollTo({ top: 0 });
+    }
+
+
+    function getTodayDateStr() {
+      const d = new Date();
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     }
 
     function applyModeUI(mode) {
@@ -892,13 +918,16 @@
       const companyField = document.getElementById('companyField');
       const workDetailSection = document.getElementById('workDetailSection');
       const selfieHeaderText = selfieHeader.querySelector('span');
+      const otDateInput = document.getElementById('otDate');
+      const otDateLabelText = document.getElementById('otDateLabelText');
+      const otDateHint = document.getElementById('otDateHint');
 
       if (mode === 'clock_out') {
         badge.textContent = '🏁 เลิกงาน';
         badge.className = 'mode-badge clock-out';
         title.textContent = 'เลิกงาน OT';
         desc.textContent = 'เลือกชื่อ → บันทึกเวลา → ถ่ายรูป';
-        timeLabel.innerHTML = 'เวลาเลิกงาน <span class="required">*</span>';
+        timeLabel.innerHTML = 'เวลาเลิกงาน <span class="required">*</span> <span style="font-weight:400; color:var(--text-tertiary); font-size:12px;">(เวลาปัจจุบัน อัปเดตอัตโนมัติ ไม่สามารถแก้ไขได้)</span>';
         submitBtn.textContent = '🏁 เลิกงาน';
         submitBtn.className = 'btn btn-warning';
         if (selfieHeaderText) selfieHeaderText.textContent = 'ยืนยันตัวตน (รูปเลิกงาน)';
@@ -907,12 +936,21 @@
         supervisorField.style.display = 'none';
         companyField.style.display = 'none';
         workDetailSection.style.display = 'none';
+
+        // ★ โหมดเลิกงาน: ปลดล็อกวันที่ ให้เลือกวันย้อนหลังได้ (เช่น ลืมกดเลิกงานเมื่อวาน)
+        otDateInput.classList.remove('field-locked');
+        otDateInput.readOnly = false;
+        otDateInput.onkeydown = null;
+        otDateInput.max = getTodayDateStr();
+        otDateInput.removeAttribute('min');
+        otDateLabelText.textContent = 'วันที่เลิกงาน';
+        otDateHint.textContent = '(เลือกวันย้อนหลังได้ ถ้าลืมกดเลิกงาน แต่ห้ามเลือกวันในอนาคต)';
       } else {
         badge.textContent = '⏱️ เริ่มงาน';
         badge.className = 'mode-badge clock-in';
         title.textContent = 'บันทึก OT';
         desc.textContent = 'กรอกข้อมูล → ถ่ายรูป → กดเริ่มงาน';
-        timeLabel.innerHTML = 'เวลาเริ่มงาน <span class="required">*</span>';
+        timeLabel.innerHTML = 'เวลาเริ่มงาน <span class="required">*</span> <span style="font-weight:400; color:var(--text-tertiary); font-size:12px;">(เวลาปัจจุบัน อัปเดตอัตโนมัติ ไม่สามารถแก้ไขได้)</span>';
         submitBtn.textContent = '⏱️ เริ่มงาน OT';
         submitBtn.className = 'btn btn-primary';
         if (selfieHeaderText) selfieHeaderText.textContent = 'ยืนยันตัวตน';
@@ -921,11 +959,31 @@
         supervisorField.style.display = 'block';
         companyField.style.display = 'block';
         workDetailSection.style.display = 'block';
+
+        // ★ โหมดเริ่มงาน: ล็อกวันที่เป็นวันนี้เสมอ ห้ามแก้ไข
+        otDateInput.classList.add('field-locked');
+        otDateInput.readOnly = true;
+        otDateInput.onkeydown = function() { return false; };
+        otDateInput.removeAttribute('max');
+        otDateInput.removeAttribute('min');
+        otDateLabelText.textContent = 'วันที่';
+        otDateHint.textContent = '(ล็อกวันปัจจุบัน ไม่สามารถแก้ไขได้)';
       }
     }
 
-    let activeClockInsByDate = {};
-    let activeClockInsInflight = {};
+    // ============================================================
+    // ★ FIX: "เลิกงาน" ต้องหาคนที่กำลังทำงานอยู่ได้ ไม่ว่าจะเริ่มไว้วันไหนก็ตาม
+    // เดิมโค้ดผูก getActiveClockIns กับวันที่ปัจจุบัน (otDate field ที่ล็อกเป็น "วันนี้")
+    // ทำให้ถ้าเริ่มงานวันที่ 10 แล้วมากดเลิกงานวันที่ 15 ระบบจะหาไม่เจอ เพราะ
+    // ไปขอเฉพาะรายการของวันที่ 15 เท่านั้น
+    // ตอนนี้แก้ให้ดึง "ทุกคนที่ยังไม่ได้กดเลิกงาน" แบบไม่จำกัดวันที่ แทน
+    // (ฝั่ง Apps Script ต้องรองรับการเรียก getActiveClockIns โดยไม่ส่ง otDate มา
+    //  แล้วคืนค่าทุกแถวที่ยังไม่มีเวลาเลิกงาน — ถ้าตอนนี้ backend ยัง filter ตาม
+    //  otDate ที่ส่งมาอยู่ ต้องแก้ฝั่ง Apps Script ให้ตรงกันด้วย)
+    // ============================================================
+    let activeClockInsAllCache = null;
+    let activeClockInsInflight = null;
+    let showAllActiveDates = false; // ★ NEW: false = กรองรายชื่อตามวันที่เลือกอยู่, true = โชว์ทุกวันที่
 
     function renderActiveClockIns(list) {
       const sel = document.getElementById('employeeSelect');
@@ -936,15 +994,27 @@
       const prevName = (sel.value !== '' && activeClockInsCache[sel.value])
         ? activeClockInsCache[sel.value].employeeName : '';
 
+      updateDateFilterToggle();
+
       if (!activeClockInsCache.length) {
         sel.innerHTML = '<option value="">-- ไม่มีคนกำลังทำงาน --</option>';
         warningBox.style.display = 'block';
-        warningBox.innerHTML =
-          '<div class="empty-active-box">' +
-          '<div class="emoji">🔍</div>' +
-          '<div class="title">ไม่พบบันทึกเริ่มงาน</div>' +
-          '<div class="desc">วันนี้ยังไม่มีพนักงานคนใดกด "เริ่มงาน" ไว้<br>กรุณากลับไปกดเริ่มงานก่อน</div>' +
-          '</div>';
+        if (!showAllActiveDates) {
+          const selectedDateLabel = formatDateShort(document.getElementById('otDate').value);
+          warningBox.innerHTML =
+            '<div class="empty-active-box">' +
+            '<div class="emoji">🔍</div>' +
+            '<div class="title">ไม่พบคนเริ่มงานวันที่ ' + escapeHtml(selectedDateLabel) + '</div>' +
+            '<div class="desc">ลองเปลี่ยนวันที่เลิกงานด้านบน หรือกด "แสดงทุกวันที่" เพื่อดูรายชื่อที่ค้างอยู่ทั้งหมด</div>' +
+            '</div>';
+        } else {
+          warningBox.innerHTML =
+            '<div class="empty-active-box">' +
+            '<div class="emoji">🔍</div>' +
+            '<div class="title">ไม่พบบันทึกเริ่มงาน</div>' +
+            '<div class="desc">ยังไม่มีพนักงานคนใดกด "เริ่มงาน" ค้างไว้<br>กรุณากลับไปกดเริ่มงานก่อน</div>' +
+            '</div>';
+        }
         return;
       }
 
@@ -953,42 +1023,65 @@
       let reselectIdx = '';
       activeClockInsCache.forEach((p, idx) => {
         if (prevName && p.employeeName === prevName) reselectIdx = String(idx);
-        html += '<option value="' + idx + '">' +
-          escapeHtml(p.employeeName) + '  ·  เริ่ม ' + p.startTime + '</option>';
+        // ถ้ากรองตามวันที่เดียวอยู่แล้ว ไม่ต้องย้ำวันที่ซ้ำในตัวเลือก โชว์แค่เวลาก็พอ
+        const label = showAllActiveDates
+          ? (escapeHtml(p.employeeName) + '  ·  เริ่ม ' + formatDateShort(p.otDate) + ' ' + p.startTime)
+          : (escapeHtml(p.employeeName) + '  ·  เริ่ม ' + p.startTime);
+        html += '<option value="' + idx + '">' + label + '</option>';
       });
       sel.innerHTML = html;
       if (reselectIdx !== '') sel.value = reselectIdx;
     }
 
-    function fetchActiveClockIns(date) {
-      if (!date) return Promise.resolve([]);
-      if (activeClockInsInflight[date]) return activeClockInsInflight[date];
-      const p = apiCall('getActiveClockIns', { otDate: date })
+    // ★ กรอง activeClockInsAllCache ตามวันที่ที่เลือกอยู่ในช่อง otDate แล้วค่อยส่งไปแสดงผล
+    function renderFilteredActiveClockIns() {
+      const source = activeClockInsAllCache || [];
+      if (showAllActiveDates) {
+        renderActiveClockIns(source);
+        return;
+      }
+      const dateVal = document.getElementById('otDate').value;
+      const filtered = source.filter(function(p) { return p.otDate === dateVal; });
+      renderActiveClockIns(filtered);
+    }
+
+    function toggleShowAllDates() {
+      showAllActiveDates = !showAllActiveDates;
+      renderFilteredActiveClockIns();
+    }
+
+    function updateDateFilterToggle() {
+      const el = document.getElementById('dateFilterToggle');
+      if (!el) return;
+      el.textContent = showAllActiveDates
+        ? '📅 กำลังแสดงทุกวันที่ · แตะเพื่อกรองเฉพาะวันที่เลือก'
+        : '📅 แสดงทุกวันที่ (ไม่กรองตามวันที่ที่เลือก)';
+    }
+
+    function fetchActiveClockIns() {
+      if (activeClockInsInflight) return activeClockInsInflight;
+      const p = apiCall('getActiveClockIns', {})
         .then(function(res) {
           const data = res.data || [];
-          activeClockInsByDate[date] = data;
-          delete activeClockInsInflight[date];
+          activeClockInsAllCache = data;
+          activeClockInsInflight = null;
           return data;
         })
         .catch(function(err) {
-          delete activeClockInsInflight[date];
+          activeClockInsInflight = null;
           throw err;
         });
-      activeClockInsInflight[date] = p;
+      activeClockInsInflight = p;
       return p;
     }
 
     async function loadActiveClockIns() {
-      const date = document.getElementById('otDate').value;
       const sel = document.getElementById('employeeSelect');
 
-      if (activeClockInsByDate[date]) {
-        renderActiveClockIns(activeClockInsByDate[date]);
-        fetchActiveClockIns(date).then(function(data) {
-          if (currentMode === 'clock_out' &&
-              document.getElementById('otDate').value === date) {
-            renderActiveClockIns(data);
-          }
+      if (activeClockInsAllCache) {
+        renderFilteredActiveClockIns();
+        fetchActiveClockIns().then(function() {
+          if (currentMode === 'clock_out') renderFilteredActiveClockIns();
         }).catch(function() {});
         return;
       }
@@ -998,8 +1091,8 @@
       document.getElementById('warningBox').style.display = 'none';
 
       try {
-        const data = await fetchActiveClockIns(date);
-        renderActiveClockIns(data);
+        await fetchActiveClockIns();
+        renderFilteredActiveClockIns();
       } catch (err) {
         sel.disabled = false;
         sel.innerHTML = '<option value="">โหลดไม่สำเร็จ</option>';
@@ -1010,13 +1103,16 @@
     }
 
     function onDateChange() {
-      if (currentMode === 'clock_out') {
-        loadActiveClockIns();
-        existingClockIn = null;
-        document.getElementById('clockInBox').style.display = 'none';
-        document.getElementById('hoursSummary').style.display = 'none';
-      } else {
+      // โหมดเริ่มงาน: วันที่ล็อกไว้เสมอ handler นี้แค่เช็คว่ามี OT ค้างของชื่อนี้อยู่ไหม
+      // โหมดเลิกงาน: วันที่เลือกย้อนหลังได้แล้ว → ต้องกรองรายชื่อ + คำนวณชั่วโมงใหม่ทุกครั้งที่เปลี่ยนวันที่
+      if (currentMode === 'clock_in') {
         checkClockStatusUI();
+      } else if (currentMode === 'clock_out') {
+        // เปลี่ยนวันที่แล้ว คนที่เคยเลือกไว้อาจไม่อยู่ในรายชื่อที่กรองใหม่ → เคลียร์ก่อน
+        const sel = document.getElementById('employeeSelect');
+        sel.value = '';
+        onEmployeeSelected();
+        renderFilteredActiveClockIns();
       }
     }
 
@@ -1025,6 +1121,7 @@
       const idx = sel.value;
       const clockInBox = document.getElementById('clockInBox');
       const warningBox = document.getElementById('warningBox');
+      const otDateInput = document.getElementById('otDate');
 
       if (idx === '' || !activeClockInsCache[idx]) {
         existingClockIn = null;
@@ -1032,8 +1129,9 @@
         document.getElementById('hoursSummary').style.display = 'none';
         document.getElementById('worktypeBox').style.display = 'none';
         resetWorktype();
-        // ยังไม่เลือกคน → ซ่อนคลัง
+        // ยังไม่เลือกคน → ซ่อนคลัง + ปลดขอบเขตวันที่ต่ำสุด
         updatePhotoOptions('');
+        otDateInput.removeAttribute('min');
         return;
       }
 
@@ -1047,6 +1145,12 @@
         otDate: picked.otDate
       };
 
+      // ★ วันที่เลิกงานต้องไม่ก่อนวันที่เริ่มงานของคนนี้ (กันเลือกวันย้อนหลังเกินจริง)
+      otDateInput.min = picked.otDate;
+      if (otDateInput.value && otDateInput.value < picked.otDate) {
+        otDateInput.value = picked.otDate;
+      }
+
       warningBox.style.display = 'none';
       clockInBox.style.display = 'block';
       clockInBox.innerHTML =
@@ -1054,6 +1158,7 @@
         '<div class="info-title">⏱️ บันทึกเริ่มงานไว้แล้ว</div>' +
         '<div class="info-time">' + picked.startTime + '</div>' +
         '<div class="info-desc">' +
+          '📅 เริ่มวันที่: <b>' + escapeHtml(formatDateShort(picked.otDate)) + '</b><br>' +
           (picked.supervisor ? '👤 หัวหน้า: <b>' + escapeHtml(picked.supervisor) + '</b><br>' : '') +
           (picked.company ? '🏢 บริษัท: <b>' + escapeHtml(picked.company) + '</b><br>' : '') +
           '🆔 ' + escapeHtml(picked.requestId) +
@@ -1094,29 +1199,48 @@
       } catch (e) { warningBox.style.display = 'none'; }
     }
 
+    // ============================================================
+    // ★ FIX: คำนวณชั่วโมงจากวันที่จริงของทั้งสองฝั่ง (เริ่ม/เลิก) แทนการ
+    // บวก 24 ชม. แบบตายตัว — เดิมถ้าข้ามมากกว่า 1 วัน (เช่น เริ่มวันที่ 10
+    // เลิกวันที่ 15) ตัวเลขชั่วโมงจะผิด เพราะรองรับแค่ข้ามเที่ยงคืนครั้งเดียว
+    // ============================================================
+    function calcHoursMinutes(startDateStr, startTime, endDateStr, endTime) {
+      if (!startDateStr || !startTime || !endDateStr || !endTime) return NaN;
+      const start = new Date(startDateStr + 'T' + startTime + ':00');
+      const end = new Date(endDateStr + 'T' + endTime + ':00');
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) return NaN;
+      return Math.round((end.getTime() - start.getTime()) / 60000);
+    }
+
+    function formatDateShort(dateStr) {
+      if (!dateStr) return '';
+      const parts = String(dateStr).split('-');
+      if (parts.length === 3) return parts[2] + '/' + parts[1];
+      return dateStr;
+    }
+
     function calcHoursListener() {
       if (currentMode !== 'clock_out' || !existingClockIn) return;
       const end = document.getElementById('timeInput').value;
       if (!end) return;
-      const [sh, sm] = existingClockIn.startTime.split(':').map(Number);
-      const [eh, em] = end.split(':').map(Number);
-      let startMin = sh * 60 + sm;
-      let endMin = eh * 60 + em;
-      if (endMin <= startMin) endMin += 24 * 60;
-      const totalMin = endMin - startMin;
+      const endDateStr = document.getElementById('otDate').value; // ล็อกเป็น "วันนี้" เสมอ
+      const totalMin = calcHoursMinutes(existingClockIn.otDate, existingClockIn.startTime, endDateStr, end);
       const box = document.getElementById('hoursSummary');
       const val = document.getElementById('hoursValue');
       box.style.display = 'flex';
-      if (totalMin <= 0) { box.classList.add('error'); val.textContent = 'เวลาไม่ถูกต้อง'; }
+      if (!isFinite(totalMin) || totalMin <= 0) { box.classList.add('error'); val.textContent = 'เวลาไม่ถูกต้อง'; }
       else { box.classList.remove('error'); val.textContent = formatDuration(totalMin); }
     }
 
     function formatDuration(totalMin) {
-      const h = Math.floor(totalMin / 60);
+      const d = Math.floor(totalMin / 1440);
+      const h = Math.floor((totalMin % 1440) / 60);
       const m = totalMin % 60;
-      if (h === 0) return m + ' นาที';
-      if (m === 0) return h + ' ชม.';
-      return h + ' ชม. ' + m + ' นาที';
+      const parts = [];
+      if (d > 0) parts.push(d + ' วัน');
+      if (h > 0) parts.push(h + ' ชม.');
+      if (m > 0 || parts.length === 0) parts.push(m + ' นาที');
+      return parts.join(' ');
     }
 
     function onCompanyChange() {
@@ -1480,6 +1604,8 @@
       const btn = document.getElementById('submitBtn');
       status.innerHTML = '';
 
+      updateLiveTime(); // ★ รีเฟรชเวลาให้ตรงล่าสุดก่อนบันทึกจริง (เวลาถูกล็อกไว้ ผู้ใช้แก้เองไม่ได้)
+
       const otDate = document.getElementById('otDate').value;
       const time = document.getElementById('timeInput').value;
       const workDetail = document.getElementById('workDetail').value.trim();
@@ -1522,12 +1648,22 @@
           return;
         }
         const picked = activeClockInsCache[idx];
+
+        // ★ ตรวจสอบวันที่/เวลาเลิกงานก่อนบันทึก — ต้องไม่ก่อนวันที่+เวลาที่เริ่มงานไว้
+        const mins = calcHoursMinutes(picked.otDate, picked.startTime, otDate, time);
+        if (!isFinite(mins) || mins <= 0) {
+          status.innerHTML = '<div class="status-box status-error">⚠️ วันที่/เวลาเลิกงานไม่ถูกต้อง<br>ต้องอยู่หลังเวลาเริ่มงาน (' + escapeHtml(formatDateShort(picked.otDate)) + ' ' + escapeHtml(picked.startTime) + ') กรุณาตรวจสอบวันที่และเวลาอีกครั้ง</div>';
+          return;
+        }
+        const hoursText = formatDuration(mins);
+
         const allowance = (picked.company === ALLOWANCE_COMPANY)
           ? (document.getElementById('allowanceFlag').value || '') : '';
 
         const data = {
           employeeName: picked.employeeName,
           otDate: picked.otDate,
+          endDate: otDate, // ★ NEW: วันที่เลิกงานจริง (อาจย้อนหลังกว่าวันนี้ได้) — เดิมไม่เคยส่งค่านี้ไปเลย
           endTime: time,
           workDetail: '',
           allowance: allowance,
@@ -1538,15 +1674,6 @@
           photoSource: photoSource
         };
 
-        const mins = (function() {
-          const [sh, sm] = picked.startTime.split(':').map(Number);
-          const [eh, em] = time.split(':').map(Number);
-          let s = sh * 60 + sm, e = eh * 60 + em;
-          if (e <= s) e += 24 * 60;
-          return e - s;
-        })();
-        const hoursText = formatDuration(mins);
-
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner"></span>กำลังบันทึก...';
 
@@ -1554,14 +1681,14 @@
           const res = await apiCall('clockOut', data);
           btn.disabled = false; btn.innerHTML = '🏁 เลิกงาน';
           if (res && res.success) {
-            activeClockInsByDate = {};
+            activeClockInsAllCache = null;
             const info2 =
               '<div class="info-row"><span>ชื่อ</span><b>' + escapeHtml(picked.employeeName) + '</b></div>' +
               (picked.supervisor ? '<div class="info-row"><span>หัวหน้า</span><b>' + escapeHtml(picked.supervisor) + '</b></div>' : '') +
               (picked.company ? '<div class="info-row"><span>บริษัท</span><b>' + escapeHtml(picked.company) + '</b></div>' : '') +
               (res.allowance ? '<div class="info-row"><span>เบี้ยเลี้ยง</span><b style="color:var(--warning);">💰 ' + escapeHtml(res.allowance) + '</b></div>' : '') +
-              '<div class="info-row"><span>เวลาเริ่ม</span><b>' + (res.startTime || picked.startTime) + '</b></div>' +
-              '<div class="info-row"><span>เวลาเลิก</span><b>' + (res.endTime || time) + '</b></div>' +
+              '<div class="info-row"><span>เริ่ม</span><b>' + escapeHtml(formatDateShort(picked.otDate)) + ' ' + (res.startTime || picked.startTime) + '</b></div>' +
+              '<div class="info-row"><span>เลิก</span><b>' + escapeHtml(formatDateShort(otDate)) + ' ' + (res.endTime || time) + '</b></div>' +
               '<div class="info-row" style="border-top:1px solid rgba(0,0,0,0.1); margin-top:6px; padding-top:8px;"><span>รวม</span><b style="color:var(--success); font-size:18px;">' + (res.hours || hoursText) + '</b></div>';
             showSuccessModal('clock_out', 'บันทึกเวลาเลิกงานเรียบร้อย', info2);
           } else {
@@ -1599,8 +1726,8 @@
           const res = await apiCall('clockIn', data);
           btn.disabled = false; btn.innerHTML = '⏱️ เริ่มงาน OT';
           if (res && res.success) {
-            activeClockInsByDate = {};
-            try { fetchActiveClockIns(otDate).catch(function(){}); } catch (e) {}
+            activeClockInsAllCache = null;
+            try { fetchActiveClockIns().catch(function(){}); } catch (e) {}
             const info =
               '<div class="info-row"><span>ชื่อ</span><b>' + escapeHtml(employeeName) + '</b></div>' +
               '<div class="info-row"><span>หัวหน้า</span><b>' + escapeHtml(supervisorName) + '</b></div>' +
