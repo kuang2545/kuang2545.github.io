@@ -577,10 +577,6 @@
           <div class="field">
             <label class="field-label" id="timeLabel">เวลาเริ่มงาน <span class="required">*</span> <span style="font-weight:400; color:var(--text-tertiary); font-size:12px;">(เวลาปัจจุบัน อัปเดตอัตโนมัติ ไม่สามารถแก้ไขได้)</span></label>
             <input type="time" id="timeInput" class="field-input field-locked" required readonly onkeydown="return false">
-            <div class="hours-summary" id="hoursSummary" style="display:none;">
-              <span class="hours-summary-label">เวลารวม</span>
-              <span class="hours-summary-value" id="hoursValue">0</span>
-            </div>
             <div class="worktype-box" id="worktypeBox" style="display:none;">
               <div class="worktype-label">💰 ประเภทเบี้ยเลี้ยง <span class="req">*</span></div>
               <div class="worktype-grid">
@@ -835,8 +831,6 @@
       const hh = String(now.getHours()).padStart(2, '0');
       const mm = String(now.getMinutes()).padStart(2, '0');
       document.getElementById('timeInput').value = hh + ':' + mm;
-      // โหมดเลิกงาน + เลือกพนักงานแล้ว → คำนวณชั่วโมงรวมใหม่ให้สดตามเวลาที่เดินอยู่
-      if (currentMode === 'clock_out' && existingClockIn) calcHoursListener();
     }
 
     function startLiveTime() {
@@ -861,7 +855,6 @@
       document.getElementById('formStatus').innerHTML = '';
       document.getElementById('warningBox').style.display = 'none';
       document.getElementById('clockInBox').style.display = 'none';
-      document.getElementById('hoursSummary').style.display = 'none';
 
       const sel = document.getElementById('employeeSelect');
       sel.innerHTML = '<option value="">-- เลือกชื่อ --</option>';
@@ -1104,7 +1097,7 @@
 
     function onDateChange() {
       // โหมดเริ่มงาน: วันที่ล็อกไว้เสมอ handler นี้แค่เช็คว่ามี OT ค้างของชื่อนี้อยู่ไหม
-      // โหมดเลิกงาน: วันที่เลือกย้อนหลังได้แล้ว → ต้องกรองรายชื่อ + คำนวณชั่วโมงใหม่ทุกครั้งที่เปลี่ยนวันที่
+      // โหมดเลิกงาน: วันที่เลือกย้อนหลังได้แล้ว → ต้องกรองรายชื่อใหม่ทุกครั้งที่เปลี่ยนวันที่
       if (currentMode === 'clock_in') {
         checkClockStatusUI();
       } else if (currentMode === 'clock_out') {
@@ -1126,7 +1119,6 @@
       if (idx === '' || !activeClockInsCache[idx]) {
         existingClockIn = null;
         clockInBox.style.display = 'none';
-        document.getElementById('hoursSummary').style.display = 'none';
         document.getElementById('worktypeBox').style.display = 'none';
         resetWorktype();
         // ยังไม่เลือกคน → ซ่อนคลัง + ปลดขอบเขตวันที่ต่ำสุด
@@ -1165,11 +1157,6 @@
         '</div>' +
         '</div>';
 
-      const timeInput = document.getElementById('timeInput');
-      timeInput.removeEventListener('change', calcHoursListener);
-      timeInput.addEventListener('change', calcHoursListener);
-      calcHoursListener();
-
       const wtBox = document.getElementById('worktypeBox');
       resetWorktype();
       if (picked.company === ALLOWANCE_COMPANY) wtBox.style.display = 'block';
@@ -1200,9 +1187,10 @@
     }
 
     // ============================================================
-    // ★ FIX: คำนวณชั่วโมงจากวันที่จริงของทั้งสองฝั่ง (เริ่ม/เลิก) แทนการ
+    // ★ FIX: ตรวจวันที่/เวลาเลิกงานจากวันที่จริงของทั้งสองฝั่ง (เริ่ม/เลิก) แทนการ
     // บวก 24 ชม. แบบตายตัว — เดิมถ้าข้ามมากกว่า 1 วัน (เช่น เริ่มวันที่ 10
-    // เลิกวันที่ 15) ตัวเลขชั่วโมงจะผิด เพราะรองรับแค่ข้ามเที่ยงคืนครั้งเดียว
+    // เลิกวันที่ 15) ตัวเลขจะผิด เพราะรองรับแค่ข้ามเที่ยงคืนครั้งเดียว
+    // ใช้สำหรับ "ตรวจสอบความถูกต้อง" เท่านั้น (ห้ามเลิกงานก่อนเริ่มงาน) — ไม่แสดงผลรวมชั่วโมงให้ผู้ใช้เห็นแล้ว
     // ============================================================
     function calcHoursMinutes(startDateStr, startTime, endDateStr, endTime) {
       if (!startDateStr || !startTime || !endDateStr || !endTime) return NaN;
@@ -1217,30 +1205,6 @@
       const parts = String(dateStr).split('-');
       if (parts.length === 3) return parts[2] + '/' + parts[1];
       return dateStr;
-    }
-
-    function calcHoursListener() {
-      if (currentMode !== 'clock_out' || !existingClockIn) return;
-      const end = document.getElementById('timeInput').value;
-      if (!end) return;
-      const endDateStr = document.getElementById('otDate').value; // ล็อกเป็น "วันนี้" เสมอ
-      const totalMin = calcHoursMinutes(existingClockIn.otDate, existingClockIn.startTime, endDateStr, end);
-      const box = document.getElementById('hoursSummary');
-      const val = document.getElementById('hoursValue');
-      box.style.display = 'flex';
-      if (!isFinite(totalMin) || totalMin <= 0) { box.classList.add('error'); val.textContent = 'เวลาไม่ถูกต้อง'; }
-      else { box.classList.remove('error'); val.textContent = formatDuration(totalMin); }
-    }
-
-    function formatDuration(totalMin) {
-      const d = Math.floor(totalMin / 1440);
-      const h = Math.floor((totalMin % 1440) / 60);
-      const m = totalMin % 60;
-      const parts = [];
-      if (d > 0) parts.push(d + ' วัน');
-      if (h > 0) parts.push(h + ' ชม.');
-      if (m > 0 || parts.length === 0) parts.push(m + ' นาที');
-      return parts.join(' ');
     }
 
     function onCompanyChange() {
@@ -1655,7 +1619,6 @@
           status.innerHTML = '<div class="status-box status-error">⚠️ วันที่/เวลาเลิกงานไม่ถูกต้อง<br>ต้องอยู่หลังเวลาเริ่มงาน (' + escapeHtml(formatDateShort(picked.otDate)) + ' ' + escapeHtml(picked.startTime) + ') กรุณาตรวจสอบวันที่และเวลาอีกครั้ง</div>';
           return;
         }
-        const hoursText = formatDuration(mins);
 
         const allowance = (picked.company === ALLOWANCE_COMPANY)
           ? (document.getElementById('allowanceFlag').value || '') : '';
@@ -1688,8 +1651,7 @@
               (picked.company ? '<div class="info-row"><span>บริษัท</span><b>' + escapeHtml(picked.company) + '</b></div>' : '') +
               (res.allowance ? '<div class="info-row"><span>เบี้ยเลี้ยง</span><b style="color:var(--warning);">💰 ' + escapeHtml(res.allowance) + '</b></div>' : '') +
               '<div class="info-row"><span>เริ่ม</span><b>' + escapeHtml(formatDateShort(picked.otDate)) + ' ' + (res.startTime || picked.startTime) + '</b></div>' +
-              '<div class="info-row"><span>เลิก</span><b>' + escapeHtml(formatDateShort(otDate)) + ' ' + (res.endTime || time) + '</b></div>' +
-              '<div class="info-row" style="border-top:1px solid rgba(0,0,0,0.1); margin-top:6px; padding-top:8px;"><span>รวม</span><b style="color:var(--success); font-size:18px;">' + (res.hours || hoursText) + '</b></div>';
+              '<div class="info-row"><span>เลิก</span><b>' + escapeHtml(formatDateShort(otDate)) + ' ' + (res.endTime || time) + '</b></div>';
             showSuccessModal('clock_out', 'บันทึกเวลาเลิกงานเรียบร้อย', info2);
           } else {
             status.innerHTML = '<div class="status-box status-error">❌ บันทึกไม่สำเร็จ: ' + escapeHtml((res && res.message) ? res.message : 'กรุณาลองใหม่') + '</div>';
