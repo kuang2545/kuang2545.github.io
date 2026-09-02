@@ -827,6 +827,8 @@
     let liveTimeIntervalId = null;
 
     function updateLiveTime() {
+      // ★ โหมดเลิกงาน: เวลาเลิกงานแก้ไขเองได้แล้ว ห้ามรีเฟรชทับค่าที่ผู้ใช้กรอก/เลือกไว้
+      if (currentMode === 'clock_out') return;
       const now = new Date();
       const hh = String(now.getHours()).padStart(2, '0');
       const mm = String(now.getMinutes()).padStart(2, '0');
@@ -862,7 +864,15 @@
       resetWorktype();
       applyModeUI(mode);
 
-      startLiveTime();
+      if (mode === 'clock_out') {
+        // ★ เวลาเลิกงานแก้ไขเองได้: ตั้งค่าเริ่มต้นเป็นเวลาปัจจุบันแค่ครั้งเดียว ไม่ auto-refresh ทับ
+        stopLiveTime();
+        const nowT = new Date();
+        document.getElementById('timeInput').value =
+          String(nowT.getHours()).padStart(2, '0') + ':' + String(nowT.getMinutes()).padStart(2, '0');
+      } else {
+        startLiveTime();
+      }
 
       startGpsLookup();
       if (gpsResult) updateGpsPill('ready', '±' + gpsResult.acc + ' ม.');
@@ -914,13 +924,14 @@
       const otDateInput = document.getElementById('otDate');
       const otDateLabelText = document.getElementById('otDateLabelText');
       const otDateHint = document.getElementById('otDateHint');
+      const timeInput = document.getElementById('timeInput');
 
       if (mode === 'clock_out') {
         badge.textContent = '🏁 เลิกงาน';
         badge.className = 'mode-badge clock-out';
         title.textContent = 'เลิกงาน OT';
         desc.textContent = 'เลือกชื่อ → บันทึกเวลา → ถ่ายรูป';
-        timeLabel.innerHTML = 'เวลาเลิกงาน <span class="required">*</span> <span style="font-weight:400; color:var(--text-tertiary); font-size:12px;">(เวลาปัจจุบัน อัปเดตอัตโนมัติ ไม่สามารถแก้ไขได้)</span>';
+        timeLabel.innerHTML = 'เวลาเลิกงาน <span class="required">*</span> <span style="font-weight:400; color:var(--text-tertiary); font-size:12px;">(ค่าเริ่มต้นคือเวลาปัจจุบัน แก้ไขได้)</span>';
         submitBtn.textContent = '🏁 เลิกงาน';
         submitBtn.className = 'btn btn-warning';
         if (selfieHeaderText) selfieHeaderText.textContent = 'ยืนยันตัวตน (รูปเลิกงาน)';
@@ -938,6 +949,11 @@
         otDateInput.removeAttribute('min');
         otDateLabelText.textContent = 'วันที่เลิกงาน';
         otDateHint.textContent = '(เลือกวันย้อนหลังได้ ถ้าลืมกดเลิกงาน แต่ห้ามเลือกวันในอนาคต)';
+
+        // ★ โหมดเลิกงาน: ปลดล็อกเวลาเลิกงานให้แก้ไขได้ (ค่าเริ่มต้นตั้งเป็นเวลาปัจจุบันตอนเข้าฟอร์ม)
+        timeInput.classList.remove('field-locked');
+        timeInput.readOnly = false;
+        timeInput.onkeydown = null;
       } else {
         badge.textContent = '⏱️ เริ่มงาน';
         badge.className = 'mode-badge clock-in';
@@ -961,6 +977,11 @@
         otDateInput.removeAttribute('min');
         otDateLabelText.textContent = 'วันที่';
         otDateHint.textContent = '(ล็อกวันปัจจุบัน ไม่สามารถแก้ไขได้)';
+
+        // ★ โหมดเริ่มงาน: ล็อกเวลาให้เป็นเวลาปัจจุบันเสมอ แก้ไขเองไม่ได้ (กันโกงเวลา)
+        timeInput.classList.add('field-locked');
+        timeInput.readOnly = true;
+        timeInput.onkeydown = function() { return false; };
       }
     }
 
@@ -1568,7 +1589,7 @@
       const btn = document.getElementById('submitBtn');
       status.innerHTML = '';
 
-      updateLiveTime(); // ★ รีเฟรชเวลาให้ตรงล่าสุดก่อนบันทึกจริง (เวลาถูกล็อกไว้ ผู้ใช้แก้เองไม่ได้)
+      updateLiveTime(); // ★ โหมดเริ่มงาน: รีเฟรชเวลาให้ตรงล่าสุดก่อนบันทึก (ล็อกไว้ แก้เองไม่ได้) / โหมดเลิกงาน: ไม่ทำอะไร เพราะแก้ไขเวลาเองได้แล้ว
 
       const otDate = document.getElementById('otDate').value;
       const time = document.getElementById('timeInput').value;
