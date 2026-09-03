@@ -1018,7 +1018,7 @@
           warningBox.innerHTML =
             '<div class="empty-active-box">' +
             '<div class="emoji">🔍</div>' +
-            '<div class="title">ไม่พบคนเริ่มงานวันที่ ' + escapeHtml(selectedDateLabel) + '</div>' +
+            '<div class="title">ไม่พบคนเริ่มงานภายใน ' + FILTER_RANGE_DAYS + ' วัน รอบวันที่ ' + escapeHtml(selectedDateLabel) + '</div>' +
             '<div class="desc">ลองเปลี่ยนวันที่เลิกงานด้านบน หรือกด "แสดงทุกวันที่" เพื่อดูรายชื่อที่ค้างอยู่ทั้งหมด</div>' +
             '</div>';
         } else {
@@ -1037,17 +1037,32 @@
       let reselectIdx = '';
       activeClockInsCache.forEach((p, idx) => {
         if (prevName && p.employeeName === prevName) reselectIdx = String(idx);
-        // ถ้ากรองตามวันที่เดียวอยู่แล้ว ไม่ต้องย้ำวันที่ซ้ำในตัวเลือก โชว์แค่เวลาก็พอ
-        const label = showAllActiveDates
-          ? (escapeHtml(p.employeeName) + '  ·  เริ่ม ' + formatDateShort(p.otDate) + ' ' + p.startTime)
-          : (escapeHtml(p.employeeName) + '  ·  เริ่ม ' + p.startTime);
+        // ★ แสดงวันที่เริ่มงานควบคู่กับเวลาเสมอ เพราะตอนนี้กรองแบบช่วงวัน (±3 วัน)
+        // อาจมีหลายวันปนกันในลิสต์เดียว ต้องมีวันที่กำกับเพื่อไม่ให้เลือกผิดคน/ผิดวัน
+        const label = escapeHtml(p.employeeName) + '  ·  เริ่ม ' + formatDateShort(p.otDate) + ' ' + p.startTime;
         html += '<option value="' + idx + '">' + label + '</option>';
       });
       sel.innerHTML = html;
       if (reselectIdx !== '') sel.value = reselectIdx;
     }
 
-    // ★ กรอง activeClockInsAllCache ตามวันที่ที่เลือกอยู่ในช่อง otDate แล้วค่อยส่งไปแสดงผล
+    // ★ NEW: จำนวนวัน ± ที่ยอมให้แสดงชื่อพนักงานรอบวันที่เลือก (ทั้งก่อนและหลัง)
+    // เช่น เริ่มงานวันที่ 2 แล้วมาเลือกวันที่เลิกงานเป็นวันที่ 5 (ห่างกัน 3 วัน) ก็ยังเห็นชื่อ
+    const FILTER_RANGE_DAYS = 3;
+
+    // ★ คำนวณผลต่างวันแบบปลอดภัย จาก string 'YYYY-MM-DD' ทั้งสองฝั่ง
+    function dateDiffDays(dateStrA, dateStrB) {
+      if (!dateStrA || !dateStrB) return NaN;
+      const a = new Date(dateStrA + 'T00:00:00');
+      const b = new Date(dateStrB + 'T00:00:00');
+      if (isNaN(a.getTime()) || isNaN(b.getTime())) return NaN;
+      return Math.round((a.getTime() - b.getTime()) / 86400000);
+    }
+
+    // ★ กรอง activeClockInsAllCache ตามวันที่ที่เลือกอยู่ในช่อง otDate โดยเปิดกว้างให้
+    // เห็นชื่อของคนที่เริ่มงาน "ก่อนหรือหลัง" วันที่เลือก ได้ไม่เกิน FILTER_RANGE_DAYS วัน
+    // แล้วค่อยส่งไปแสดงผล (เดิมกรองแบบต้องตรงวันเป๊ะเท่านั้น ทำให้เริ่มวันที่ 2
+    // แล้วมาเลิกงานวันที่ 3 หาไม่เจอ)
     function renderFilteredActiveClockIns() {
       const source = activeClockInsAllCache || [];
       if (showAllActiveDates) {
@@ -1055,7 +1070,10 @@
         return;
       }
       const dateVal = document.getElementById('otDate').value;
-      const filtered = source.filter(function(p) { return p.otDate === dateVal; });
+      const filtered = source.filter(function(p) {
+        const diff = dateDiffDays(dateVal, p.otDate);
+        return !isNaN(diff) && Math.abs(diff) <= FILTER_RANGE_DAYS;
+      });
       renderActiveClockIns(filtered);
     }
 
@@ -1068,8 +1086,8 @@
       const el = document.getElementById('dateFilterToggle');
       if (!el) return;
       el.textContent = showAllActiveDates
-        ? '📅 กำลังแสดงทุกวันที่ · แตะเพื่อกรองเฉพาะวันที่เลือก'
-        : '📅 แสดงทุกวันที่ (ไม่กรองตามวันที่ที่เลือก)';
+        ? '📅 กำลังแสดงทุกวันที่ · แตะเพื่อกรองเฉพาะ ±' + FILTER_RANGE_DAYS + ' วันรอบวันที่เลือก'
+        : '📅 กำลังแสดงเฉพาะ ±' + FILTER_RANGE_DAYS + ' วันรอบวันที่เลือก · แตะเพื่อแสดงทุกวันที่';
     }
 
     function fetchActiveClockIns() {
