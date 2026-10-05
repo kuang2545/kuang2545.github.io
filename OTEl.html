@@ -755,8 +755,13 @@ td.col-detail .clip {
 <script>
 // ══════════════════════════════════════════════════════════════
 //  VPS REST API (แทน Apps Script เดิม)
+//  ★ FIX (2026-10-05): GitHub Pages เป็น https:// เบราว์เซอร์จะบล็อกการเรียก
+//  API แบบ http:// (Mixed Content) → เมื่อเปิดผ่าน https ให้ใช้ปลายทาง HTTPS
+//  (Caddy + sslip.io บน VPS) ส่วนเปิดไฟล์ในเครื่อง (file://) ยังใช้ http เดิมได้
 // ══════════════════════════════════════════════════════════════
-const API_BASE = 'http://102.129.229.6:3001';
+const API_BASE = (location.protocol === 'https:')
+  ? 'https://102-129-229-6.sslip.io'
+  : 'http://102.129.229.6:3001';
 const TXN_API  = API_BASE + '/transaction';
 const EMP_API  = API_BASE + '/emp';
 const API_KEY  = 'hikari20259f3c6e1b0f2d9c9c0e5e0b4d8b4e6e9c0c6c2f3e7b8a9f1d2e3c4b5a6f7d8e9';
@@ -783,10 +788,7 @@ function normStatus(s) {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  ★★★ FIX (2026-08-07): เวลา/วันที่ — เดิมบวก +7 ชั่วโมงให้ทุก timestamp
-//  โดยไม่เช็คก่อนว่าเป็น UTC จริงไหม ถ้า backend เก็บเป็นเวลาไทย local
-//  อยู่แล้ว (ไม่มี Z/offset) จะบวกซ้ำ ทำให้บางรายการเลื่อนไปอีกวัน
-//  → ตอนนี้ shift เฉพาะ timestamp ที่มี timezone info ชัดเจนเท่านั้น
+//  ★★★ FIX (2026-08-07): เวลา/วันที่ — shift +7 เฉพาะ timestamp ที่มี timezone info
 // ══════════════════════════════════════════════════════════════
 function _hasTZInfo(v) {
   const s = String(v).trim();
@@ -801,13 +803,11 @@ function _shift7(v) {
   if (v === null || v === undefined || v === '') return null;
   const s = String(v).trim();
   if (_hasTZInfo(s)) {
-    // มี timezone ชัดเจน (UTC/offset) → แปลงเป็นเวลาไทยจริง (+7)
     const d = new Date(s);
     if (isNaN(d.getTime())) return null;
     d.setUTCHours(d.getUTCHours() + 7);
     return d;
   }
-  // ไม่มี timezone info → ถือว่า backend เก็บเป็นเวลาไทย local อยู่แล้ว ไม่ต้อง shift ซ้ำ
   const p = _parseNaive(s);
   if (p) return new Date(Date.UTC(p.y, p.mo - 1, p.d, p.h, p.mi, p.s));
   const d = new Date(s);
@@ -895,8 +895,6 @@ function normalizeRow(e, i) {
     id: e.id,
     requestId: 'OT-' + e.id,
     submittedAt: _fmtDateTime(e.record_date),
-    // ★ FIX: เก็บ record_date ที่แปลงเป็นเวลาไทยแล้ว (Date object) ไว้ใช้กรองวันที่
-    //   เฉพาะโหมด "ทำความสะอาด" — งานแม่บ้านอิงตามเวลาที่ส่งจริง ไม่ใช่ ot_date
     recordDate: _shift7(e.record_date),
     otDate: _fmtDate(e.ot_date),
     employeeName: e.emp_name || '',
@@ -1032,7 +1030,7 @@ async function loadData() {
       body.innerHTML = `<tr><td colspan="13"><div class="empty">
         <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
         <div class="empty-title">โหลดไม่สำเร็จ</div>
-        <div class="empty-desc">${escapeHtml(err.message || err)}<br><span style="font-size:11px;">ตรวจว่าเปิดไฟล์แบบ file:// และเชื่อมต่อ VPS ได้</span></div>
+        <div class="empty-desc">${escapeHtml(err.message || err)}<br><span style="font-size:11px;">เชื่อมต่อ API ไม่ได้: ${escapeHtml(API_BASE)}</span></div>
         <button class="btn" onclick="loadData()">ลองใหม่</button>
       </div></td></tr>`;
     } else {
@@ -1059,8 +1057,7 @@ function minutesBetween(startTime, endTime) {
   return e - s;
 }
 // ── เลยกำหนด: ยัง "กำลังทำงาน" แต่ผ่านมาเกิน 8 ชม.จากเวลาเริ่มงาน (ยังไม่กดเลิกงาน) ──
-const OVERDUE_LIMIT_MIN = 8 * 60; // 480 นาที
-// คืนเวลาจริง (epoch) ของเวลาเริ่มงาน — มี TZ ใช้ตามนั้น, ไม่มีถือเป็นเวลาไทย (+7)
+const OVERDUE_LIMIT_MIN = 8 * 60;
 function _realInstant(v) {
   if (v === null || v === undefined || v === '') return null;
   const s = String(v).trim();
@@ -1069,18 +1066,15 @@ function _realInstant(v) {
   if (p) return new Date(Date.UTC(p.y, p.mo - 1, p.d, p.h, p.mi, p.s) - 7 * 3600 * 1000);
   const d = new Date(s); return isNaN(d.getTime()) ? null : d;
 }
-// เลยกำหนดหรือยัง — เฉพาะแถวที่ยังกำลังทำงานและเกิน 8 ชม.
 function isOverdue(r) {
   if (!r || r.status !== 'กำลังทำงาน') return false;
   if (!r._startAt) return false;
   return (Date.now() - r._startAt.getTime()) / 60000 > OVERDUE_LIMIT_MIN;
 }
-// เกินมากี่นาทีจาก 8 ชม. (สำหรับ tooltip)
 function overdueByMin(r) {
   if (!isOverdue(r)) return 0;
   return Math.floor((Date.now() - r._startAt.getTime()) / 60000 - OVERDUE_LIMIT_MIN);
 }
-// เวลาเลิกงานอัตโนมัติ = เวลาเข้างาน + 8 ชม. (คืนเป็น "HH:MM", ข้ามเที่ยงคืนวนกลับ)
 function _autoEndHHMM(startStr) {
   const p = String(startStr || '').split(':');
   if (p.length < 2) return '';
@@ -1112,20 +1106,16 @@ function companyAbbr(c) {
 }
 
 function computeSummary() {
-  // กรองข้อมูลตามบริษัทที่เลือก
   const companyF = (document.getElementById('companyFilter').value || '').trim();
   let filteredData = allData;
-  
   if (companyF) {
     filteredData = allData.filter(r => (r.company || '').trim() === companyF);
   }
-  
-  // กรองงานทำความสะอาดออก
   const otData = filteredData.filter(r => !isCleaning(r));
-  
+
   let total = otData.length, working = 0, pending = 0, approved = 0;
   let pendingMin = 0, approvedMin = 0;
-  
+
   otData.forEach(r => {
     const mins = minutesBetween(r.startTime, r.endTime);
     if (r.status === 'กำลังทำงาน') working++;
@@ -1133,7 +1123,7 @@ function computeSummary() {
     else if (r.status === 'ไม่อนุมัติ') {}
     else { pending++; pendingMin += mins; }
   });
-  
+
   document.getElementById('sumTotal').innerHTML = total + ' <span class="stat-sub">คำขอ</span>';
   document.getElementById('sumWorking').innerHTML = working + ' <span class="stat-sub">คน</span>';
   document.getElementById('sumPending').innerHTML = pending + ' <span class="stat-sub">· ' + formatDurationMin(pendingMin) + '</span>';
@@ -1265,7 +1255,7 @@ function onCompanyFilterChange() {
   sel.classList.toggle('active-filter', sel.value !== '');
   populateSupervisorFilter();
   renderTable();
-  computeSummary();  // ★ เพิ่มบรรทัดนี้เพื่ออัปเดตสถิติ
+  computeSummary();
 }
 
 function getOrderedCompanies() {
@@ -1327,8 +1317,6 @@ function renderTable() {
       const ts = new Date(target.getFullYear(), target.getMonth(), target.getDate()).getTime();
       const te = ts + 86400000 - 1;
       if (cleaningOnly) {
-        // ★ FIX: โหมดทำความสะอาด — กรองด้วยวันที่ "ส่งข้อมูลจริง" (record_date, เวลาไทย)
-        //   ไม่ใช่ ot_date เพราะงานแม่บ้านเช็คอินตามเวลาจริง ไม่ได้กรอกวัน OT เอง
         if (!r.recordDate) return false;
         const rd = new Date(r.recordDate.getUTCFullYear(), r.recordDate.getUTCMonth(), r.recordDate.getUTCDate()).getTime();
         if (rd < ts || rd > te) return false;
@@ -1396,7 +1384,6 @@ function renderTable() {
                     : r.status === 'ไม่อนุมัติ' ? 'b-rejected'
                     : r.status === 'กำลังทำงาน' ? 'b-working'
                     : 'b-pending';
-    // ── เลยกำหนด: เกิน 8 ชม.แล้วยังไม่กดเลิกงาน ──
     const _overdue = isOverdue(r);
     const badgeClassFinal = _overdue ? 'b-overdue' : badgeClass;
     const statusText = _overdue ? 'เลยกำหนด' : r.status;
@@ -1420,7 +1407,6 @@ function renderTable() {
     const isWorking = r.status === 'กำลังทำงาน';
     let timeRange;
     if (isWorking && _overdue) {
-      // เลยกำหนด: โชว์เวลาเลิกอัตโนมัติ (เข้างาน + 8 ชม.) แทนจุดสด
       timeRange = `<b>${escapeHtml(r.startTime)}</b><span class="arr">→</span><b style="color:var(--red);">${escapeHtml(_autoEndHHMM(r.startTime))}</b>`;
     } else if (isWorking) {
       timeRange = `<b>${escapeHtml(r.startTime)}</b><span class="arr">→</span><span style="color:var(--blue);">●</span>`;
@@ -1429,7 +1415,6 @@ function renderTable() {
     } else { timeRange = '<span class="dim">—</span>'; }
 
     let actions = '';
-    // ★ เลยกำหนด (overdue) ให้อนุมัติ/ไม่อนุมัติได้เหมือนรายการรออนุมัติ
     if (isPending || _overdue) {
       actions = `
         <button class="icon-btn approve" title="อนุมัติ" onclick="openActionById(${r.id}, 'อนุมัติ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
@@ -1439,10 +1424,9 @@ function renderTable() {
     }
     actions += `<button class="icon-btn delete" title="ลบ" onclick="deleteRow(${r.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>`;
 
-    // ★ แก้ไข: แสดง "เข้างานปกติ" แทน "-" หรือ "—" เมื่อไม่มีข้อมูลหัวหน้างาน
     const supText = String(r.supervisor || '').trim();
     const supCell = (supText && supText !== '-' && supText !== '—') ? escapeHtml(r.supervisor) : 'เข้างานปกติ';
-    
+
     const compCell = r.company ? `<span class="company-tag" title="${escapeHtml(r.company)}">${escapeHtml(companyAbbr(r.company))}</span>` : '<span class="dim">—</span>';
     let allowCell;
     if (hasAllowance(r)) {
@@ -1522,10 +1506,7 @@ function openAction(id, status, record) {
   }
   document.getElementById('actionReqId').textContent = record.requestId;
   document.getElementById('actionName').textContent = record.employeeName;
-  
-  // ★ แก้ไข: แสดง "เข้างานปกติ" แทน "—" ในหน้าต่างป๊อปอัปด้วย
   document.getElementById('actionSupervisor').textContent = (record.supervisor && String(record.supervisor).trim() !== '' && String(record.supervisor) !== '-' && String(record.supervisor) !== '—') ? record.supervisor : 'เข้างานปกติ';
-  
   document.getElementById('actionCompany').textContent = record.company || '—';
   document.getElementById('actionAllowance').textContent =
     hasAllowance(record) ? (allowanceAmount(record) > 0
@@ -1835,9 +1816,9 @@ const COMPANY_LOGOS = {
   'triple e empire group': '1suv0dKh7_FIPamBvZLv-Iza0T9nkcYNo',
   'ae&t international': '1HGo9tq8McRab8Zej2ydhDDFoz5WwCuZZ',
   'chavest': '162qxrHZ9n9K4HbYbzUjRCBQq-VYpk6Pn',
-  'triple e lighting': '15ujjcMPWSruIhEuWkQMpsDBcDvW8Rmdn',  // เพิ่มใหม่ - TR
-  'eita & paul': '1pkXkzEbYd8kIOAlUj_heuGgTOOO45pWT',        // เพิ่มใหม่ - EI
-  'hikari denki': '1-SyANzGHhm9KloOXLPLW_qy9Qpz-sxWw',      // เพิ่มใหม่ - Hikari Denki
+  'triple e lighting': '15ujjcMPWSruIhEuWkQMpsDBcDvW8Rmdn',
+  'eita & paul': '1pkXkzEbYd8kIOAlUj_heuGgTOOO45pWT',
+  'hikari denki': '1-SyANzGHhm9KloOXLPLW_qy9Qpz-sxWw',
 };
 function companyLogo(company) {
   const id = COMPANY_LOGOS[String(company || '').trim().toLowerCase()];
@@ -1989,7 +1970,7 @@ function enterCompany(company) {
   _showPage('ot');
   populateSupervisorFilter();
   renderTable();
-  computeSummary();  // ★ เพิ่มบรรทัดนี้
+  computeSummary();
 }
 
 function backToCompanyGate() {
@@ -2236,17 +2217,8 @@ async function deleteEmp(id) {
   } catch (err) { showToast(err.message || err, 'error'); }
 }
 
-// ══════════════════════════════════════════════════════════════
-//  ★★★ FIX (2026-08-07): ตั้งค่า default ของช่องกรองวันที่ให้ตรงกับ
-//  "วันนี้" ตามเวลาไทย (+7) เสมอ ไม่อิงตาม timezone ของเครื่อง/เบราว์เซอร์
-//  ผู้ใช้ (เดิมใช้ new Date() ตรงๆ ซึ่งถ้าเครื่องตั้ง timezone ไม่ตรงไทย
-//  จะกรองไม่เจอรายการของ "วันนี้")
-// ══════════════════════════════════════════════════════════════
+// ── ตั้งค่าช่องกรองวันที่เป็น "วันนี้" ตามเวลาไทย (+7) ไม่อิง timezone เครื่อง ──
 (function setDefaultDateFilter() {
-  // ★ FIX: บวก +7 ชม. จาก UTC epoch ตรงๆ แล้วอ่านค่าด้วย getUTC* เท่านั้น
-  //   (ห้ามผสมกับ getTimezoneOffset()/getFullYear() ของเครื่อง เพราะถ้าเครื่อง
-  //   ตั้ง timezone เป็นไทยอยู่แล้ว จะบวกซ้อนกันเป็น 14 ชม. แทนที่จะเป็น 7 ชม.
-  //   ทำให้ข้ามไปอีกวันแบบที่เจอ — วิธีนี้ไม่พึ่งพา timezone ของเครื่องเลย)
   const now = new Date();
   const bd = new Date(now.getTime() + 7 * 3600000);
   const iso = bd.getUTCFullYear() + '-' + String(bd.getUTCMonth() + 1).padStart(2, '0') + '-' + String(bd.getUTCDate()).padStart(2, '0');
